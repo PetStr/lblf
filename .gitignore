@@ -1,0 +1,9 @@
+*.o
+*.ba
+*.exe
+*.txt
+*~
+*.orig
+*.dbc
+*.DBC
+main
