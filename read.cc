@@ -5,6 +5,8 @@
 
 //hexdump -v -C -n 512 truck02.blf
 
+#include "blf_structs.hh"
+
 const int32_t FileSignature   = 0x47474F4C; //LOGG
 const int32_t ObjectSignature = 0x4A424F4C; //LOBJ
 
@@ -16,19 +18,6 @@ uint32_t fileLength(std::fstream & fs)
     fs.seekg (0, fs.beg);
     return length;
 }
-
-
-struct sysTime_t
-{
-    uint16_t year;
-    uint16_t month;
-    uint16_t dayOfWeek;
-    uint16_t day;
-    uint16_t hour;
-    uint16_t minute;
-    uint16_t second;
-    uint16_t milliseconds;
-};
 
 
 void print(std::ostream & s, const sysTime_t & ts)
@@ -44,27 +33,6 @@ void print(std::ostream & s, const sysTime_t & ts)
     s << " milliseconds :" << (int) ts.milliseconds ;
     s << '\n';
 }
-
-struct fileStatistics
-{
-    uint32_t FileSign;
-    uint32_t StatSize;
-    uint8_t  AppId;
-    uint8_t  AppMaj;
-    uint8_t  AppMin;
-    uint8_t  AppBuild;
-    uint8_t  ApiMaj;
-    uint8_t  ApiMin;
-    uint8_t  ApiBuild;
-    uint8_t  ApiPatch;
-    uint64_t fileSize;
-    uint64_t uncompressedSize;
-    uint32_t objCount;
-    uint32_t objRead;
-    sysTime_t meas_start_time;
-    sysTime_t last_obj_time;
-    uint64_t fileSize_less115;
-};
 
 
 bool read(std::fstream & fs, fileStatistics & os)
@@ -122,16 +90,6 @@ void print(std::ostream & s, const fileStatistics & os)
 }
 
 
-struct ObjectHeaderBase
-{
-    uint32_t ObjSign;
-    uint16_t headerSize;
-    uint16_t headerVer;
-    uint32_t objSize;
-    uint32_t objectType;
-};
-
-
 void print(std::ostream & s, const ObjectHeaderBase & ohb)
 {
     s << "ObjectHeaderBase: ";
@@ -164,31 +122,6 @@ bool read(std::fstream & fs, ObjectHeaderBase & ohb)
 }
 
 
-enum ObjectFlags_e : uint32_t
-{
-    TimeTenMics = 0x00000001,
-    TimeNano = 0x00000002
-};
-
-enum timeStampStatus_e : uint8_t
-{
-    orginal = 0x01, SwGen = 0x02, User = 0x10
-};
-
-
-#pragma pack(1)
-struct ObjectHeader2
-{
-    ObjectFlags_e objectFlags;
-    timeStampStatus_e  timeStampStatus;
-    uint8_t  reservObjHeader;
-    uint16_t ObjectHeaderVersion;
-    uint64_t ObjectTimeStamp;
-    uint64_t originalObjectTimeStamp;
-};
-#pragma pack()
-
-
 bool read(std::fstream & fs, ObjectHeader2 & oh2)
 {
 //    fs.read(reinterpret_cast<char *> (&oh2.objectFlags),   sizeof(oh2.objectFlags));
@@ -216,44 +149,17 @@ void print(std::ostream & s, const ObjectHeader2 & oh2)
     s << '\n';
 }
 
-enum compressionMethod_e : int16_t
-{
-    uncompressed = 0x00,
-    zlib = 0x02
-};
-
-
-struct LogContainer
-{
-    compressionMethod_e compressionMethod;
-    uint16_t reserv1;
-    uint32_t reserv2;
-    uint32_t unCompressedFileSize;
-    uint32_t reserv3;
-    //Calculated
-    uint32_t compressedFileSize;
-};
-
 
 bool read(std::fstream & fs, LogContainer & lc, const ObjectHeaderBase & ohb)
 {
-    fs.read(reinterpret_cast<char *> (&lc.compressionMethod ), sizeof(lc.compressionMethod));
-    fs.read(reinterpret_cast<char *> (&lc.reserv1), sizeof(lc.reserv1));
-    fs.read(reinterpret_cast<char *> (&lc.reserv2), sizeof(lc.reserv2));
-    fs.read(reinterpret_cast<char *> (&lc.unCompressedFileSize),   sizeof(lc.unCompressedFileSize));
-    fs.read(reinterpret_cast<char *> (&lc.reserv3), sizeof(lc.reserv3));
-
-
+    fs.read(reinterpret_cast<char *> (&lc), sizeof(LogContainer));
     
     if(lc.compressionMethod == 2)
         {
-            lc.compressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - sizeof(lc.reserv1)
-                                    - sizeof(lc.reserv2)- sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
+            lc.unCompressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - sizeof(lc.reserv1)
+	      - sizeof(lc.reserv2)- sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
         }
-    else //Assume uncompressed
-        {
-            lc.compressedFileSize = lc.unCompressedFileSize;
-        }
+  
     return true;
 }
 
@@ -264,31 +170,12 @@ void print(std::ostream & s, const LogContainer & lc)
     s << std::dec;
     s << "compressionMethod: " << std::hex <<(int) lc.compressionMethod ;
     s << ", uncompressedFileSize: " << std::dec <<(int) lc.unCompressedFileSize;
-    s << ", compressedFileSize: " << std::dec <<(int) lc.compressedFileSize;
     s << '\n';
 }
 
-#pragma pack(1)
-struct ObjectHeader
-{
-    ObjectFlags_e objectFlag;
-    uint16_t clientIndex;
-    uint16_t objectVersion;
-    uint64_t objectTimeStamp;
-};
-#pragma pack()
-
-
 bool read(std::fstream & fs, ObjectHeader & oh)
 {
-  //  std::cout << "Reading ObjectHeader\n";
-//    fs.read(reinterpret_cast<char *> (&oh.objectFlag), sizeof(oh.objectFlag));
-//    fs.read(reinterpret_cast<char *> (&oh.clientIndex), sizeof(oh.clientIndex));
-//    fs.read(reinterpret_cast<char *> (&oh.objectVersion), sizeof(oh.objectVersion));
-//    fs.read(reinterpret_cast<char *> (&oh.objectTimeStamp), sizeof(oh.objectTimeStamp));
-//
     fs.read(reinterpret_cast<char *> (&oh), sizeof(ObjectHeader));
-    
     return true;
 }
 
@@ -303,28 +190,9 @@ void print(std::ostream & s, const ObjectHeader & oh)
     s << '\n';
 }
 
-#pragma pack(1)
-struct CanMessage
-{
-    uint16_t channel;
-    uint8_t flags;
-    uint8_t dlc;
-    uint32_t id;
-    std::array<uint8_t, 8> data {};
-};
-#pragma pack()
 
 bool read(std::fstream & fs, CanMessage & cm)
 {
-//    fs.read(reinterpret_cast<char *> (&cm.channel), sizeof(cm.channel));
-//    fs.read(reinterpret_cast<char *> (&cm.flags), sizeof(cm.flags));
-//    fs.read(reinterpret_cast<char *> (&cm.dlc), sizeof(cm.dlc));
-//    if(cm.dlc > 8)
-//      cm.dlc = 8;
-//    fs.read(reinterpret_cast<char *> (&cm.id), sizeof(cm.id));
-//    fs.read(reinterpret_cast<char *> (cm.data.data()), static_cast<std::streamsize>(cm.data.size()));
-
-
   fs.read(reinterpret_cast<char *> (&cm), sizeof(CanMessage));
   if(cm.dlc > 8)
     {
@@ -348,25 +216,8 @@ void print(std::ostream & s, const CanMessage & cm)
     s << '\n';
 }
 
-#pragma pack(1)
-struct AppTrigger
-{
-    uint64_t preTriggerTime;
-    uint64_t postTriggerTime;
-    uint16_t channel;
-    uint16_t flags;
-    uint32_t appSpecific2;
-};
-#pragma pack()
-
 bool read(std::fstream & fs, AppTrigger & at)
 {
-//    fs.read(reinterpret_cast<char *> (&at.preTriggerTime ), sizeof(at.preTriggerTime));
-//    fs.read(reinterpret_cast<char *> (&at.postTriggerTime ), sizeof(at.postTriggerTime));
-//    fs.read(reinterpret_cast<char *> (&at.channel ), sizeof(at.channel));
-//    fs.read(reinterpret_cast<char *> (&at.flags ), sizeof(at.flags));
-//    fs.read(reinterpret_cast<char *> (&at.appSpecific2 ), sizeof(at.appSpecific2));
-//
     fs.read(reinterpret_cast<char *> (&at), sizeof(AppTrigger));
     
     return true;
@@ -384,25 +235,22 @@ void print(std::ostream & s, const AppTrigger & at)
     s << '\n';
 }
 
-#pragma pack(1)
-struct CanErrorFrame
-{
-    uint16_t channel;
-    uint16_t length;
-    uint32_t reservedCanErrorFrame;
-};
-#pragma pack()
 
 bool read(std::fstream & fs, CanErrorFrame & cfe)
 {
-//    fs.read(reinterpret_cast<char *> (&cfe.channel ), sizeof(cfe.channel));
-//    fs.read(reinterpret_cast<char *> (&cfe.length ), sizeof(cfe.length));
-//    fs.read(reinterpret_cast<char *> (&cfe.reservedCanErrorFrame ), sizeof(cfe.reservedCanErrorFrame));
-//
     fs.read(reinterpret_cast<char *> (&cfe), sizeof(CanErrorFrame));
     
     return true;
 }
+
+
+template <typename type_data>
+bool read_template(std::fstream & fs, type_data & data)
+{
+    fs.read(reinterpret_cast<char *> (&data), sizeof( type_data ));
+    return true;
+}
+
 
 void print(std::ostream & s, const CanErrorFrame & cfe)
 {
@@ -463,7 +311,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
 	  (read(fs, oh));
 	  //	  print(std::cout, oh);
 	  struct CanMessage cm;
-	  if(read(fs,cm))
+	  if(read_template(fs,cm))
 	    print(std::cout, cm);
 	  }
             break;
@@ -472,10 +320,10 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
 	  {
 	    print(std::cout, ohb);
 	    struct ObjectHeader oh;
-	    read(fs, oh);
+	    read_template(fs, oh);
 	    print(std::cout, oh);
 	    struct CanErrorFrame cef;
-	    (read(fs,cef));
+	    (read_template(fs,cef));
 	    print(std::cout, cef);
 	  }
 	  break;
@@ -535,7 +383,6 @@ void runfile_nocompress (const char * filename)
             read(fs, ohb2);
             print(std::cout, ohb2);
             current_position(std::cout, fs.tellg());
-
             struct ObjectHeader oh;
             read(fs, oh);
             print(std::cout, oh);
@@ -575,7 +422,7 @@ void run_handle (const char * filename)
 		//  print(std::cout, ohb);
 	        //  current_position(std::cout, fs.tellg());
 		std::cout << std::dec << (int) counter << ' ';
-		std::cout << "s: " << ohb.objSize << "t: " << ohb.objectType << ' ';		
+		std::cout << ", size: " << ohb.objSize << ", type: " << ohb.objectType << ' ';		
 		handle_ObjectType(fs, ohb);
 		//	    current_position(std::cout, fs.tellg());
 	      }
