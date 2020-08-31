@@ -114,25 +114,6 @@ bool read(std::fstream & fs, ObjectHeaderBase & ohb)
     fs.read(reinterpret_cast<char *> (&ohb.headerVer),sizeof(ohb.headerVer));
     fs.read(reinterpret_cast<char *> (&ohb.objSize),sizeof(ohb.objSize));
     fs.read(reinterpret_cast<char *> (&ohb.objectType),sizeof(ohb.objectType));
-//    auto offset = ohb.headerSize - sizeof(ohb.ObjSign) - sizeof(ohb.headerSize) -
-//                  sizeof(ohb.headerVer) - sizeof(ohb.objSize) - sizeof(ohb.objectType);
-//    fs.seekg(offset, std::ios_base::cur);
-//    std::cout << "Moving file pointer extra offset: " << std::dec << (int) offset << '\n';
-    return true;
-}
-
-
-bool read(std::fstream & fs, ObjectHeader2 & oh2)
-{
-//    fs.read(reinterpret_cast<char *> (&oh2.objectFlags),   sizeof(oh2.objectFlags));
-//    fs.read(reinterpret_cast<char *> (&oh2.timeStampStatus),sizeof(oh2.timeStampStatus));
-//    fs.read(reinterpret_cast<char *> (&oh2.reservObjHeader), sizeof(oh2.reservObjHeader));
-//    fs.read(reinterpret_cast<char *> (&oh2.ObjectTimeStamp),   sizeof(oh2.ObjectTimeStamp));
-//    fs.read(reinterpret_cast<char *> (&oh2.originalObjectTimeStamp), sizeof(oh2.originalObjectTimeStamp));
-//
-    fs.read(reinterpret_cast<char *> (&oh2), sizeof(ObjectHeader2));
-
-    
     return true;
 }
 
@@ -173,12 +154,6 @@ void print(std::ostream & s, const LogContainer & lc)
     s << '\n';
 }
 
-bool read(std::fstream & fs, ObjectHeader & oh)
-{
-    fs.read(reinterpret_cast<char *> (&oh), sizeof(ObjectHeader));
-    return true;
-}
-
 
 void print(std::ostream & s, const ObjectHeader & oh)
 {
@@ -190,17 +165,6 @@ void print(std::ostream & s, const ObjectHeader & oh)
     s << '\n';
 }
 
-
-bool read(std::fstream & fs, CanMessage & cm)
-{
-  fs.read(reinterpret_cast<char *> (&cm), sizeof(CanMessage));
-  if(cm.dlc > 8)
-    {
-      cm.dlc = 8;
-    }
-    
-    return true;
-}
 
 void print(std::ostream & s, const CanMessage & cm)
 {
@@ -216,12 +180,6 @@ void print(std::ostream & s, const CanMessage & cm)
     s << '\n';
 }
 
-bool read(std::fstream & fs, AppTrigger & at)
-{
-    fs.read(reinterpret_cast<char *> (&at), sizeof(AppTrigger));
-    
-    return true;
-}
 
 void print(std::ostream & s, const AppTrigger & at)
 {
@@ -235,13 +193,6 @@ void print(std::ostream & s, const AppTrigger & at)
     s << '\n';
 }
 
-
-bool read(std::fstream & fs, CanErrorFrame & cfe)
-{
-    fs.read(reinterpret_cast<char *> (&cfe), sizeof(CanErrorFrame));
-    
-    return true;
-}
 
 
 template <typename type_data>
@@ -263,37 +214,6 @@ void print(std::ostream & s, const CanErrorFrame & cfe)
 }
 
 
-void runfile (const char * filename)
-{
-    std::cout << "Opening file: " << filename << '\n';
-    std::fstream fs(filename, std::fstream::in | std::fstream::binary);
-
-    if(fs)
-        {
-            struct fileStatistics os;
-            std::cout << "sizeof(os) " << std::dec << sizeof(os) << '\n';
-            read(fs, os);
-            print(std::cout, os);
-            std::cout << "Current position: " << std::hex << (int) fs.tellg() << ", " << std::dec << (int) fs.tellg()  << '\n';
-
-            //    fs.seekg(os.StatSize, std::ios::beg);
-            std::cout << "Current position: " << std::hex << (int) fs.tellg() << ", " << std::dec << (int) fs.tellg()  << '\n';
-
-            struct ObjectHeaderBase ohb;
-            read(fs, ohb);
-            print(std::cout, ohb);
-            std::cout << "sizeof(ohb) " << std::dec << sizeof(ohb) << '\n';
-            std::cout << "Current position: " << std::hex << (int) fs.tellg() << ", " << std::dec << (int) fs.tellg()  << '\n';
-
-            struct LogContainer lc;
-            read(fs, lc, ohb);
-            print(std::cout, lc);
-            std::cout << "Current position: " << std::hex << (int) fs.tellg() << ", " << std::dec << (int) fs.tellg()  << '\n';
-        }
-    fs.close();
-}
-
-
 void current_position(std::ostream & s, uint64_t pos)
 {
     s << "Current position: " << "0x" << std::hex << (uint64_t) pos << ", " << std::dec << (uint64_t) pos << '\n';
@@ -308,7 +228,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
         case 1: //read Can message;
 	  {
 	  struct ObjectHeader oh;
-	  (read(fs, oh));
+	  (read_template(fs, oh));
 	  //	  print(std::cout, oh);
 	  struct CanMessage cm;
 	  if(read_template(fs,cm))
@@ -332,11 +252,11 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
 	  {
 	    current_position(std::cout, fs.tellg());
 	    struct ObjectHeader oh;
-	    read(fs, oh);
+	    read_template(fs, oh);
 	    //print(std::cout, oh);
 	    struct AppTrigger ap;
 	    current_position(std::cout, fs.tellg());
-	    (read(fs,ap));
+	    (read_template(fs,ap));
 	    //  print(std::cout, ap);
 	  }
 	  break;
@@ -355,49 +275,6 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
         }
 
 }
-
-
-void runfile_nocompress (const char * filename)
-{
-    std::cout << "Opening file: " << filename << '\n';
-    std::fstream fs(filename, std::fstream::in | std::fstream::binary);
-
-    if(fs)
-        {
-            struct fileStatistics os;
-            read(fs, os);
-            //            print(std::cout, os);
-            current_position(std::cout, fs.tellg());
-
-            struct ObjectHeaderBase ohb;
-            read(fs, ohb);
-            print(std::cout, ohb);
-            current_position(std::cout, fs.tellg());
-
-            struct LogContainer lc;
-            read(fs, lc, ohb);
-            print(std::cout, lc);
-            current_position(std::cout, fs.tellg());
-
-            struct ObjectHeaderBase ohb2;
-            read(fs, ohb2);
-            print(std::cout, ohb2);
-            current_position(std::cout, fs.tellg());
-            struct ObjectHeader oh;
-            read(fs, oh);
-            print(std::cout, oh);
-            current_position(std::cout, fs.tellg());
-
-
-            struct CanMessage cm;
-            read(fs, cm);
-            print(std::cout, cm);
-            current_position(std::cout, fs.tellg());
-
-        }
-    fs.close();
-}
-
 
 
 void run_handle (const char * filename)
@@ -452,7 +329,5 @@ int main()
     //    runfile_nocompress("truck02.blf");
 
     run_handle("truck03.blf");
-    
-
 }
 
