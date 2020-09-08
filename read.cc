@@ -49,7 +49,7 @@ bool read(std::fstream & fs, fileStatistics & os)
     fs.read(reinterpret_cast<char *> (&os.AppMin ),sizeof(os.AppMin ));
     fs.read(reinterpret_cast<char *> (&os.AppBuild ),sizeof(os.AppBuild ));
     fs.read(reinterpret_cast<char *> (&os.ApiMaj ),sizeof(os.ApiMaj  ));
-    fs.read(reinterpret_cast<char *> (&os. ApiMin ),sizeof(os.ApiMin ));
+    fs.read(reinterpret_cast<char *> (&os.ApiMin ),sizeof(os.ApiMin ));
     fs.read(reinterpret_cast<char *> (&os.ApiBuild ),sizeof(os.ApiBuild ));
     fs.read(reinterpret_cast<char *> (&os.ApiPatch ),sizeof(os.ApiPatch ));
     fs.read(reinterpret_cast<char *> (&os.fileSize ),sizeof(os.fileSize ));
@@ -134,13 +134,13 @@ void print(std::ostream & s, const ObjectHeader2 & oh2)
 bool read(std::fstream & fs, LogContainer & lc, const ObjectHeaderBase & ohb)
 {
     fs.read(reinterpret_cast<char *> (&lc), sizeof(LogContainer));
-    
+
     if(lc.compressionMethod == 2)
         {
             lc.unCompressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - sizeof(lc.reserv1)
-	      - sizeof(lc.reserv2)- sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
+                                      - sizeof(lc.reserv2)- sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
         }
-  
+
     return true;
 }
 
@@ -209,7 +209,7 @@ void print(std::ostream & s, const CanErrorFrame & cfe)
     s << std::dec;
     s << ", channel : " << (uint64_t) cfe.channel;
     s << ", length : " << (uint64_t) cfe.length;
-    s << ", reservedCanErrorFrame : " << (uint64_t) cfe.reservedCanErrorFrame; 
+    s << ", reservedCanErrorFrame : " << (uint64_t) cfe.reservedCanErrorFrame;
     s << '\n';
 }
 
@@ -222,54 +222,54 @@ void current_position(std::ostream & s, uint64_t pos)
 
 void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
 {
-  
+
     switch(ohb.objectType)
         {
         case 1: //read Can message;
-	  {
-	  struct ObjectHeader oh;
-	  (read_template(fs, oh));
-	  //	  print(std::cout, oh);
-	  struct CanMessage cm;
-	  if(read_template(fs,cm))
-	    print(std::cout, cm);
-	  }
-            break;
+        {
+            struct ObjectHeader oh;
+            (read_template(fs, oh));
+            //	  print(std::cout, oh);
+            struct CanMessage cm;
+            if(read_template(fs,cm))
+                print(std::cout, cm);
+        }
+        break;
 
-	case 2 : //CanErrorFrame
-	  {
-	    print(std::cout, ohb);
-	    struct ObjectHeader oh;
-	    read_template(fs, oh);
-	    print(std::cout, oh);
-	    struct CanErrorFrame cef;
-	    (read_template(fs,cef));
-	    print(std::cout, cef);
-	  }
-	  break;
-	    
+        case 2 : //CanErrorFrame
+        {
+            print(std::cout, ohb);
+            struct ObjectHeader oh;
+            read_template(fs, oh);
+            print(std::cout, oh);
+            struct CanErrorFrame cef;
+            (read_template(fs,cef));
+            print(std::cout, cef);
+        }
+        break;
+
         case 5 : //Handle apptrigger
-	  {
-	    current_position(std::cout, fs.tellg());
-	    struct ObjectHeader oh;
-	    read_template(fs, oh);
-	    //print(std::cout, oh);
-	    struct AppTrigger ap;
-	    current_position(std::cout, fs.tellg());
-	    (read_template(fs,ap));
-	    //  print(std::cout, ap);
-	  }
-	  break;
+        {
+            current_position(std::cout, fs.tellg());
+            struct ObjectHeader oh;
+            read_template(fs, oh);
+            //print(std::cout, oh);
+            struct AppTrigger ap;
+            current_position(std::cout, fs.tellg());
+            (read_template(fs,ap));
+            //  print(std::cout, ap);
+        }
+        break;
         case 10: //Get Logcontainer
-	  {
-	  struct LogContainer lc;
-	  if(read(fs, lc, ohb))
-	    print(std::cout, lc);
-	  }
-            break;
+        {
+            struct LogContainer lc;
+            if(read(fs, lc, ohb))
+                print(std::cout, lc);
+        }
+        break;
         default:
-	  std::cout << "Now ObjectType\n";
-	  exit(-1);
+            std::cout << "Now ObjectType\n";
+            exit(-1);
             //Unhandled message
             break;
         }
@@ -291,18 +291,18 @@ void run_handle (const char * filename)
 
             struct ObjectHeaderBase ohb;
 
-	    int counter = 0;
-	    while(!fs.eof())
-	      {
-		counter++;
-		read(fs, ohb);
-		//  print(std::cout, ohb);
-	        //  current_position(std::cout, fs.tellg());
-		std::cout << std::dec << (int) counter << ' ';
-		std::cout << ", size: " << ohb.objSize << ", type: " << ohb.objectType << ' ';		
-		handle_ObjectType(fs, ohb);
-		//	    current_position(std::cout, fs.tellg());
-	      }
+            int counter = 0;
+            while(!fs.eof())
+                {
+                    counter++;
+                    read(fs, ohb);
+                    //  print(std::cout, ohb);
+                    //  current_position(std::cout, fs.tellg());
+                    std::cout << std::dec << (int) counter << ' ';
+                    std::cout << ", size: " << ohb.objSize << ", type: " << ohb.objectType << ' ';
+                    handle_ObjectType(fs, ohb);
+                    //	    current_position(std::cout, fs.tellg());
+                }
         }
     fs.close();
 }
