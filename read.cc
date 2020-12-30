@@ -345,16 +345,17 @@ int main()
     std::cout << "LogContainer    : " << std::dec << sizeof(LogContainer      ) << '\n';
     std::cout << "CanMessage      : " << std::dec << sizeof(CanMessage        ) << '\n';
     std::cout << "CanMessage2     : " << std::dec << sizeof(CanMessage2       ) << '\n';
-    
     std::cout << "AppTrigger      : " << std::dec << sizeof(AppTrigger        ) << '\n';
 
     //  runfile("save.blf");
     //std::cout << "----------------------------------\n";
     //runfile("night.blf");
+    
     std::cout << "----------------------------------\n";
 
-    //    runfile_nocompress("truck02.blf");
+    run_handle("truck02.blf");
 
-    run_handle("truck03.blf");
+    std::cout << "----------------------------------\n";
+    //run_handle("truck03.blf");
 }
 
