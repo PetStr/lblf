@@ -102,7 +102,6 @@ void print(std::ostream & s, const ObjectHeaderBase & ohb)
     s << '\n';
 }
 
-
 bool read(std::fstream & fs, ObjectHeaderBase & ohb)
 {
     fs.read(reinterpret_cast<char *> (&ohb.ObjSign),sizeof(ohb.ObjSign));
@@ -181,6 +180,21 @@ void print(std::ostream & s, const CanMessage & cm)
 }
 
 
+void print(std::ostream & s, const CanMessage2 & cm2)
+{
+    s << "CanMessage2 : ";
+    s << std::dec;
+    s << "channel: " << (int) cm2.channel;
+    s << ", flags: " << std::dec << (int) cm2.flags;
+    s << ", dlc: " << std::dec << (int) cm2.dlc;
+    s << ", id: 0x" << std::hex << (int) cm2.id;
+    s << ", data: ";
+    for(int n = 0; n < cm2.dlc; n++)
+        s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) cm2.data[n];
+    s << '\n';
+}
+
+
 void print(std::ostream & s, const AppTrigger & at)
 {
     s << "Apptrigger: ";
@@ -192,7 +206,6 @@ void print(std::ostream & s, const AppTrigger & at)
     s << ", appSpecific2: " << (uint64_t) at.appSpecific2;
     s << '\n';
 }
-
 
 
 template <typename type_data>
@@ -260,6 +273,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
             //  print(std::cout, ap);
         }
         break;
+	
         case 10: //Get Logcontainer
         {
             struct LogContainer lc;
@@ -267,6 +281,18 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
                 print(std::cout, lc);
         }
         break;
+
+	case 86:
+	{
+	    struct ObjectHeader oh;
+            (read_template(fs, oh));
+            //	  print(std::cout, oh);
+            struct CanMessage cm2;
+            if(read_template(fs,cm2))
+                print(std::cout, cm2);
+	}
+	break;
+	
         default:
             std::cout << "Now ObjectType\n";
             exit(-1);
@@ -308,7 +334,6 @@ void run_handle (const char * filename)
 }
 
 
-
 int main()
 {
 
@@ -319,6 +344,8 @@ int main()
     std::cout << "ObjectHeader2   : " << std::dec << sizeof(ObjectHeader2     ) << '\n';
     std::cout << "LogContainer    : " << std::dec << sizeof(LogContainer      ) << '\n';
     std::cout << "CanMessage      : " << std::dec << sizeof(CanMessage        ) << '\n';
+    std::cout << "CanMessage2     : " << std::dec << sizeof(CanMessage2       ) << '\n';
+    
     std::cout << "AppTrigger      : " << std::dec << sizeof(AppTrigger        ) << '\n';
 
     //  runfile("save.blf");

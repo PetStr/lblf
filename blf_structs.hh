@@ -108,6 +108,20 @@ struct CanMessage
 };
 
 
+struct CanMessage2
+{
+    uint16_t channel;
+    uint8_t flags;
+    uint8_t dlc;
+    uint32_t id;
+    std::array<uint8_t, 8> data {};
+    uint32_t frameLength;
+    uint8_t bitCount;
+    uint8_t reservedCanMessage1;
+    uint16_t reservedCanMessage2;  
+};
+
+
 struct AppTrigger
 {
     uint64_t preTriggerTime;
