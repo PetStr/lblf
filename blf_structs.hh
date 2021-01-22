@@ -2,6 +2,17 @@
 #define BLF_STRUCTS_HH
 
 
+enum class ObjectType : uint32_t {
+  UNKNOWN = 0,
+  CAN_MESSAGE = 1,
+  CAN_ERROR = 2,
+  CAN_OVERLOAD = 3,
+  APP_TRIGGER = 5,
+  LOG_CONTAINER = 10,
+  CAN_MESSAGE2 = 86
+};
+
+
 #pragma pack(1)
 
 struct sysTime_t
@@ -105,6 +116,22 @@ struct CanMessage
     uint8_t dlc;
     uint32_t id;
     std::array<uint8_t, 8> data {};
+};
+
+
+struct CanError
+{
+    uint16_t channel;
+    uint16_t length;
+    uint32_t reservedCanErrorFrame;
+};
+
+
+struct CanOverload
+{
+    uint16_t channel;
+    uint16_t reservedCanOverloadFrame1;
+    uint32_t reservedCanOverloadFrame2;
 };
 
 

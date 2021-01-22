@@ -180,6 +180,17 @@ void print(std::ostream & s, const CanMessage & cm)
 }
 
 
+void print(std::ostream & s, const CanOverload & co)
+{
+    s << "CanOverload : ";
+    s << std::dec;
+    s << "channel: " << (int) co.channel;
+    s << ", reservedCanOverloadFrame1: " << std::hex << (int) co.reservedCanOverloadFrame1;
+    s << ", reservedCanOverloadFrame2: " << std::hex << (int) co.reservedCanOverloadFrame2;
+    s << '\n';
+}
+
+
 void print(std::ostream & s, const CanMessage2 & cm2)
 {
     s << "CanMessage2 : ";
@@ -238,7 +249,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
 
     switch(ohb.objectType)
         {
-        case 1: //read Can message;
+        case static_cast <uint32_t> ( ObjectType::CAN_MESSAGE ): //read Can message;
         {
             struct ObjectHeader oh;
             (read_template(fs, oh));
@@ -249,7 +260,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
         }
         break;
 
-        case 2 : //CanErrorFrame
+        case static_cast <uint32_t> ( ObjectType::CAN_ERROR )  : //CanErrorFrame
         {
             print(std::cout, ohb);
             struct ObjectHeader oh;
@@ -261,7 +272,21 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
         }
         break;
 
-        case 5 : //Handle apptrigger
+        case static_cast <uint32_t> ( ObjectType::CAN_OVERLOAD )  : //CanOverload
+        {
+            print(std::cout, ohb);
+            struct ObjectHeader oh;
+            read_template(fs, oh);
+            print(std::cout, oh);
+            struct CanOverload col;
+            (read_template(fs,col));
+            print(std::cout, col);
+        }
+        break;
+
+
+	
+        case static_cast <uint32_t> ( ObjectType::APP_TRIGGER ) : //Handle apptrigger
         {
             current_position(std::cout, fs.tellg());
             struct ObjectHeader oh;
@@ -274,7 +299,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
         }
         break;
 	
-        case 10: //Get Logcontainer
+        case static_cast <uint32_t> ( ObjectType::LOG_CONTAINER ) : //Get Logcontainer
         {
             struct LogContainer lc;
             if(read(fs, lc, ohb))
@@ -282,7 +307,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
         }
         break;
 
-	case 86:
+	case static_cast <uint32_t> ( ObjectType::CAN_MESSAGE2 ):
 	{
 	    struct ObjectHeader oh;
             (read_template(fs, oh));
@@ -294,7 +319,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
 	break;
 	
         default:
-            std::cout << "Now ObjectType\n";
+	  std::cout << "New ObjectType: " << (int) ohb.objectType << '\n';
             exit(-1);
             //Unhandled message
             break;
@@ -329,6 +354,7 @@ void run_handle (const char * filename)
                     handle_ObjectType(fs, ohb);
                     //	    current_position(std::cout, fs.tellg());
                 }
+	    std::cout << "End of file\n";
         }
     fs.close();
 }
@@ -353,7 +379,9 @@ int main()
     
     std::cout << "----------------------------------\n";
 
-    run_handle("truck02.blf");
+    //     run_handle("truck02.blf");
+    run_handle("b-874992_logfile008.blf");
+    
 
     std::cout << "----------------------------------\n";
     //run_handle("truck03.blf");
