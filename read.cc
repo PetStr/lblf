@@ -283,8 +283,6 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
             print(std::cout, col);
         }
         break;
-
-
 	
         case static_cast <uint32_t> ( ObjectType::APP_TRIGGER ) : //Handle apptrigger
         {
@@ -343,16 +341,25 @@ void run_handle (const char * filename)
             struct ObjectHeaderBase ohb;
 
             int counter = 0;
+	    int jump_byte_counter = 0;
             while(!fs.eof())
                 {
                     counter++;
-                    read(fs, ohb);
-                    //  print(std::cout, ohb);
-                    //  current_position(std::cout, fs.tellg());
+                    bool result = read(fs, ohb);
+		    if(!result)
+		      {
+			jump_byte_counter++;
+			uint8_t dummy;
+			fs.read(reinterpret_cast<char *> (&dummy ),sizeof(dummy));
+			std::cout << "jump\n";
+		      }
+		    else
+		      {
                     std::cout << std::dec << (int) counter << ' ';
                     std::cout << ", size: " << ohb.objSize << ", type: " << ohb.objectType << ' ';
                     handle_ObjectType(fs, ohb);
                     //	    current_position(std::cout, fs.tellg());
+		      }
                 }
 	    std::cout << "End of file\n";
         }
