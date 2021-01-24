@@ -131,7 +131,7 @@ struct CanOverload
 {
     uint16_t channel;
     uint16_t reservedCanOverloadFrame1;
-    uint32_t reservedCanOverloadFrame2;
+    uint32_t reservedCanOverloadFrame2; // Corrected //?? 
 };
 
 

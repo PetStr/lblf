@@ -11,6 +11,29 @@ const int32_t FileSignature   = 0x47474F4C; //LOGG
 const int32_t ObjectSignature = 0x4A424F4C; //LOBJ
 
 
+std::string print(ObjectType ot)
+{
+    switch (ot)
+        {
+        case ObjectType::UNKNOWN :
+            return "UNKNOWN";
+	case ObjectType::CAN_MESSAGE :
+	    return "CanMessage";
+        case ObjectType::CAN_ERROR :
+            return "CanError";
+	case ObjectType::CAN_OVERLOAD :
+	    return "CanOverload";
+	case ObjectType::APP_TRIGGER :
+	    return "App_Trigger";
+	case ObjectType::LOG_CONTAINER :
+	    return "LogContainer";
+	case ObjectType::CAN_MESSAGE2 :
+	    return "CanMessage2";
+        }
+    return "missing Object Type";
+}
+
+
 uint32_t fileLength(std::fstream & fs)
 {
     fs.seekg (0, fs.end);
@@ -246,7 +269,6 @@ void current_position(std::ostream & s, uint64_t pos)
 
 void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
 {
-
     switch(ohb.objectType)
         {
         case static_cast <uint32_t> ( ObjectType::CAN_MESSAGE ): //read Can message;
@@ -283,7 +305,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
             print(std::cout, col);
         }
         break;
-	
+
         case static_cast <uint32_t> ( ObjectType::APP_TRIGGER ) : //Handle apptrigger
         {
             current_position(std::cout, fs.tellg());
@@ -296,7 +318,7 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
             //  print(std::cout, ap);
         }
         break;
-	
+
         case static_cast <uint32_t> ( ObjectType::LOG_CONTAINER ) : //Get Logcontainer
         {
             struct LogContainer lc;
@@ -305,19 +327,19 @@ void handle_ObjectType(std::fstream & fs, const ObjectHeaderBase &  ohb)
         }
         break;
 
-	case static_cast <uint32_t> ( ObjectType::CAN_MESSAGE2 ):
-	{
-	    struct ObjectHeader oh;
+        case static_cast <uint32_t> ( ObjectType::CAN_MESSAGE2 ):
+        {
+            struct ObjectHeader oh;
             (read_template(fs, oh));
             //	  print(std::cout, oh);
             struct CanMessage cm2;
             if(read_template(fs,cm2))
                 print(std::cout, cm2);
-	}
-	break;
-	
+        }
+        break;
+
         default:
-	  std::cout << "New ObjectType: " << (int) ohb.objectType << '\n';
+            std::cout << "New ObjectType: " << (int) ohb.objectType << '\n';
             exit(-1);
             //Unhandled message
             break;
@@ -337,31 +359,84 @@ void run_handle (const char * filename)
             read(fs, os);
             //            print(std::cout, os);
             current_position(std::cout, fs.tellg());
-
-            struct ObjectHeaderBase ohb;
-
             int counter = 0;
-	    int jump_byte_counter = 0;
+            int jump_byte_counter = 0;
+	    struct ObjectHeaderBase ohb;
             while(!fs.eof())
                 {
                     counter++;
                     bool result = read(fs, ohb);
-		    if(!result)
-		      {
-			jump_byte_counter++;
-			uint8_t dummy;
-			fs.read(reinterpret_cast<char *> (&dummy ),sizeof(dummy));
-			std::cout << "jump\n";
-		      }
-		    else
-		      {
-                    std::cout << std::dec << (int) counter << ' ';
-                    std::cout << ", size: " << ohb.objSize << ", type: " << ohb.objectType << ' ';
-                    handle_ObjectType(fs, ohb);
-                    //	    current_position(std::cout, fs.tellg());
-		      }
+                    if(!result)
+                        {
+                            jump_byte_counter++;
+                            uint8_t dummy;
+                            fs.read(reinterpret_cast<char *> (&dummy ),sizeof(dummy));
+                            std::cout << "jump\n";
+                        }
+                    else
+                        {
+                            std::cout << std::dec << (int) counter << ' ';
+                            std::cout << ", size: " << ohb.objSize << ", type: " << print(static_cast<ObjectType> (ohb.objectType) ) << ' ';
+                            handle_ObjectType(fs, ohb);
+                            //	    current_position(std::cout, fs.tellg());
+                        }
                 }
-	    std::cout << "End of file\n";
+            std::cout << "End of file\n";
+        }
+    fs.close();
+}
+
+
+void go_through_header (const char * filename)
+{
+    std::cout << "Opening file: " << filename << '\n';
+    std::fstream fs(filename, std::fstream::in | std::fstream::binary);
+
+    if(fs)
+        {
+            struct fileStatistics fileStat;
+            if(read(fs, fileStat))
+	      {
+		print(std::cout, fileStat );
+	      }
+	    else
+	      {
+		std::cout << "Error file did not start with file statistics\n";
+		exit(-1);
+	      }
+
+            current_position(std::cout, fs.tellg());
+
+	    struct ObjectHeaderBase ohb;
+	    if(read(fs, ohb))
+	      print(std::cout, ohb);
+	    else
+	      exit (-1);
+
+	    std::cout << ".";
+	    
+            int counter = 0;
+            int jump_byte_counter = 0;
+            while(!fs.eof())
+                {
+                    counter++;
+                    bool result = read(fs, ohb);
+		    
+		    if(!result)
+		      exit(-1);
+		  
+		    uint32_t offset = ohb.objSize - sizeof(ObjectHeaderBase);
+		    std::cout << "offset: " << std::dec << (int) offset << '\n';
+		    fs.seekg(offset, std::ios_base::cur);
+		      if(fs.eof())
+		      std::cout << "End of file!!!!!!\n";
+		      
+		    std::cout << std::dec << (int) counter << ' ';
+		    std::cout << ", objSize: " << ohb.objSize << ", type: " << print(static_cast<ObjectType> (ohb.objectType) ) << '\n';
+		    current_position(std::cout, fs.tellg());
+		    
+		}
+            std::cout << "End of file\n";
         }
     fs.close();
 }
@@ -370,24 +445,16 @@ void run_handle (const char * filename)
 int main()
 {
 
-    std::cout << "sysTime_t       : " << std::dec << sizeof(sysTime_t         ) << '\n';
-    std::cout << "fileStatistics  : " << std::dec << sizeof(fileStatistics    ) << '\n';
-    std::cout << "ObjectHeaderBase: " << std::dec << sizeof(ObjectHeaderBase  ) << '\n';
-    std::cout << "ObjectHeader    : " << std::dec << sizeof(ObjectHeader      ) << '\n';
-    std::cout << "ObjectHeader2   : " << std::dec << sizeof(ObjectHeader2     ) << '\n';
-    std::cout << "LogContainer    : " << std::dec << sizeof(LogContainer      ) << '\n';
-    std::cout << "CanMessage      : " << std::dec << sizeof(CanMessage        ) << '\n';
-    std::cout << "CanMessage2     : " << std::dec << sizeof(CanMessage2       ) << '\n';
-    std::cout << "AppTrigger      : " << std::dec << sizeof(AppTrigger        ) << '\n';
-
     //  runfile("save.blf");
     //std::cout << "----------------------------------\n";
     //runfile("night.blf");
-    
+
     std::cout << "----------------------------------\n";
 
     //     run_handle("truck02.blf");
-    run_handle("b-874992_logfile008.blf");
+    //    run_handle("b-874992_logfile008.blf");
+
+    go_through_header("b-874992_logfile008.blf");
     
 
     std::cout << "----------------------------------\n";
