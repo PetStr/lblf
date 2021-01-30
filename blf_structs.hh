@@ -178,7 +178,7 @@ struct ObjectHeaderBase
     uint16_t headerSize;
     uint16_t headerVer;
     uint32_t objSize;
-    uint32_t objectType;
+    enum ObjectType objectType; //  : uint32_t;
 };
 
 
