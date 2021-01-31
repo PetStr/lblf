@@ -135,6 +135,33 @@ enum class ObjectType_e : uint32_t
 };
 
 
+enum class AppId_e : uint8_t
+{
+    UNKNOWN       = 0,
+    CANALYZER     = 1,
+    CANOE         = 2,
+    CANSTRESS     = 3,
+    CANLOG        = 4,
+    CANAPE        = 5,
+    CANCASEXLLOG  = 6,
+    VLCONFIG      = 7,
+    PORSCHELOGGER = 200
+};
+
+//For DriverOverrun.
+enum class BusType : uint32_t
+{
+    CAN      = 1,
+    LIN      = 5,
+    MOST     = 6,
+    FLEXRAY  = 7,
+    J1708    = 9,
+    ETHERNET = 10,
+    WLAN     = 13,
+    AFDX     = 14
+};
+
+
 #pragma pack(1)
 
 struct sysTime_t
@@ -154,7 +181,7 @@ struct fileStatistics
 {
     uint32_t FileSign;
     uint32_t StatSize;
-    uint8_t  AppId;
+    AppId_e AppId; //uint8_t
     uint8_t  AppMaj;
     uint8_t  AppMin;
     uint8_t  AppBuild;

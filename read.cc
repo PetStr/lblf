@@ -278,6 +278,33 @@ std::string print(ObjectType_e ot)
 }
 
 
+std::string print(AppId_e ai)
+{
+    switch (ai)
+        {
+        case AppId_e::UNKNOWN:
+            return "";
+        case AppId_e::CANALYZER:
+            return "CANALYZER";
+        case AppId_e::CANOE:
+            return "CANOE";
+        case AppId_e::CANSTRESS:
+            return "CANSTRESS";
+        case AppId_e::CANLOG:
+            return "CANLOG";
+        case AppId_e::CANAPE:
+            return "CANAPE";
+        case AppId_e::CANCASEXLLOG:
+            return "CANCASEXLLOG";
+        case AppId_e::VLCONFIG:
+            return "VLCONFIG";
+        case AppId_e::PORSCHELOGGER:
+            return "PORSCHELOGGER";
+        }
+    return "Undeclared AppId";
+}
+
+
 uint32_t fileLength(std::fstream &fs)
 {
     fs.seekg(0, fs.end);
@@ -337,7 +364,7 @@ void print(std::ostream &s, const fileStatistics &os)
     s << "os.FileSign           " << std::hex << static_cast<uint64_t>(os.FileSign) << '\n';
     s << "os.StatSize           " << static_cast<uint64_t>(os.StatSize);
     s << " dec: " << std::dec << static_cast<uint64_t>(os.StatSize) << '\n';
-    s << "os.AppId              " << static_cast<uint64_t>(os.AppId) << '\n';
+    s << "os.AppId              " << print(os.AppId) << '\n';
     s << "os.AppMaj             " << static_cast<uint64_t>(os.AppMaj) << '\n';
     s << "os.AppMin             " << static_cast<uint64_t>(os.AppMin) << '\n';
     s << "os.AppBuild           " << static_cast<uint64_t>(os.AppBuild) << '\n';
@@ -524,7 +551,6 @@ void current_position(std::ostream &s, const uint64_t pos)
 
 bool parse_container(std::fstream &fs, const LogContainer &lc)
 {
-
     uint32_t bytes_left_in_container = lc.unCompressedFileSize;
     bool run = true;
     while(run)
@@ -541,7 +567,6 @@ bool parse_container(std::fstream &fs, const LogContainer &lc)
             if(bytes_left_in_container <= 0)
                 run = false;
         }
-
     return true;
 }
 
@@ -617,7 +642,7 @@ void handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
                 }
             else
                 {
-                    std::cout << "LogContainer walk throu failed.\n";
+                    std::cout << "LogContainer walk through failed.\n";
                 }
         }
         break;
