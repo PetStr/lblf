@@ -13,8 +13,6 @@ const int32_t ObjectSignature = 0x4A424F4C; //LOBJ
 //Forward declaration.
 void handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb);
 
-
-
 std::string print(ObjectType_e ot)
 {
     switch (ot)
@@ -279,6 +277,7 @@ std::string print(ObjectType_e ot)
     return "missing Object Type";
 }
 
+
 uint32_t fileLength(std::fstream &fs)
 {
     fs.seekg(0, fs.end);
@@ -287,10 +286,11 @@ uint32_t fileLength(std::fstream &fs)
     return length;
 }
 
+
 void print(std::ostream &s, const sysTime_t &ts)
 {
     s << std::dec;
-    s << "year : " << (int)ts.year;
+    s << "year: " << (int)ts.year;
     s << " month: " << (int)ts.month;
     s << " dayOfWeek : " << (int)ts.dayOfWeek;
     s << " day :" << (int)ts.day;
@@ -300,6 +300,7 @@ void print(std::ostream &s, const sysTime_t &ts)
     s << " milliseconds :" << (int)ts.milliseconds;
     s << '\n';
 }
+
 
 bool read(std::fstream &fs, fileStatistics &os)
 {
@@ -330,6 +331,7 @@ bool read(std::fstream &fs, fileStatistics &os)
     return true;
 }
 
+
 void print(std::ostream &s, const fileStatistics &os)
 {
     s << "os.FileSign           " << std::hex << static_cast<uint64_t>(os.FileSign) << '\n';
@@ -354,17 +356,19 @@ void print(std::ostream &s, const fileStatistics &os)
     s << "os.fileSize_less115   " << static_cast<uint64_t>(os.fileSize_less115) << '\n';
 }
 
+
 void print(std::ostream &s, const ObjectHeaderBase &ohb)
 {
-    s << "ObjectHeaderBase: ";
+    s << "ObjectHeaderBase ";
     //s << "ObjSign " << std::hex << (int)ohb.ObjSign;
     //s << std::dec;
-    s << ", headerSize " << (int)ohb.headerSize;
+    s << " headerSize " << (int)ohb.headerSize;
     s << ", headerVer " << (int)ohb.headerVer;
     s << ", objSize " << (int)ohb.objSize;
     s << ", objectType " << print(ohb.objectType);
     s << '\n';
 }
+
 
 bool read(std::fstream &fs, ObjectHeaderBase &ohb)
 {
@@ -380,6 +384,7 @@ bool read(std::fstream &fs, ObjectHeaderBase &ohb)
     return true;
 }
 
+
 void print(std::ostream &s, const ObjectHeader2 &oh2)
 {
     s << "ObjectHeader2: ";
@@ -391,6 +396,7 @@ void print(std::ostream &s, const ObjectHeader2 &oh2)
     s << ", originalObjectTimeStamp " << (int)oh2.originalObjectTimeStamp;
     s << '\n';
 }
+
 
 bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
 {
@@ -404,6 +410,7 @@ bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
     return true;
 }
 
+
 void print(std::ostream &s, const LogContainer &lc)
 {
     s << "LogContainer : ";
@@ -412,6 +419,7 @@ void print(std::ostream &s, const LogContainer &lc)
     s << ", uncompressedFileSize: " << std::dec << (int)lc.unCompressedFileSize;
     s << '\n';
 }
+
 
 void print(std::ostream &s, const ObjectHeader &oh)
 {
@@ -422,6 +430,7 @@ void print(std::ostream &s, const ObjectHeader &oh)
     s << ", objectTimeStamp: " << std::dec << (int)oh.objectTimeStamp;
     s << '\n';
 }
+
 
 void print(std::ostream &s, const CanMessage &cm)
 {
@@ -437,6 +446,7 @@ void print(std::ostream &s, const CanMessage &cm)
     s << '\n';
 }
 
+
 void print(std::ostream &s, const CanOverload &co)
 {
     s << "CanOverload : ";
@@ -446,6 +456,7 @@ void print(std::ostream &s, const CanOverload &co)
     s << ", reservedCanOverloadFrame2: " << std::hex << (int)co.reservedCanOverloadFrame2;
     s << '\n';
 }
+
 
 void print(std::ostream &s, const CanMessage2 &cm2)
 {
@@ -461,6 +472,7 @@ void print(std::ostream &s, const CanMessage2 &cm2)
     s << '\n';
 }
 
+
 void print(std::ostream &s, const AppTrigger &at)
 {
     s << "Apptrigger: ";
@@ -473,12 +485,14 @@ void print(std::ostream &s, const AppTrigger &at)
     s << '\n';
 }
 
+
 template <typename type_data>
 bool read_template(std::fstream &fs, type_data &data)
 {
     fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
     return true;
 }
+
 
 void print(std::ostream &s, const CanError &cfe)
 {
@@ -499,7 +513,6 @@ void print(std::ostream &s, const CanError_short &cfe)
     s << ", length : " << (uint64_t)cfe.length;
     s << '\n';
 }
-
 
 
 void current_position(std::ostream &s, const uint64_t pos)
@@ -582,14 +595,12 @@ void handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
 
         case (ObjectType_e::APP_TRIGGER): //Handle apptrigger
         {
-            current_position(std::cout, fs.tellg());
             struct ObjectHeader oh;
             read_template(fs, oh);
             //print(std::cout, oh);
             struct AppTrigger ap;
-            current_position(std::cout, fs.tellg());
-            (read_template(fs, ap));
-            //  print(std::cout, ap);
+            read_template(fs, ap);
+            print(std::cout, ap);
         }
         break;
 
@@ -675,17 +686,11 @@ void go_through_file(const char * const filename)
 
             handle_ObjectType(fs, ohb);
         }
-
-
     fs.close();
 }
 
 int main()
 {
-
-    //  runfile("save.blf");
-    //std::cout << "----------------------------------\n";
-    //runfile("night.blf");
 
     std::cout << "----------------------------------\n";
 
