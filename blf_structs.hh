@@ -2,7 +2,7 @@
 #define BLF_STRUCTS_HH
 
 
-enum class ObjectType : uint32_t
+enum class ObjectType_e : uint32_t
 {
     UNKNOWN                       = 0,
     CAN_MESSAGE                   = 1,
@@ -178,7 +178,7 @@ struct ObjectHeaderBase
     uint16_t headerSize;
     uint16_t headerVer;
     uint32_t objSize;
-    enum ObjectType objectType; //  : uint32_t;
+    enum ObjectType_e objectType; //  : uint32_t;
 };
 
 
@@ -249,6 +249,13 @@ struct CanError
 };
 
 
+struct CanError_short
+{
+    uint16_t channel;
+    uint16_t length;
+};
+
+
 struct CanOverload
 {
     uint16_t channel;
@@ -280,13 +287,6 @@ struct AppTrigger
     uint32_t appSpecific2;
 };
 
-
-struct CanErrorFrame
-{
-    uint16_t channel;
-    uint16_t length;
-    uint32_t reservedCanErrorFrame;
-};
 
 #pragma pack()
 
