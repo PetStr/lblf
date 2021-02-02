@@ -2,6 +2,7 @@
 #include <fstream>
 #include <array>
 #include <iomanip>
+#include <vector>
 
 //hexdump -v -C -n 512 truck02.blf
 
@@ -301,7 +302,7 @@ std::string print(AppId_e ai)
         case AppId_e::PORSCHELOGGER:
             return "PORSCHELOGGER";
         }
-    return "Undeclared AppId";
+    return "Undeclared AppId: ";
 }
 
 
@@ -359,12 +360,33 @@ bool read(std::fstream &fs, fileStatistics &os)
 }
 
 
+bool read(std::fstream & fs, uint32_t length, std::vector<uint8_t> & data)
+{
+    for(uint32_t n = 0; n<length; n++)
+        {
+            uint8_t value;
+            fs.read((char *) &value, 1);
+            data.push_back(value);
+        }
+    return true;
+}
+
+
+bool read(std::fstream & fs, uint32_t length, std::string & data)
+{
+    data.resize(length);
+    fs.read(const_cast<char *>(data.data()), length);
+    return true;
+}
+
+
 void print(std::ostream &s, const fileStatistics &os)
 {
     s << "os.FileSign           " << std::hex << static_cast<uint64_t>(os.FileSign) << '\n';
     s << "os.StatSize           " << static_cast<uint64_t>(os.StatSize);
     s << " dec: " << std::dec << static_cast<uint64_t>(os.StatSize) << '\n';
-    s << "os.AppId              " << print(os.AppId) << '\n';
+    s << "os.AppId              " << print(os.AppId);
+    s << " " << static_cast<uint64_t> (os.AppId) << '\n';
     s << "os.AppMaj             " << static_cast<uint64_t>(os.AppMaj) << '\n';
     s << "os.AppMin             " << static_cast<uint64_t>(os.AppMin) << '\n';
     s << "os.AppBuild           " << static_cast<uint64_t>(os.AppBuild) << '\n';
@@ -402,6 +424,8 @@ bool read(std::fstream &fs, ObjectHeaderBase &ohb)
     fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
         {
+            std::cout << "Found not LOBJ: " << std::hex << (int) ohb.ObjSign;
+            std::cout << '\n';
             return false;
         }
     fs.read(reinterpret_cast<char *>(&ohb.headerSize), sizeof(ohb.headerSize));
@@ -466,10 +490,16 @@ void print(std::ostream &s, const CanMessage &cm)
     s << "channel: " << (int)cm.channel;
     s << ", flags: " << std::dec << (int)cm.flags;
     s << ", dlc: " << std::dec << (int)cm.dlc;
+    auto dlc = cm.dlc;
+    if(dlc > 8)
+        dlc = 8;
+    s << ", dlc: " << std::dec << (int)dlc;
     s << ", id: 0x" << std::hex << (int)cm.id;
     s << ", data: ";
-    for (int n = 0; n < cm.dlc; n++)
-        s << " " << std::hex << std::setfill('0') << std::setw(2) << (int)cm.data[n];
+    if(cm.dlc>8)
+
+        for (auto a : cm.data)
+            s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
     s << '\n';
 }
 
@@ -491,11 +521,15 @@ void print(std::ostream &s, const CanMessage2 &cm2)
     s << std::dec;
     s << "channel: " << (int)cm2.channel;
     s << ", flags: " << std::dec << (int)cm2.flags;
-    s << ", dlc: " << std::dec << (int)cm2.dlc;
+    auto dlc = cm2.dlc;
+    if(dlc > 8)
+        dlc = 8;
+    s << ", dlc: " << std::dec << dlc;
+    s << ", dlc: " << std::dec << cm2.dlc;
     s << ", id: 0x" << std::hex << (int)cm2.id;
     s << ", data: ";
-    for (int n = 0; n < cm2.dlc; n++)
-        s << " " << std::hex << std::setfill('0') << std::setw(2) << (int)cm2.data[n];
+    for(auto d : cm2.data)
+        s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) d;
     s << '\n';
 }
 
@@ -510,6 +544,24 @@ void print(std::ostream &s, const AppTrigger &at)
     s << ", flags: " << (uint64_t)at.flags;
     s << ", appSpecific2: " << (uint64_t)at.appSpecific2;
     s << '\n';
+}
+
+
+void print(std::ostream &s, const AppText &at)
+{
+    s << "AppText: ";
+    s << std::dec;
+    s << "mSource: " << (uint64_t)at.mSource ;
+    s << ", mTextLength: " << (uint64_t)at.mTextLength;
+    s << '\n';
+}
+
+
+void print(std::ostream &s, const reserved_5 &r)
+{
+    s << "Reserved_5: ";
+    for(auto a : r.data)
+        s << " 0x" << std::hex << a;
 }
 
 
@@ -571,8 +623,129 @@ bool parse_container(std::fstream &fs, const LogContainer &lc)
 }
 
 
+bool read_head(std::fstream &fs)
+{
+    struct ObjectHeaderBase ohb;
+    if (read(fs, ohb))
+        print(std::cout, ohb);
+    else
+        {
+            std::cout << "Error reading ObjectHeaderBase\n";
+            return false;
+        }
+
+    auto bytes_to_jump = 0;
+    if(ohb.headerSize == 16)
+        bytes_to_jump = ohb.objSize - ohb.headerSize;
+
+    if(ohb.headerSize == 32)
+        bytes_to_jump = ohb.objSize - ohb.headerSize + 16;
+
+    fs.seekg(bytes_to_jump,std::ios_base::cur);
+    std::cout << print(ohb.objectType) << " " << std::dec << (int) bytes_to_jump << '\n';
+    return true;
+}
+
+
+bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
+{
+    uint32_t bytes_left_in_container = lc.unCompressedFileSize;
+    bool run = true;
+    while(run)
+        {
+
+            struct ObjectHeaderBase ohb;
+            if (read (fs, ohb))
+                print(std::cout, ohb);
+            else
+                {
+                    std::cout << "Error reading ObjectHeaderBase\n";
+                    return false;
+                }
+
+            auto bytes_to_jump = 0;
+            if(ohb.headerSize == 16)
+                bytes_to_jump = ohb.objSize - ohb.headerSize;
+
+            if(ohb.headerSize == 32)
+                bytes_to_jump = ohb.objSize - ohb.headerSize + 16;
+
+            fs.seekg(bytes_to_jump,std::ios_base::cur);
+            std::cout << "Bytes_to_jump: " << bytes_to_jump << " current position " << std::hex << fs.tellg() << '\n';
+            std::cout << print(ohb.objectType) << " " << std::dec << (int) bytes_to_jump << '\n';
+
+            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
+            std::cout << "bytes left: " << std::dec << bytes_left_in_container << '\n';
+            if(bytes_left_in_container <= 0)
+                run = false;
+        }
+    return true;
+}
+
+
+void go_through_file_header_base(const char * const filename)
+{
+    std::cout << "Opening file: " << filename;
+    std::fstream fs(filename, std::fstream::in | std::fstream::binary);
+    if (fs.fail())
+        {
+            std::cout << " ";
+            std::cout << "File open failed, Exiting program\n";
+            exit( static_cast<uint8_t> (exit_codes::UNABLE_TO_OPEN_FILE) );
+        }
+    else
+        {
+            std::cout << " ** SUCCESS **\n";
+        }
+
+    auto filelength = fileLength(fs);
+
+    if (fs)
+        {
+            struct fileStatistics fileStat;
+            if (read(fs, fileStat))
+                {
+                    print(std::cout, fileStat);
+                }
+            else
+                {
+                    std::cout << "Error file is not a BLF file\n";
+                    exit(static_cast<uint8_t> (exit_codes::NOT_A_VALID_BLF_FILE));
+                }
+        }
+
+    while (!fs.eof())
+        {
+            if((filelength - fs.tellg() == 0))
+                break;
+            std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
+            struct ObjectHeaderBase ohb;
+            if (read(fs, ohb))
+                print(std::cout, ohb);
+            else
+                {
+                    std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
+                    exit(-1);
+                }
+
+            if(ohb.objectType == ObjectType_e::LOG_CONTAINER)
+                {
+                    struct LogContainer lc;
+                    read(fs,lc,ohb);
+                    parse_logcontainer_base(fs, lc);
+                }
+            else
+                read_head(fs);
+        }
+    fs.close();
+}
+
+
+
+
 void handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
 {
+    const auto payload_size = ohb.objSize-ohb.headerSize;
     switch (ohb.objectType)
         {
         case (ObjectType_e::CAN_MESSAGE): //read Can message;
@@ -580,9 +753,12 @@ void handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
             struct ObjectHeader oh;
             (read_template(fs, oh));
             //	  print(std::cout, oh);
-            struct CanMessage cm;
-            if (read_template(fs, cm))
-                print(std::cout, cm);
+            if(payload_size == sizeof(CanMessage))
+                {
+                    struct CanMessage cm;
+                    if (read_template(fs, cm))
+                        print(std::cout, cm);
+                }
         }
         break;
 
@@ -591,17 +767,22 @@ void handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
             struct ObjectHeader oh;
             read_template(fs, oh);
             print(std::cout, oh);
-            if(ohb.objSize-ohb.headerSize == 4)
+            switch(payload_size)
+                {
+                case sizeof(CanError_short) :
                 {
                     struct CanError_short cef;
                     read_template(fs,cef);
                     print(std::cout, cef);
+                    break;
                 }
-            else
+                case sizeof(CanError) :
                 {
                     struct CanError cef;
                     read_template(fs, cef);
                     print(std::cout, cef);
+                    break;
+                }
                 }
         }
         break;
@@ -652,11 +833,40 @@ void handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
             struct ObjectHeader oh;
             (read_template(fs, oh));
             //	  print(std::cout, oh);
-            struct CanMessage cm2;
+            struct CanMessage2 cm2;
             if (read_template(fs, cm2))
                 print(std::cout, cm2);
         }
         break;
+
+        case (ObjectType_e::APP_TEXT):
+        {
+            struct ObjectHeader oh;
+            read_template(fs, oh);
+            struct AppText ap;
+            read_template(fs,ap);
+            print(std::cout,ap);
+            //std::vector<uint8_t> data;
+            std::string data;
+            read(fs, ap.mTextLength, data);
+            //std::cout << "Length: " << data.size() << '\n';
+            //for (auto i : data)
+            //    std::cout << static_cast<int> (i) << ' ';
+            std::cout << "Sträng: " << data << '\n';
+        }
+        break;
+
+        case (ObjectType_e::reserved_5):
+        {
+            std::cout << "sizeof (reserved5) " << sizeof(reserved_5) << '\n';
+            struct ObjectHeader oh;
+            read_template(fs, oh);
+            struct reserved_5 r5;
+            read_template(fs,r5);
+            print(std::cout, r5);
+        }
+        break;
+
 
         default:
             std::cout << "New ObjectType: " << (int)ohb.objectType << '\n';
@@ -675,7 +885,7 @@ void go_through_file(const char * const filename)
         {
             std::cout << " ";
             std::cout << "File open failed, Exiting program\n";
-            exit(-1);
+            exit( static_cast<uint8_t> (exit_codes::UNABLE_TO_OPEN_FILE) );
         }
     else
         {
@@ -694,7 +904,7 @@ void go_through_file(const char * const filename)
             else
                 {
                     std::cout << "Error file is not a BLF file\n";
-                    exit(-1);
+                    exit(static_cast<uint8_t> (exit_codes::NOT_A_VALID_BLF_FILE));
                 }
         }
 
@@ -707,23 +917,42 @@ void go_through_file(const char * const filename)
             if (read(fs, ohb))
                 print(std::cout, ohb);
             else
-                exit(-1);
+                {
+                    std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
+                    exit(-1);
+                }
 
             handle_ObjectType(fs, ohb);
         }
     fs.close();
 }
 
-int main()
+
+int main(int argc, char* argv[])
 {
 
-    std::cout << "----------------------------------\n";
+    std::cout << "LogContainer    : " << std::dec << sizeof(LogContainer      ) << '\n';
+    std::cout << "CanMessage      : " << std::dec << sizeof(CanMessage        ) << '\n';
+    std::cout << "CanMessage2     : " << std::dec << sizeof(CanMessage2       ) << '\n';
+    std::cout << "AppTrigger      : " << std::dec << sizeof(AppTrigger        ) << '\n';
 
-    //     run_handle("truck02.blf");
-    //    run_handle("b-874992_logfile008.blf");
+    std::cout << "ObjectHeader      : " << std::dec << sizeof(ObjectHeader        ) << '\n';
+    std::cout << "ObjectHeaderBase  : " << std::dec << sizeof(ObjectHeaderBase      ) << '\n';
+    
 
-    go_through_file("zuf016.blf");
 
-    std::cout << "----------------------------------\n";
-    //run_handle("truck03.blf");
+    std::cout << "----- START OF OUTPUT -----------------------------\n";
+
+    if(argc > 1)
+        {
+            //go_through_file( argv[1] );
+            go_through_file_header_base ( argv[1]  );
+        }
+    else
+        {
+            std::cout << "run blf evaluation: " << argv[0] << " filname.blf\n";
+        }
+
+    std::cout << "----- END OF OUTPUT -----------------------------\n";
+
 }

@@ -2,6 +2,13 @@
 #define BLF_STRUCTS_HH
 
 
+enum class exit_codes : uint8_t
+{
+    EXITING_SUCCESS,
+    UNABLE_TO_OPEN_FILE,
+    NOT_A_VALID_BLF_FILE
+};
+
 enum class ObjectType_e : uint32_t
 {
     UNKNOWN                       = 0,
@@ -147,6 +154,7 @@ enum class AppId_e : uint8_t
     VLCONFIG      = 7,
     PORSCHELOGGER = 200
 };
+
 
 //For DriverOverrun.
 enum class BusType : uint32_t
@@ -314,6 +322,19 @@ struct AppTrigger
     uint32_t appSpecific2;
 };
 
+struct AppText
+{
+    uint32_t mSource;
+    uint32_t reserved;
+    uint32_t mTextLength;
+    char *mText;
+};
+
+
+struct reserved_5
+{
+    std::array<uint32_t, 6> data {};
+};
 
 #pragma pack()
 
