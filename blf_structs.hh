@@ -6,7 +6,11 @@ enum class exit_codes : uint8_t
 {
     EXITING_SUCCESS,
     UNABLE_TO_OPEN_FILE,
-    NOT_A_VALID_BLF_FILE
+    NOT_A_VALID_BLF_FILE,
+    CAN_MESSAGE_INVALID_LENGTH,
+    LOGCONTAINER_WALK_THROUGH_FAIL,
+    UNHANDLED_OBJECT_TYPE,
+    UNABLE_TO_READ_OBJECT_HEADER_BASE
 };
 
 enum class ObjectType_e : uint32_t
@@ -15,6 +19,7 @@ enum class ObjectType_e : uint32_t
     CAN_MESSAGE                   = 1,
     CAN_ERROR                     = 2,
     CAN_OVERLOAD                  = 3,
+    CAN_STATISTIC                 = 4,
     APP_TRIGGER                   = 5,
     ENV_INTEGER                   = 6,
     ENV_DOUBLE                    = 7,
