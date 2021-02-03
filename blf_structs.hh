@@ -2,7 +2,7 @@
 #define BLF_STRUCTS_HH
 
 
-enum class exit_codes : uint8_t
+enum class exit_codes : uint32_t
 {
     EXITING_SUCCESS,
     UNABLE_TO_OPEN_FILE,
@@ -12,6 +12,7 @@ enum class exit_codes : uint8_t
     UNHANDLED_OBJECT_TYPE,
     UNABLE_TO_READ_OBJECT_HEADER_BASE
 };
+
 
 enum class ObjectType_e : uint32_t
 {
@@ -192,7 +193,7 @@ struct sysTime_t
 
 struct fileStatistics
 {
-    uint32_t FileSign;
+    uint32_t FileSign; //LOGG
     uint32_t StatSize;
     AppId_e AppId; //uint8_t
     uint8_t  AppMaj;
@@ -214,7 +215,7 @@ struct fileStatistics
 
 struct ObjectHeaderBase
 {
-    uint32_t ObjSign;
+    uint32_t ObjSign; //LOBJ
     uint16_t headerSize;
     uint16_t headerVer;
     uint32_t objSize;
