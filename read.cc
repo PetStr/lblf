@@ -497,9 +497,7 @@ void print(std::ostream &s, const CanMessage &cm)
     s << ", dlc: " << std::dec << (int)dlc;
     s << ", id: 0x" << std::hex << (int)cm.id;
     s << ", data: ";
-    if(cm.dlc>8)
-
-        for (auto a : cm.data)
+           for (auto a : cm.data)
             s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
     s << '\n';
 }
@@ -675,7 +673,7 @@ bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
 
             fs.seekg(bytes_to_jump,std::ios_base::cur);
             //std::cout << "Bytes_to_jump: " << bytes_to_jump << " current position " << std::hex << fs.tellg() << '\n';
-            std::cout << print(ohb.objectType) << " " << static_cast<int> (ohb.objectType) << " " << std::dec << (int) bytes_to_jump << '\n';
+            std::cout << print(ohb.objectType) << "(" << static_cast<int> (ohb.objectType) << ") " << std::dec << (int) bytes_to_jump << '\n';
 
             bytes_left_in_container = bytes_left_in_container - ohb.objSize;
             //std::cout << "bytes left: " << std::dec << bytes_left_in_container << '\n';
@@ -956,8 +954,8 @@ int main(int argc, char* argv[])
 
     if(argc > 1)
         {
-            //go_through_file( argv[1] );
-            go_through_file_header_base ( argv[1] );
+            go_through_file( argv[1] );
+            //go_through_file_header_base ( argv[1] );
         }
     else
         {
