@@ -483,3 +483,24 @@ void print(std::ostream &s, const reserved_5 &r)
     for(auto a : r.data)
         s << " 0x" << std::hex << a;
 }
+
+
+void print(std::ostream &s, const CanError &cfe)
+{
+    s << "CanError: ";
+    s << std::dec;
+    s << ", channel : " << (uint64_t)cfe.channel;
+    s << ", length : " << (uint64_t)cfe.length;
+    s << ", reservedCanErrorFrame : " << (uint64_t)cfe.reservedCanErrorFrame;
+    s << '\n';
+}
+
+
+void print(std::ostream &s, const CanError_short &cfe)
+{
+    s << "CanError_short: ";
+    s << std::dec;
+    s << ", channel : " << (uint64_t)cfe.channel;
+    s << ", length : " << (uint64_t)cfe.length;
+    s << '\n';
+}

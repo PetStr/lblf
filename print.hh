@@ -24,5 +24,7 @@ void print(std::ostream &s, const CanMessage2 &cm2);
 void print(std::ostream &s, const AppTrigger &at);
 void print(std::ostream &s, const AppText &at);
 void print(std::ostream &s, const reserved_5 &r);
+void print(std::ostream &s, const CanError &cfe);
+void print(std::ostream &s, const CanError_short &cfe);
 
 #endif

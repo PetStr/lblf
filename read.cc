@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <vector>
 
+#include <zlib.h>
+
 //hexdump -v -C -n 512 truck02.blf
 
 #include "blf_structs.hh"
@@ -114,26 +116,6 @@ bool read_template(std::fstream &fs, type_data &data)
 }
 
 
-void print(std::ostream &s, const CanError &cfe)
-{
-    s << "CanError: ";
-    s << std::dec;
-    s << ", channel : " << (uint64_t)cfe.channel;
-    s << ", length : " << (uint64_t)cfe.length;
-    s << ", reservedCanErrorFrame : " << (uint64_t)cfe.reservedCanErrorFrame;
-    s << '\n';
-}
-
-
-void print(std::ostream &s, const CanError_short &cfe)
-{
-    s << "CanError_short: ";
-    s << std::dec;
-    s << ", channel : " << (uint64_t)cfe.channel;
-    s << ", length : " << (uint64_t)cfe.length;
-    s << '\n';
-}
-
 
 void current_position(std::ostream &s, const uint64_t pos)
 {
@@ -142,11 +124,30 @@ void current_position(std::ostream &s, const uint64_t pos)
 }
 
 
-bool parse_container(std::fstream &fs, const LogContainer &lc)
+bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
+{
+    uLong bytes_left_in_container = lc.unCompressedFileSize;
+    std::vector<uint8_t> compressedFile {};
+    std::vector<uint8_t> uncompressedFile {};
+    auto compressedFileSize = ohb.objSize - ohb.headerSize;
+    compressedFile.resize(compressedFileSize);
+    fs.read(reinterpret_cast<char *>(compressedFile.data()), compressedFileSize);
+    uncompressedFile.resize(bytes_left_in_container);
+    int retVal = ::uncompress(
+                reinterpret_cast<Byte *>(uncompressedFile.data()),
+                &bytes_left_in_container,
+                reinterpret_cast<Byte *>(compressedFile.data()),
+                static_cast<uLong>(compressedFileSize));
+
+    return true;
+}
+
+
+bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
 {
     uint32_t bytes_left_in_container = lc.unCompressedFileSize;
     bool run = true;
-    while(run)
+   while(run)
         {
             struct ObjectHeaderBase ohb;
             if (read(fs, ohb))
@@ -236,7 +237,8 @@ void go_through_file_header_base(const char * const filename)
         {
             std::cout << " ";
             std::cout << "File open failed, Exiting program\n";
-            exit( static_cast<uint8_t> (exit_codes::UNABLE_TO_OPEN_FILE) );
+            return;
+            //exit( static_cast<uint8_t> (exit_codes::UNABLE_TO_OPEN_FILE) );
         }
     else
         {
@@ -255,7 +257,8 @@ void go_through_file_header_base(const char * const filename)
             else
                 {
                     std::cout << "Error file is not a BLF file\n";
-                    exit(static_cast<uint8_t> (exit_codes::NOT_A_VALID_BLF_FILE));
+                    return;
+                    //exit(static_cast<uint8_t> (exit_codes::NOT_A_VALID_BLF_FILE));
                 }
         }
 
@@ -366,8 +369,10 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
             if (read(fs, lc, ohb))
                 print(std::cout, lc);
 
+        if(lc.compressionMethod == compressionMethod_e::uncompressed)
+        {
             //Lets work through the logcontainer.
-            if(parse_container(fs, lc))
+            if(parse_container_uncompressed(fs, lc))
                 {
                     std::cout << "LogContainer handled.\n";
                 }
@@ -376,6 +381,20 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
                     std::cout << "LogContainer walk through failed.\n";
                     return exit_codes::LOGCONTAINER_WALK_THROUGH_FAIL;
                 }
+        }
+        if(lc.compressionMethod == compressionMethod_e::zlib)
+        {
+            if(parse_container_compressed(fs, lc, ohb))
+                {
+                    std::cout << "LogContainer handled.\n";
+                }
+            else
+                {
+                    std::cout << "LogContainer walk through failed.\n";
+                    return exit_codes::LOGCONTAINER_WALK_THROUGH_FAIL;
+                }
+        }       
+
         }
         break;
 
@@ -488,9 +507,9 @@ int main(int argc, char* argv[])
         std::cout << "CanMessage      : " << std::dec << sizeof(CanMessage        ) << '\n';
         std::cout << "CanMessage2     : " << std::dec << sizeof(CanMessage2       ) << '\n';
         std::cout << "AppTrigger      : " << std::dec << sizeof(AppTrigger        ) << '\n';
-        std::cout << "ObjectHeader      : " << std::dec << sizeof(ObjectHeader        ) << '\n';
-        std::cout << "ObjectHeader2      : " << std::dec << sizeof(ObjectHeader2        ) << '\n';
-        std::cout << "ObjectHeaderBase  : " << std::dec << sizeof(ObjectHeaderBase      ) << '\n';
+        std::cout << "ObjectHeader      : " << std::dec << sizeof(ObjectHeader    ) << '\n';
+        std::cout << "ObjectHeader2      : " << std::dec << sizeof(ObjectHeader2  ) << '\n';
+        std::cout << "ObjectHeaderBase  : " << std::dec << sizeof(ObjectHeaderBase) << '\n';
       */
 
 
@@ -498,8 +517,8 @@ int main(int argc, char* argv[])
 
     if(argc > 1)
         {
-            //go_through_file( argv[1] );
-            go_through_file_header_base ( argv[1] );
+            go_through_file( argv[1] );
+            //go_through_file_header_base ( argv[1] );
         }
     else
         {
