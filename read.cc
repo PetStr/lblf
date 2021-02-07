@@ -141,7 +141,7 @@ bool read_template(std::fstream &fs, type_data &data)
 template <typename type_data>
 bool read_template(const uint8_t * indata_array, type_data &data)
 {
-    std::memcpy(data, indata_array , sizeof(type_data));
+    std::memcpy(reinterpret_cast<char *> (&data), indata_array , sizeof(type_data));
     return true;
 }
 
@@ -183,7 +183,22 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
                 exit(-1);
 
             uncompresseddata = uncompresseddata + sizeof(ohb);
+
+            struct ObjectHeader oh;
+            read_template(uncompresseddata, oh);
+            uncompresseddata = uncompresseddata + sizeof(oh);
+            print(std::cout, oh);
+            
+            struct CanMessage cm;
+            read_template(uncompresseddata, cm);
+            uncompresseddata = uncompresseddata + sizeof(cm);
+            print(std::cout, cm);
+
+
+
 /*
+
+
             handle_ObjectType(fs, ohb);
             bytes_left_in_container = bytes_left_in_container - ohb.objSize;
             //std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
