@@ -246,7 +246,7 @@ struct ObjectHeader2
 };
 
 
-enum compressionMethod_e : int16_t
+enum class compressionMethod_e : int16_t
 {
     uncompressed = 0x00,
     zlib = 0x02

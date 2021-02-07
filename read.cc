@@ -96,7 +96,7 @@ bool read(std::fstream &fs, ObjectHeaderBase &ohb)
 }
 
 
-bool read(const uint8_t * data, ObjectHeaderBase &ohb)
+bool read(uint8_t * data, ObjectHeaderBase &ohb)
 {
     std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -121,7 +121,7 @@ bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
 {
     fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
-    if (lc.compressionMethod == 2)
+    if (lc.compressionMethod == compressionMethod_e::uncompressed)
         {
             lc.unCompressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - sizeof(lc.reserv1) - sizeof(lc.reserv2) - sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
         }
@@ -141,7 +141,7 @@ bool read_template(std::fstream &fs, type_data &data)
 template <typename type_data>
 bool read_template(const uint8_t * indata_array, type_data &data)
 {
-    std::memcpy(reinterpret_cast<char *> (&data), indata_array , sizeof(type_data));
+    std::memcpy(reinterpret_cast<char *> (&data), indata_array, sizeof(type_data));
     return true;
 }
 
@@ -155,7 +155,7 @@ void current_position(std::ostream &s, const uint64_t pos)
 
 bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
 {
-    std::cout << __FUNCTION__ << '\n';
+    std::cout << "Entering: " << __FUNCTION__ << '\n';
     uLong bytes_left_in_container = lc.unCompressedFileSize;
     std::vector<uint8_t> compressedFile {};
     std::vector<uint8_t> uncompressedFile {};
@@ -164,16 +164,19 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
     fs.read(reinterpret_cast<char *>(compressedFile.data()), compressedFileSize);
     uncompressedFile.resize(bytes_left_in_container);
     int retVal = ::uncompress(
-                reinterpret_cast<Byte *>(uncompressedFile.data()),
-                &bytes_left_in_container,
-                reinterpret_cast<Byte *>(compressedFile.data()),
-                static_cast<uLong>(compressedFileSize));
-    
+                     reinterpret_cast<Byte *>(uncompressedFile.data()),
+                     &bytes_left_in_container,
+                     reinterpret_cast<Byte *>(compressedFile.data()),
+                     static_cast<uLong>(compressedFileSize));
+
+    std::cout << __FUNCTION__ << " compressedFileSize; " << compressedFileSize << '\n';
+    std::cout << __FUNCTION__ << " lc.unCompressedFileSize; " << lc.unCompressedFileSize << '\n';
+    std::cout << __FUNCTION__ << ": size of uncompressedFile: " << uncompressedFile.size() << '\n';
 
     uint8_t * uncompresseddata = uncompressedFile.data();
     bool run = true;
     while(run)
-        {  
+        {
             struct ObjectHeaderBase ohb;
             if (read(uncompresseddata, ohb))
                 {
@@ -182,31 +185,31 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
             else
                 exit(-1);
 
+
+            std::cout << __FUNCTION__ << ": data: " << (int) uncompresseddata[0] << ' ' << uncompresseddata[0] << '\n';
+
             uncompresseddata = uncompresseddata + sizeof(ohb);
+
+            std::cout << __FUNCTION__ << ": data: " << (int) uncompresseddata[0] << ' ' << uncompresseddata[0] << '\n';
 
             struct ObjectHeader oh;
             read_template(uncompresseddata, oh);
             uncompresseddata = uncompresseddata + sizeof(oh);
             print(std::cout, oh);
-            
+
             struct CanMessage cm;
             read_template(uncompresseddata, cm);
             uncompresseddata = uncompresseddata + sizeof(cm);
             print(std::cout, cm);
 
-
-
-/*
-
-
-            handle_ObjectType(fs, ohb);
-            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
-            //std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
-            if(bytes_left_in_container <= 0)
-                run = false;
-  */      
+            /*
+                        handle_ObjectType(fs, ohb);
+                        bytes_left_in_container = bytes_left_in_container - ohb.objSize;
+                        //std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
+                        if(bytes_left_in_container <= 0)
+                            run = false;
+              */
         }
-
     return true;
 }
 
@@ -215,7 +218,7 @@ bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
 {
     uint32_t bytes_left_in_container = lc.unCompressedFileSize;
     bool run = true;
-   while(run)
+    while(run)
         {
             struct ObjectHeaderBase ohb;
             if (read(fs, ohb))
@@ -437,31 +440,31 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
             if (read(fs, lc, ohb))
                 print(std::cout, lc);
 
-        if(lc.compressionMethod == compressionMethod_e::uncompressed)
-        {
-            //Lets work through the logcontainer.
-            if(parse_container_uncompressed(fs, lc))
+            if(lc.compressionMethod == compressionMethod_e::uncompressed)
                 {
-                    std::cout << "LogContainer handled.\n";
+                    //Lets work through the logcontainer.
+                    if(parse_container_uncompressed(fs, lc))
+                        {
+                            std::cout << "LogContainer handled.\n";
+                        }
+                    else
+                        {
+                            std::cout << "LogContainer walk through failed.\n";
+                            return exit_codes::LOGCONTAINER_WALK_THROUGH_FAIL;
+                        }
                 }
-            else
+            if(lc.compressionMethod == compressionMethod_e::zlib)
                 {
-                    std::cout << "LogContainer walk through failed.\n";
-                    return exit_codes::LOGCONTAINER_WALK_THROUGH_FAIL;
+                    if(parse_container_compressed(fs, lc, ohb))
+                        {
+                            std::cout << "LogContainer handled.\n";
+                        }
+                    else
+                        {
+                            std::cout << "LogContainer walk through failed.\n";
+                            return exit_codes::LOGCONTAINER_WALK_THROUGH_FAIL;
+                        }
                 }
-        }
-        if(lc.compressionMethod == compressionMethod_e::zlib)
-        {
-            if(parse_container_compressed(fs, lc, ohb))
-                {
-                    std::cout << "LogContainer handled.\n";
-                }
-            else
-                {
-                    std::cout << "LogContainer walk through failed.\n";
-                    return exit_codes::LOGCONTAINER_WALK_THROUGH_FAIL;
-                }
-        }       
 
         }
         break;

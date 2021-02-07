@@ -317,6 +317,20 @@ std::string print(AppId_e ai)
 }
 
 
+std::string print(compressionMethod_e cm)
+{
+    switch (cm)
+        {
+        case compressionMethod_e::uncompressed:
+            return "Uncompressed";
+        case compressionMethod_e::zlib:
+            return "zlib";
+
+        }
+    return "Undeclared AppId: ";
+}
+
+
 void print(std::ostream &s, const sysTime_t &ts)
 {
     s << std::dec;
@@ -388,7 +402,7 @@ void print(std::ostream &s, const LogContainer &lc)
 {
     s << "LogContainer : ";
     s << std::dec;
-    s << "compressionMethod: " << std::hex << (int)lc.compressionMethod;
+    s << "compressionMethod: " << print(lc.compressionMethod);
     s << ", uncompressedFileSize: " << std::dec << (int)lc.unCompressedFileSize;
     s << '\n';
 }
