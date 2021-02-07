@@ -399,8 +399,8 @@ void print(std::ostream &s, const ObjectHeader &oh)
     s << "ObjectHeader : ";
     s << std::dec;
     s << "objectFlag: " << (int)oh.clientIndex;
-    s << ", objectVersion: " << std::dec << (int)oh.objectVersion;
-    s << ", objectTimeStamp: " << std::dec << (int)oh.objectTimeStamp;
+    s << ", objectVersion: " << std::dec << oh.objectVersion;
+    s << ", objectTimeStamp: " << std::dec << oh.objectTimeStamp;
     s << '\n';
 }
 

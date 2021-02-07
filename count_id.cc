@@ -3,13 +3,14 @@
  * Contact: petter.strandh@gmail.com
  */
 
-//g++ count_id.cc -o count_id -Wall -Wextra -Wpedantic -Wno-switch
+//g++ count_id.cc -o count_id -Wall -Wextra -Wpedantic -Wno-switch -O0 -g
 
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <cstring>
 
 #include "blf_structs.hh"
 #include "count_id.hh"
@@ -33,7 +34,7 @@ struct can_counter_record
 
 //Global
 std::vector <can_counter_record> id_data;
-
+uint32_t can_frame_counter;
 
 
 struct dbc_id_data
@@ -86,25 +87,6 @@ void can_id_count(std::vector<can_counter_record> & id_record, unsigned int & ca
             can_id_data.hit_counter = 1;
             id_record.push_back(can_id_data);
         }
-}
-
-
-void handle_can_frame(const struct CanMessage &obj, std::vector <can_counter_record> & id_data )
-{
-
-    unsigned int can_id = obj.id;
-    unsigned char channel = obj.channel;
-
-    can_id_count(id_data, can_id, channel);
-}
-
-
-void handle_can_frame(const struct CanMessage2 &obj, std::vector <can_counter_record> & id_data)
-{
-    unsigned int can_id = obj.id;
-    unsigned char channel = obj.channel;
-
-    can_id_count(id_data, can_id, channel);
 }
 
 
@@ -279,6 +261,28 @@ bool read(std::fstream &fs, ObjectHeaderBase &ohb)
 }
 
 
+bool read(const uint8_t * data, ObjectHeaderBase &ohb)
+{
+    std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
+    if (ohb.ObjSign != ObjectSignature)
+        {
+            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
+            std::cout << '\n';
+            return false;
+        }
+    data = data + sizeof(ohb.ObjSign);
+    std::memcpy(&ohb.headerSize, data, sizeof(ohb.headerSize));
+    data = data + sizeof(ohb.headerSize);
+    std::memcpy(&ohb.headerVer, data, sizeof(ohb.headerVer));
+    data = data + sizeof(ohb.headerVer);
+    std::memcpy(&ohb.objSize, data, sizeof(ohb.objSize));
+    data = data + sizeof(ohb.objSize);
+    std::memcpy(&ohb.objectType, data, sizeof(ohb.objectType));
+    return true;
+}
+
+
+
 bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
 {
     fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
@@ -329,27 +333,23 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
     const auto payload_size = ohb.objSize-ohb.headerSize;
     switch (ohb.objectType)
         {
-
         case (ObjectType_e::LOG_CONTAINER): //Get Logcontainer
         {
             struct LogContainer lc;
             read(fs, lc, ohb);
- 
             if(lc.compressionMethod == compressionMethod_e::uncompressed)
-            {
-            //Lets work through the logcontainer.
-                if(parse_container_uncompressed(fs, lc) == exit_codes::EXITING_SUCCESS)
                 {
-                    std::cout << "LogContainer handled.\n";
+                    //Lets work through the logcontainer.
+                    if(parse_container_uncompressed(fs, lc) == exit_codes::EXITING_SUCCESS)
+                        {
+                            std::cout << "LogContainer handled.\n";
+                        }
+                    else
+                        {
+                            std::cout << "LogContainer walk through failed.\n";
+                            return exit_codes::LOGCONTAINER_WALK_THROUGH_FAIL;
+                        }
                 }
-            else
-                {
-                    std::cout << "LogContainer walk through failed.\n";
-                    return exit_codes::LOGCONTAINER_WALK_THROUGH_FAIL;
-                }
-        }
-            
-
         }
         break;
 
@@ -357,15 +357,15 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
         {
             struct ObjectHeader oh;
             read_template(fs, oh);
-
             if(payload_size == sizeof(CanMessage))
                 {
+                    can_frame_counter++;
                     struct CanMessage cm;
                     if (read_template(fs, cm))
                         {
                             unsigned int can_id = cm.id;
                             unsigned char channel = cm.channel;
-                            can_id_count( id_data, can_id, channel);
+                            can_id_count(id_data, can_id, channel);
                         }
                 }
             else
@@ -377,6 +377,7 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
 
         case (ObjectType_e::CAN_MESSAGE2):
         {
+            can_frame_counter++;
             struct ObjectHeader oh;
             read_template(fs, oh);
             struct CanMessage2 cm2;
@@ -384,13 +385,12 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
                 {
                     unsigned int can_id = cm2.id;
                     unsigned char channel = cm2.channel;
-                    can_id_count( id_data, can_id, channel);
+                    can_id_count(id_data, can_id, channel);
                 }
             else
                 {
                     return exit_codes::CAN_MESSAGE_INVALID_LENGTH;
                 }
-
         }
         break;
 
@@ -406,12 +406,8 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
             fs.seekg(bytes_to_jump,std::ios_base::cur);
         }
         }
-
     return exit_codes::EXITING_SUCCESS;
 }
-
-
-
 
 
 exit_codes go_through_blf_file(const char * const filename)
@@ -487,12 +483,13 @@ int main(int argc, char *argv[])
                 std::cout << "Success reading: " << DBC[n].file_name << '\n';
         }
 
+    can_frame_counter = 0;
     go_through_blf_file(filename);
 
     print_frameid_dbcdata(std::cout, id_data, dbc_data);
     std::cout << "Number of dbc frames: " << dbc_data.size() << '\n';
 
-    // std::cout << "Number of different frames: " << id_data.size() <<
-    //           " total number of frames in blf:" << can_frame_counter  << '\n';
+    std::cout << "Number of different frames: " << id_data.size() <<
+              " total number of frames in blf:" << can_frame_counter  << '\n';
     return 0;
 }

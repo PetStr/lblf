@@ -3,6 +3,7 @@
 #include <array>
 #include <iomanip>
 #include <vector>
+#include <cstring>
 
 #include <zlib.h>
 
@@ -95,6 +96,27 @@ bool read(std::fstream &fs, ObjectHeaderBase &ohb)
 }
 
 
+bool read(const uint8_t * data, ObjectHeaderBase &ohb)
+{
+    std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
+    if (ohb.ObjSign != ObjectSignature)
+        {
+            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
+            std::cout << '\n';
+            return false;
+        }
+    data = data + sizeof(ohb.ObjSign);
+    std::memcpy(&ohb.headerSize, data, sizeof(ohb.headerSize));
+    data = data + sizeof(ohb.headerSize);
+    std::memcpy(&ohb.headerVer, data, sizeof(ohb.headerVer));
+    data = data + sizeof(ohb.headerVer);
+    std::memcpy(&ohb.objSize, data, sizeof(ohb.objSize));
+    data = data + sizeof(ohb.objSize);
+    std::memcpy(&ohb.objectType, data, sizeof(ohb.objectType));
+    return true;
+}
+
+
 bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
 {
     fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
@@ -116,6 +138,13 @@ bool read_template(std::fstream &fs, type_data &data)
 }
 
 
+template <typename type_data>
+bool read_template(const uint8_t * indata_array, type_data &data)
+{
+    std::memcpy(data, indata_array , sizeof(type_data));
+    return true;
+}
+
 
 void current_position(std::ostream &s, const uint64_t pos)
 {
@@ -126,6 +155,7 @@ void current_position(std::ostream &s, const uint64_t pos)
 
 bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
 {
+    std::cout << __FUNCTION__ << '\n';
     uLong bytes_left_in_container = lc.unCompressedFileSize;
     std::vector<uint8_t> compressedFile {};
     std::vector<uint8_t> uncompressedFile {};
@@ -138,6 +168,29 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
                 &bytes_left_in_container,
                 reinterpret_cast<Byte *>(compressedFile.data()),
                 static_cast<uLong>(compressedFileSize));
+    
+
+    uint8_t * uncompresseddata = uncompressedFile.data();
+    bool run = true;
+    while(run)
+        {  
+            struct ObjectHeaderBase ohb;
+            if (read(uncompresseddata, ohb))
+                {
+                    print(std::cout, ohb);
+                }
+            else
+                exit(-1);
+
+            uncompresseddata = uncompresseddata + sizeof(ohb);
+/*
+            handle_ObjectType(fs, ohb);
+            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
+            //std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
+            if(bytes_left_in_container <= 0)
+                run = false;
+  */      
+        }
 
     return true;
 }
