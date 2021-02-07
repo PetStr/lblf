@@ -377,6 +377,7 @@ void print(std::ostream &s, const ObjectHeaderBase &ohb)
     s << "ObjectHeaderBase ";
     //s << "ObjSign " << std::hex << (int)ohb.ObjSign;
     //s << std::dec;
+    s << std::dec;
     s << " headerSize " << (int)ohb.headerSize;
     s << ", headerVer " << (int)ohb.headerVer;
     s << ", objSize " << (int)ohb.objSize;

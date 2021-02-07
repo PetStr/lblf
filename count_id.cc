@@ -282,7 +282,6 @@ bool read(const uint8_t * data, ObjectHeaderBase &ohb)
 }
 
 
-
 bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
 {
     fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
