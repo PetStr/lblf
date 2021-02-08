@@ -445,7 +445,7 @@ exit_codes go_through_blf_file(const char * const filename)
         {
             if((filelength - fs.tellg() == 0))
                 break;
-            std::cout << __FUNCTION__ << "Bytes left: " << filelength - fs.tellg() << '\n';
+            //std::cout << __FUNCTION__ << "Bytes left: " << filelength - fs.tellg() << '\n';
             struct ObjectHeaderBase ohb;
             if (read(fs, ohb))
                 {
