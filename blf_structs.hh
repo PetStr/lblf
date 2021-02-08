@@ -223,13 +223,13 @@ struct ObjectHeaderBase
 };
 
 
-enum ObjectFlags_e : uint32_t
+enum class ObjectFlags_e : uint32_t
 {
     TimeTenMics = 0x00000001,
     TimeNano = 0x00000002
 };
 
-enum timeStampStatus_e : uint8_t
+enum class timeStampStatus_e : uint8_t
 {
     orginal = 0x01, SwGen = 0x02, User = 0x10
 };

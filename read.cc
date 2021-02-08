@@ -176,20 +176,20 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
                      reinterpret_cast<Byte *>(compressedFile.data()),
                      static_cast<uLong>(compressedFileSize));
 
-    
+
     std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
- 
-/*
+
+
     size_t cnt = 0;
     for(auto a: uncompressedFile)
-    {
-        std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
-        cnt++;
-        if((cnt % 48) == 0)
-            std::cout << '\n';
-    }
+        {
+            std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
+            cnt++;
+            if((cnt % 48) == 0)
+                std::cout << '\n';
+        }
     std::cout << '\n';
-    */
+
 
     uint8_t * uncompresseddata = uncompressedFile.data();
     bool run = true;
@@ -201,14 +201,14 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
                     print(std::cout, ohb);
                 }
             else
-                exit(-1);
+                break;
 
             //Move pointer to next step
             uncompresseddata += sizeof(ohb);
             bytes_left_in_container -= sizeof(ohb);
             if(bytes_left_in_container <= 0)
                 return true;
-    
+
             struct ObjectHeader oh;
             auto bytes_read = read_template(uncompresseddata, oh);
             uncompresseddata+=bytes_read;
@@ -225,7 +225,7 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
             print(std::cout, cm);
 
             std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
-                      
+
             if(bytes_left_in_container <= 0)
                 run = false;
         }
@@ -245,7 +245,7 @@ bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
                     //print(std::cout, ohb);
                 }
             else
-                exit(-1);
+                return false;
 
             handle_ObjectType(fs, ohb);
             bytes_left_in_container = bytes_left_in_container - ohb.objSize;
@@ -328,7 +328,6 @@ void go_through_file_header_base(const char * const filename)
             std::cout << " ";
             std::cout << "File open failed, Exiting program\n";
             return;
-            //exit( static_cast<uint8_t> (exit_codes::UNABLE_TO_OPEN_FILE) );
         }
     else
         {
@@ -348,7 +347,6 @@ void go_through_file_header_base(const char * const filename)
                 {
                     std::cout << "Error file is not a BLF file\n";
                     return;
-                    //exit(static_cast<uint8_t> (exit_codes::NOT_A_VALID_BLF_FILE));
                 }
         }
 
@@ -366,7 +364,7 @@ void go_through_file_header_base(const char * const filename)
             else
                 {
                     std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
-                    exit(-1);
+                    break;
                 }
 
             if(ohb.objectType == ObjectType_e::LOG_CONTAINER)
@@ -574,7 +572,7 @@ exit_codes go_through_file(const char * const filename)
                 break;
             std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
             std::cout << "Bytes now: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
-            
+
             auto offset = fs.tellg() % 4;
 
             std::cout << "Offset to move: " << offset << '\n';

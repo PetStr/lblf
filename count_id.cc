@@ -286,7 +286,7 @@ bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
 {
     fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
-    if (lc.compressionMethod == 2)
+    if (lc.compressionMethod == compressionMethod_e::uncompressed)
         {
             lc.unCompressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - sizeof(lc.reserv1) - sizeof(lc.reserv2) - sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
         }

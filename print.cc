@@ -295,7 +295,7 @@ std::string print(AppId_e ai)
     switch (ai)
         {
         case AppId_e::UNKNOWN:
-            return "";
+            return "Unknown";
         case AppId_e::CANALYZER:
             return "CANALYZER";
         case AppId_e::CANOE:
@@ -328,6 +328,34 @@ std::string print(compressionMethod_e cm)
 
         }
     return "Undeclared AppId: ";
+}
+
+
+std::string print(ObjectFlags_e of)
+{
+    switch (of)
+        {
+        case ObjectFlags_e::TimeTenMics:
+            return "Time Ten Microseconds";
+        case ObjectFlags_e::TimeNano:
+            return "Time in Nanoseconds";
+        }
+    return "Unknown Timeflags";
+}
+
+
+std::string print(timeStampStatus_e tss)
+{
+    switch(tss)
+        {
+        case timeStampStatus_e::orginal :
+            return "Orginal";
+        case timeStampStatus_e::SwGen :
+            return "Software Generated";
+        case timeStampStatus_e::User:
+            return "User defined";
+        }
+    return "Unknown time stamp status.";
 }
 
 
@@ -364,9 +392,9 @@ void print(std::ostream &s, const fileStatistics &os)
     s << "os.uncompressedSize   " << static_cast<uint64_t>(os.uncompressedSize) << '\n';
     s << "os.objCount           " << static_cast<uint64_t>(os.objCount) << '\n';
     s << "os.objRead            " << static_cast<uint64_t>(os.objRead) << '\n';
-    s << "os.meas_start_time: ";
+    s << "os.meas_start_time:   ";
     print(s, os.meas_start_time);
-    s << "os.last_obj_time: ";
+    s << "os.last_obj_time:     ";
     print(s, os.last_obj_time);
     s << "os.fileSize_less115   " << static_cast<uint64_t>(os.fileSize_less115) << '\n';
 }

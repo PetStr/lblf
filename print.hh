@@ -12,6 +12,8 @@
 std::string print(exit_codes ec);
 std::string print(ObjectType_e ot);
 std::string print(AppId_e ai);
+std::string print(ObjectFlags_e of);
+std::string print(timeStampStatus_e tss);
 void print(std::ostream &s, const sysTime_t &ts);
 void print(std::ostream &s, const fileStatistics &os);
 void print(std::ostream &s, const ObjectHeaderBase &ohb);
