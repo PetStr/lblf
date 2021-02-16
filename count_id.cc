@@ -33,8 +33,10 @@ struct can_counter_record
 };
 
 //Global
+namespace GLOBAL {
 std::vector <can_counter_record> id_data;
 uint32_t can_frame_counter;
+}
 
 
 struct dbc_id_data
@@ -358,13 +360,13 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
             read_template(fs, oh);
             if(payload_size == sizeof(CanMessage))
                 {
-                    can_frame_counter++;
+                    GLOBAL::can_frame_counter++;
                     struct CanMessage cm;
                     if (read_template(fs, cm))
                         {
                             unsigned int can_id = cm.id;
                             unsigned char channel = cm.channel;
-                            can_id_count(id_data, can_id, channel);
+                            can_id_count(GLOBAL::id_data, can_id, channel);
                         }
                 }
             else
@@ -376,7 +378,7 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
 
         case (ObjectType_e::CAN_MESSAGE2):
         {
-            can_frame_counter++;
+            GLOBAL::can_frame_counter++;
             struct ObjectHeader oh;
             read_template(fs, oh);
             struct CanMessage2 cm2;
@@ -384,7 +386,7 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
                 {
                     unsigned int can_id = cm2.id;
                     unsigned char channel = cm2.channel;
-                    can_id_count(id_data, can_id, channel);
+                    can_id_count(GLOBAL::id_data, can_id, channel);
                 }
             else
                 {
@@ -482,13 +484,13 @@ int main(int argc, char *argv[])
                 std::cout << "Success reading: " << DBC[n].file_name << '\n';
         }
 
-    can_frame_counter = 0;
+    GLOBAL::can_frame_counter = 0;
     go_through_blf_file(filename);
 
-    print_frameid_dbcdata(std::cout, id_data, dbc_data);
+    print_frameid_dbcdata(std::cout, GLOBAL::id_data, dbc_data);
     std::cout << "Number of dbc frames: " << dbc_data.size() << '\n';
 
-    std::cout << "Number of different frames: " << id_data.size() <<
-              " total number of frames in blf:" << can_frame_counter  << '\n';
+    std::cout << "Number of different frames: " << GLOBAL::id_data.size() <<
+              " total number of frames in blf:" << GLOBAL::can_frame_counter  << '\n';
     return 0;
 }
