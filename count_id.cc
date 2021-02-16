@@ -14,6 +14,8 @@
 
 #include "blf_structs.hh"
 #include "count_id.hh"
+#include "print.hh"
+
 
 
 const size_t CAN_ID_MARK = 1;
@@ -165,13 +167,16 @@ bool parse_dbc_file(const std::string &filename, std::vector <dbc_id_data> & dbc
     std::ifstream infile;
     infile.open(filename.c_str());
 
-    if (infile.fail())
-        {
+    if (infile.good())
+    {
+        return read_dbc_file(infile, dbc_data, separator, bank);
+    }
+    else
+    {
             std::cout << __LINE__ <<  " failed to open file: " << filename << '\n';
             return false;
-        }
-
-    return read_dbc_file(infile, dbc_data, separator, bank);
+    }
+    return false;
 }
 
 
@@ -485,7 +490,14 @@ int main(int argc, char *argv[])
         }
 
     GLOBAL::can_frame_counter = 0;
-    go_through_blf_file(filename);
+    exit_codes result = go_through_blf_file(filename);
+
+    if(result != exit_codes::EXITING_SUCCESS)
+    {
+        std::cout << print(result) << '\n';
+        std::cout << "Exiting\n";
+        return(EXIT_FAILURE);
+    }
 
     print_frameid_dbcdata(std::cout, GLOBAL::id_data, dbc_data);
     std::cout << "Number of dbc frames: " << dbc_data.size() << '\n';

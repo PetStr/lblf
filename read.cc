@@ -235,7 +235,7 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
 
 bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
 {
-    uint32_t bytes_left_in_container = lc.unCompressedFileSize;
+    int32_t bytes_left_in_container = lc.unCompressedFileSize;
     bool run = true;
     while(run)
         {
@@ -249,7 +249,7 @@ bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
 
             handle_ObjectType(fs, ohb);
             bytes_left_in_container = bytes_left_in_container - ohb.objSize;
-            //std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
+            std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
             if(bytes_left_in_container <= 0)
                 run = false;
         }

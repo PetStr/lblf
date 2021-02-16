@@ -2,11 +2,13 @@ cmake_minimum_required(VERSION 3.17)
 
 project("lblf")
 
+set(CMAKE_BUILD_TYPE Debug)
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 
@@ -18,5 +20,5 @@ add_executable(read read.cc print.cc)
 
 target_link_libraries(read ZLIB::ZLIB)
 
-add_executable(count_id count_id.cc)
+add_executable(count_id count_id.cc print.cc)
 
