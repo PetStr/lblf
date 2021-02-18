@@ -29,13 +29,14 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb);
 
 struct can_counter_record
 {
-    unsigned int id;
+    uint32_t id;
     unsigned char channel;
-    unsigned int hit_counter;
+    uint32_t hit_counter;
 };
 
 //Global
-namespace GLOBAL {
+namespace GLOBAL
+{
 std::vector <can_counter_record> id_data;
 uint32_t can_frame_counter;
 }
@@ -44,12 +45,12 @@ uint32_t can_frame_counter;
 struct dbc_id_data
 {
     uint8_t dbc_table;
-    unsigned int id;
+    uint32_t id;
     std::string id_name;
 };
 
 
-uint8_t can_id_name_func(std::string & can_id_name, const unsigned int can_id, std::vector <dbc_id_data> dbc_table)
+uint8_t can_id_name_func(std::string & can_id_name, const uint32_t can_id, std::vector <dbc_id_data> dbc_table)
 {
     uint8_t bank = 0xff;
     can_id_name.clear();
@@ -66,7 +67,7 @@ uint8_t can_id_name_func(std::string & can_id_name, const unsigned int can_id, s
 }
 
 
-void can_id_count(std::vector<can_counter_record> & id_record, unsigned int & can_id, unsigned char channel)
+void can_id_count(std::vector<can_counter_record> & id_record, const uint32_t can_id, const uint8_t channel)
 {
 //Lookfor id in vector. If it does not exist add it. if it does exist count one.
     bool found_first_time = false;
@@ -168,14 +169,14 @@ bool parse_dbc_file(const std::string &filename, std::vector <dbc_id_data> & dbc
     infile.open(filename.c_str());
 
     if (infile.good())
-    {
-        return read_dbc_file(infile, dbc_data, separator, bank);
-    }
+        {
+            return read_dbc_file(infile, dbc_data, separator, bank);
+        }
     else
-    {
+        {
             std::cout << __LINE__ <<  " failed to open file: " << filename << '\n';
             return false;
-    }
+        }
     return false;
 }
 
@@ -186,7 +187,7 @@ void print_frameid_dbcdata(std::ostream & stream, std::vector <can_counter_recor
     stream <<  "channel" << "\t" << "id_dec" << "\t" << "id_hex" << "\t" << "hits" << "\t" << "dbc_file" << "\t" << "frame_name" << '\n';
     //Got through id_data.
 
-    for(int channel = 0; channel <10; channel++)
+    for(uint8_t channel = 0; channel <10; channel++)
         {
 
             for(auto itr : id_data)
@@ -312,7 +313,7 @@ bool read_template(std::fstream &fs, type_data &data)
 
 exit_codes parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
 {
-    uint32_t bytes_left_in_container = lc.unCompressedFileSize;
+    int32_t bytes_left_in_container = lc.unCompressedFileSize;
     bool run = true;
     while(run)
         {
@@ -493,11 +494,11 @@ int main(int argc, char *argv[])
     exit_codes result = go_through_blf_file(filename);
 
     if(result != exit_codes::EXITING_SUCCESS)
-    {
-        std::cout << print(result) << '\n';
-        std::cout << "Exiting\n";
-        return(EXIT_FAILURE);
-    }
+        {
+            std::cout << print(result) << '\n';
+            std::cout << "Exiting\n";
+            return(EXIT_FAILURE);
+        }
 
     print_frameid_dbcdata(std::cout, GLOBAL::id_data, dbc_data);
     std::cout << "Number of dbc frames: " << dbc_data.size() << '\n';

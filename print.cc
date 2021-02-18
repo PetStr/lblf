@@ -478,6 +478,16 @@ void print(std::ostream &s, const CanOverload &co)
 }
 
 
+void print(std::ostream &s, const CanOverload_short &co)
+{
+    s << "CanOverload : ";
+    s << std::dec;
+    s << "channel: " << (int)co.channel;
+    s << ", reservedCanOverloadFrame1: " << std::hex << (int)co.reservedCanOverloadFrame1;
+    s << '\n';
+}
+
+
 void print(std::ostream &s, const CanMessage2 &cm2)
 {
     s << "CanMessage2 : ";

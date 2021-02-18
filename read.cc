@@ -434,9 +434,21 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
             struct ObjectHeader oh;
             read_template(fs, oh);
             print(std::cout, oh);
-            struct CanOverload col;
-            (read_template(fs, col));
-            print(std::cout, col);
+            switch(payload_size)
+                {
+                case sizeof(CanOverload) :
+                    struct CanOverload col;
+                    read_template(fs, col);
+                    print(std::cout, col);
+                    break;
+                case sizeof(CanOverload_short) :
+                    struct CanOverload_short cols;
+                    read_template(fs, cols);
+                    print(std::cout, cols);
+                    break;
+                default:
+                    std::cout << "Error wrong CanOverload Frame!\n";
+                }
         }
         break;
 

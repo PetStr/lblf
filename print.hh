@@ -22,6 +22,7 @@ void print(std::ostream &s, const LogContainer &lc);
 void print(std::ostream &s, const ObjectHeader &oh);
 void print(std::ostream &s, const CanMessage &cm);
 void print(std::ostream &s, const CanOverload &co);
+void print(std::ostream &s, const CanOverload_short &co);
 void print(std::ostream &s, const CanMessage2 &cm2);
 void print(std::ostream &s, const AppTrigger &at);
 void print(std::ostream &s, const AppText &at);
