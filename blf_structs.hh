@@ -305,6 +305,13 @@ struct CanOverload
 };
 
 
+struct CanOverload_short
+{
+    uint16_t channel;
+    uint16_t reservedCanOverloadFrame1;
+};
+
+
 struct CanMessage2
 {
     uint16_t channel;
