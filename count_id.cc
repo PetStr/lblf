@@ -134,9 +134,11 @@ std::string partString(std::string const &row, std::vector<size_t> const &marks,
 }
 
 
-int toInt(std::string s)
+unsigned long int toInt(const std::string &s)
 {
-    return std::atoi(s.c_str());
+    char * end = nullptr;
+    const int base {10};
+    return std::strtoul(s.c_str(), &end, base);
 }
 
 
@@ -210,6 +212,16 @@ void print_frameid_dbcdata(std::ostream & stream, std::vector <can_counter_recor
                         }
                 }
         }
+}
+
+
+void print_dbcdata(std::ostream & stream, std::vector<dbc_id_data> & dbc_data)
+{
+    for(auto data : dbc_data)
+    {
+        stream << std::dec << data.id << ", 0x" << std::hex << data.id << ", " << data.id_name << '\n';
+    }
+    return;
 }
 
 
@@ -469,6 +481,33 @@ exit_codes go_through_blf_file(const char * const filename)
     fs.close();
     return exit_codes::EXITING_SUCCESS;
 }
+
+
+#ifdef TEST_DBC
+int main(int argc, char *argv[])
+{
+    if (argc != 2)
+        {
+            std::cout << "count_id <filename.blf>" << '\n';
+            return -1;
+        }
+
+    const char * const filename = argv[1];
+    std::string separator(" ");
+    std::vector<dbc_id_data> dbc_data;
+
+    for(int n = 0; n < DBC_number; n++)
+        {
+            std::string filename(DBC[n].file_name);
+            if(parse_dbc_file(filename, dbc_data, separator,n))
+                std::cout << "Success reading: " << DBC[n].file_name << '\n';
+        }
+
+    print_dbcdata(std::cout, dbc_data);
+
+return EXIT_SUCCESS;
+}
+#endif 
 
 
 int main(int argc, char *argv[])
