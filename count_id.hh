@@ -2,6 +2,15 @@
 #define COUNT_ID_H_
 
 
+
+struct dbc_id_data
+{
+    uint8_t dbc_table;
+    uint32_t id;
+    std::string id_name;
+};
+
+
 struct dbc_names
 {
     const char * const short_name;

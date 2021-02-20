@@ -5,12 +5,11 @@
 
 //g++ count_id.cc -o count_id -Wall -Wextra -Wpedantic -Wno-switch -O0 -g
 
+#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <vector>
-#include <fstream>
-#include <cstring>
 
 #include "blf_structs.hh"
 #include "count_id.hh"
@@ -30,7 +29,7 @@ exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb);
 struct can_counter_record
 {
     uint32_t id;
-    unsigned char channel;
+    uint16_t channel;
     uint32_t hit_counter;
 };
 
@@ -42,19 +41,11 @@ uint32_t can_frame_counter;
 }
 
 
-struct dbc_id_data
-{
-    uint8_t dbc_table;
-    uint32_t id;
-    std::string id_name;
-};
-
-
-uint8_t can_id_name_func(std::string & can_id_name, const uint32_t can_id, std::vector <dbc_id_data> dbc_table)
+uint8_t can_id_name_func(std::string & can_id_name, const uint32_t can_id, const std::vector <dbc_id_data> &dbc_table)
 {
     uint8_t bank = 0xff;
     can_id_name.clear();
-    for(auto itr : dbc_table)
+    for(const auto &itr : dbc_table)
         {
             if(itr.id == can_id)
                 {
@@ -86,10 +77,7 @@ void can_id_count(std::vector<can_counter_record> & id_record, const uint32_t ca
 
     if(!found_first_time)
         {
-            struct can_counter_record can_id_data;
-            can_id_data.id = can_id;
-            can_id_data.channel = channel;
-            can_id_data.hit_counter = 1;
+            struct can_counter_record can_id_data = {can_id, channel, 1};
             id_record.push_back(can_id_data);
         }
 }
@@ -134,7 +122,7 @@ std::string partString(std::string const &row, std::vector<size_t> const &marks,
 }
 
 
-unsigned long int toInt(const std::string &s)
+uint64_t toInt(const std::string &s)
 {
     char * end = nullptr;
     const int base {10};
@@ -199,13 +187,13 @@ void print_frameid_dbcdata(std::ostream & stream, std::vector <can_counter_recor
                             uint8_t bank = can_id_name_func(can_id_name, itr.id, dbc_data);
                             if(bank == 0xff)
                                 {
-                                    stream << (int) itr.channel  << "\t" << itr.id << "\t0x"
+                                    stream << static_cast<int> (itr.channel)  << "\t" << itr.id << "\t0x"
                                            << std::hex << itr.id << "\t" << std::dec << itr.hit_counter
                                            << "\t" << "unknown" << "\t" << "unknown" << '\n';
                                 }
                             else
                                 {
-                                    stream << (int) itr.channel  << "\t" << itr.id << "\t0x"
+                                    stream << static_cast<int> (itr.channel)  << "\t" << itr.id << "\t0x"
                                            << std::hex << itr.id << "\t" << std::dec << itr.hit_counter
                                            << "\t" << DBC[bank].short_name << "\t" << can_id_name << '\n';
                                 }
@@ -217,19 +205,19 @@ void print_frameid_dbcdata(std::ostream & stream, std::vector <can_counter_recor
 
 void print_dbcdata(std::ostream & stream, std::vector<dbc_id_data> & dbc_data)
 {
-    for(auto data : dbc_data)
-    {
-        stream << std::dec << data.id << ", 0x" << std::hex << data.id << ", " << data.id_name << '\n';
-    }
+    for(const auto &data : dbc_data)
+        {
+            stream << std::dec << data.id << ", 0x" << std::hex << data.id << ", " << data.id_name << '\n';
+        }
     return;
 }
 
 
 uint32_t fileLength(std::fstream &fs)
 {
-    fs.seekg(0, fs.end);
+    fs.seekg(0, std::fstream::end);
     uint32_t length = fs.tellg();
-    fs.seekg(0, fs.beg);
+    fs.seekg(0, std::fstream::beg);
     return length;
 }
 
@@ -269,7 +257,7 @@ bool read(std::fstream &fs, ObjectHeaderBase &ohb)
     fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
         {
-            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
+            std::cout << "Not Found LOBJ: " << std::hex << static_cast<int> (ohb.ObjSign);
             std::cout << '\n';
             return false;
         }
@@ -286,7 +274,7 @@ bool read(const uint8_t * data, ObjectHeaderBase &ohb)
     std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
         {
-            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
+            std::cout << "Not Found LOBJ: " << std::hex << static_cast<int> (ohb.ObjSign);
             std::cout << '\n';
             return false;
         }
@@ -505,9 +493,9 @@ int main(int argc, char *argv[])
 
     print_dbcdata(std::cout, dbc_data);
 
-return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
-#endif 
+#endif
 
 
 int main(int argc, char *argv[])
