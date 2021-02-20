@@ -1,0 +1,9 @@
+BasedOnStyle: WebKit
+AlignTrailingComments: true
+BreakBeforeBraces: GNU
+Cpp11BracedListStyle: true
+DerivePointerAlignment: true
+MaxEmptyLinesToKeep: 2
+SortIncludes: false
+SpaceAfterCStyleCast: true
+SpaceBeforeRangeBasedForLoopColon: false
