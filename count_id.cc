@@ -111,8 +111,6 @@ void find_marks(std::vector<size_t> &marks, const std::string &row, const std::s
     //adding beginning and end that does not have marks.
     marks.insert(marks.begin(), -1);
     marks.push_back(row.size());
-    if (0)
-        std::cout << "Find marks size: " << marks.size() << '\n';
 }
 
 
@@ -209,7 +207,6 @@ void print_dbcdata(std::ostream & stream, std::vector<dbc_id_data> & dbc_data)
         {
             stream << std::dec << data.id << ", 0x" << std::hex << data.id << ", " << data.id_name << '\n';
         }
-    return;
 }
 
 
@@ -532,5 +529,5 @@ int main(int argc, char *argv[])
 
     std::cout << "Number of different frames: " << GLOBAL::id_data.size() <<
               " total number of frames in blf:" << GLOBAL::can_frame_counter  << '\n';
-    return 0;
+    return EXIT_SUCCESS;
 }
