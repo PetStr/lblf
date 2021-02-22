@@ -153,7 +153,7 @@ void current_position(std::ostream &s, const uint64_t pos)
 }
 
 
-bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
+bool parse_container_compressed(std::istream &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
 {
     std::cout << "Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
     std::cout << "Entering: " << __FUNCTION__ << '\n';
@@ -170,7 +170,7 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
     std::cout << "Bytes after : " << std::dec << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
     uncompressedFile.resize(bytes_left_in_container);
-    int retVal = ::uncompress(
+    int retVal = uncompress(
                      reinterpret_cast<Byte *>(uncompressedFile.data()),
                      &bytes_left_in_container,
                      reinterpret_cast<Byte *>(compressedFile.data()),

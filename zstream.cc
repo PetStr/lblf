@@ -4,26 +4,25 @@
 #include <zlib.h>
 
 
+void f()
+{
+    std::vector<uint8_t> uncompressedFile;
 
- void f()
- {
-std::vector<uint8_t> uncompressedFile;
+    std::streampos m_tellg;
 
-std::streampos m_tellg;
+    uint64_t uncompressedFileSize, filePosition;
 
-uint64_t uncompressedFileSize, filePosition;
+    std::streamoff offset = m_tellg - filePosition;
 
-std::streamoff offset = m_tellg - filePosition;
+    std::streamsize n;
 
-std::streamsize n;
-
-std::streamsize gcount = std::min(n, static_cast<std::streamsize>(uncompressedFileSize - offset));
-
+    std::streamsize gcount = std::min(n, static_cast<std::streamsize>(uncompressedFileSize - offset));
 
 
- std::copy(uncompressedFile.cbegin() + offset, uncompressedFile.cbegin() + offset + gcount, s);
 
- std::cout << "Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
+    std::copy(uncompressedFile.cbegin() + offset, uncompressedFile.cbegin() + offset + gcount, s);
+
+    std::cout << "Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
     std::cout << "Entering: " << __FUNCTION__ << '\n';
     uLong bytes_left_in_container = lc.unCompressedFileSize;
     std::vector<uint8_t> compressedFile {};
@@ -44,4 +43,5 @@ std::streamsize gcount = std::min(n, static_cast<std::streamsize>(uncompressedFi
                      reinterpret_cast<Byte *>(compressedFile.data()),
                      static_cast<uLong>(compressedFileSize));
 
- }
+}
+
