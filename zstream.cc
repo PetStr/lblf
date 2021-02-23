@@ -59,6 +59,14 @@ void print(const std::vector<uint8_t> &data)
         std::cout << '\n';
 }
 
+uint32_t fileLength(std::istream &fs)
+{
+    fs.seekg(0, fs.end);
+    uint32_t length = fs.tellg();
+    fs.seekg(0, fs.beg);
+    return length;
+}
+
 
 int main()
 {
@@ -76,13 +84,20 @@ int main()
         binary_buffer.write(reinterpret_cast<const char*>(&v), sizeof(uint8_t));
     }
 
+    std::cout << "stream length: " << fileLength(binary_buffer) << '\n';
+
     print(indata);
+
+
     
     std::vector<uint8_t> okompad;
     char buffer[1];
     while (binary_buffer.read(buffer, 1)) {
         okompad.push_back(*reinterpret_cast<uint8_t*>(buffer));
     }
+
+    std::cout << "stream length after read : " << fileLength(binary_buffer) << '\n';
+
 
     print(okompad);
 
