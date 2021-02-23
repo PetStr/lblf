@@ -1,38 +1,83 @@
+#include <algorithm>
 #include <iostream>
 #include <vector>
-#include <algorithm>
+#include <iomanip>
+
 #include <zlib.h>
 
 
 
 
-void uncompresser(std::vector<uint8_t> & uncompressedFile, 
-    const std::vector<uint8_t> &compressedFile, size_t compressed )
+auto uncompresser(std::vector<uint8_t> & uncompressed, 
+                    std::vector<uint8_t> &compressed)
 {
-    
-    std::streampos m_tellg;
-    uint64_t uncompressedFileSize, filePosition;
+   
+    auto compressedSize = compressed.size();
+    compressed.resize(compressedSize);
 
-    //std::streamoff offset = m_tellg - filePosition;
-    //std::streamsize n;
-    //std::streamsize gcount = std::min(n, static_cast<std::streamsize>(uncompressedFileSize - offset));
+    //Byte * in = nullptr; 
+    //std::copy(uncompressed.cbegin(), uncompressed.cend(), in);
 
-  
-    uLong bytes_left_in_container = lc.unCompressedFileSize;
-    
-    auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
-    compressedFile.resize(compressedFileSize);
+    auto retVal = ::uncompress(
+                     reinterpret_cast<Byte *>(uncompressed.data()),
+                     &compressedSize,
+                     reinterpret_cast<Byte *>(compressed.data()),
+                     static_cast<uLong>(compressedSize));
 
-    fs.read(reinterpret_cast<char *>(compressedFile.data()), compressedFileSize);
+    uncompressed.resize(compressedSize);
 
-    uncompressedFile.resize(bytes_left_in_container);
-    int retVal = ::uncompress(
-                     reinterpret_cast<Byte *>(uncompressedFile.data()),
-                     &bytes_left_in_container,
-                     reinterpret_cast<Byte *>(compressedFile.data()),
-                     static_cast<uLong>(compressedFileSize));
-
-    std::copy(uncompressedFile.cbegin() + offset, uncompressedFile.cbegin() + offset + gcount, s);
-
+    return retVal;
 }
 
+
+auto pressa(std::vector<uint8_t> & uncompressed, 
+                std::vector<uint8_t> &compressed, 
+                const int compressionLevel)
+{
+        /* deflate/compress data */
+        uLong compressedBufferSize = compressBound(uncompressed.size());
+        std::cout << "compressBound: " << std::dec << compressedBufferSize << '\n';
+        compressed.resize(compressedBufferSize); // extend
+        auto retVal = ::compress2(
+                         reinterpret_cast<Byte *>(compressed.data()),
+                         &compressedBufferSize,
+                         reinterpret_cast<Byte *>(uncompressed.data()),
+                         uncompressed.size(),
+                         compressionLevel);
+        
+        std::cout << "compressBound after: " << std::dec << compressedBufferSize << '\n';
+        compressed.resize(compressedBufferSize);
+                    
+    return retVal;
+}
+
+void print(const std::vector<uint8_t> &data)
+{
+    std::cout << "size:" << std::dec << data.size() << " ;capacity " << data.capacity() << " : ";
+    for(const auto a : data)
+        {
+            std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << static_cast<int> (a);
+        }
+        std::cout << '\n';
+}
+
+
+
+
+
+int main()
+{
+
+    std::vector<uint8_t> okompad = { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55 };
+    print(okompad);
+
+    std::vector<uint8_t> kompressed;
+    pressa(okompad, kompressed,9);
+    print(kompressed);
+
+    std::vector<uint8_t> okompad_tillbaka(40);
+    uncompresser(okompad_tillbaka,  kompressed);
+    print(okompad_tillbaka);
+
+    return EXIT_SUCCESS;
+}
