@@ -9,24 +9,21 @@
 
 
 auto uncompresser(std::vector<uint8_t> & uncompressed, 
-                    std::vector<uint8_t> &compressed)
+                    std::vector<uint8_t> &compressed, size_t output_size)
 {
    
     auto compressedSize = compressed.size();
-    compressed.resize(compressedSize);
+    uncompressed.resize(output_size);
 
     //Byte * in = nullptr; 
     //std::copy(uncompressed.cbegin(), uncompressed.cend(), in);
 
     auto retVal = ::uncompress(
                      reinterpret_cast<Byte *>(uncompressed.data()),
-                     &compressedSize,
+                     &output_size,
                      reinterpret_cast<Byte *>(compressed.data()),
                      static_cast<uLong>(compressedSize));
-
-    uncompressed.resize(compressedSize);
-
-    return retVal;
+     return retVal;
 }
 
 
@@ -51,6 +48,7 @@ auto pressa(std::vector<uint8_t> & uncompressed,
     return retVal;
 }
 
+
 void print(const std::vector<uint8_t> &data)
 {
     std::cout << "size:" << std::dec << data.size() << " ;capacity " << data.capacity() << " : ";
@@ -62,21 +60,38 @@ void print(const std::vector<uint8_t> &data)
 }
 
 
-
-
-
 int main()
 {
 
-    std::vector<uint8_t> okompad = { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55 };
+    std::vector<uint8_t> indata = { 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55,0x55, 
+    0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55 , 0xAA, 0xAA,0x55, 0x55, 
+    0x55,0x55, 0x55, 0x55,0x55, 0x55, 0x55 , 0xAA, 0xAA };
+    
+    size_t indata_size = indata.size();
+    std::cout << "indata.size: " << indata_size << '\n';
+    
+    std::stringstream binary_buffer;
+
+    for (const auto& v : indata) {
+        binary_buffer.write(reinterpret_cast<const char*>(&v), sizeof(uint8_t));
+    }
+
+    print(indata);
+    
+    std::vector<uint8_t> okompad;
+    char buffer[1];
+    while (binary_buffer.read(buffer, 1)) {
+        okompad.push_back(*reinterpret_cast<uint8_t*>(buffer));
+    }
+
     print(okompad);
 
     std::vector<uint8_t> kompressed;
     pressa(okompad, kompressed,9);
     print(kompressed);
 
-    std::vector<uint8_t> okompad_tillbaka(40);
-    uncompresser(okompad_tillbaka,  kompressed);
+    std::vector<uint8_t> okompad_tillbaka(indata_size);
+    uncompresser(okompad_tillbaka,  kompressed, indata_size);
     print(okompad_tillbaka);
 
     return EXIT_SUCCESS;
