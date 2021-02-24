@@ -9,7 +9,7 @@
 
 
 auto uncompresser(std::vector<uint8_t> & uncompressed, 
-                    std::vector<uint8_t> &compressed, size_t output_size)
+                    std::vector<uint8_t> &compressed, uLongf output_size)
 {
    
     auto compressedSize = compressed.size();
