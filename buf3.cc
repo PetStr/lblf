@@ -132,7 +132,7 @@ private:
     buffer_type m_buf;
 };
 
-typedef BasicSequenceInputStream<char> SequenceInputStream;
+typedef BasicSequenceInputStream<uint8_t> SequenceInputStream;
 
 
 // Test
@@ -147,7 +147,7 @@ int main()
     const std::vector<uint8_t> vector(s.begin(), s.end());
     SequenceInputStream stream(vector.data(), vector.size());
 
-    std::string line;
-    std::getline(stream, line);
+    uint8_t * line;
+    stream.read(line, 1);
     std::cout << line << '\n';
 }

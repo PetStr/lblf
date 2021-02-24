@@ -409,7 +409,8 @@ void print(std::ostream &s, const ObjectHeaderBase &ohb)
     s << " headerSize " << (int)ohb.headerSize;
     s << ", headerVer " << (int)ohb.headerVer;
     s << ", objSize " << (int)ohb.objSize;
-    s << ", objectType " << print(ohb.objectType);
+    s << ", objectType# " << static_cast<int> (ohb.objectType);
+    s << ", " << print(ohb.objectType);
     s << '\n';
 }
 
@@ -427,16 +428,6 @@ void print(std::ostream &s, const ObjectHeader2 &oh2)
 }
 
 
-void print(std::ostream &s, const LogContainer &lc)
-{
-    s << "LogContainer : ";
-    s << std::dec;
-    s << "compressionMethod: " << print(lc.compressionMethod);
-    s << ", uncompressedFileSize: " << std::dec << (int)lc.unCompressedFileSize;
-    s << '\n';
-}
-
-
 void print(std::ostream &s, const ObjectHeader &oh)
 {
     s << "ObjectHeader : ";
@@ -444,6 +435,35 @@ void print(std::ostream &s, const ObjectHeader &oh)
     s << "objectFlag: " << (int)oh.clientIndex;
     s << ", objectVersion: " << std::dec << oh.objectVersion;
     s << ", objectTimeStamp: " << std::dec << oh.objectTimeStamp;
+    s << '\n';
+}
+
+
+void print(std::ostream &s, const ObjectHeaderCarry &ohc)
+{
+    switch(ohc.oh_enum)
+    {
+        case ObjectHeaders_e::ONLY_HEADER_BASE :
+            print(s, ohc.ohb);
+            break;
+        case ObjectHeaders_e::BASE_AND_HEADER :
+            print(s,ohc.ohb);
+            print(s,ohc.oh);
+            break;
+        case ObjectHeaders_e::BASE_AND_HEADER2 :
+            print(s,ohc.ohb);
+            print(s,ohc.oh2);
+            break;
+    }
+}
+
+
+void print(std::ostream &s, const LogContainer &lc)
+{
+    s << "LogContainer : ";
+    s << std::dec;
+    s << "compressionMethod: " << print(lc.compressionMethod);
+    s << ", uncompressedFileSize: " << std::dec << (int)lc.unCompressedFileSize;
     s << '\n';
 }
 
@@ -535,6 +555,7 @@ void print(std::ostream &s, const reserved_5 &r)
     s << "Reserved_5: ";
     for(auto a : r.data)
         s << " 0x" << std::hex << a;
+    s << '\n';
 }
 
 
@@ -555,5 +576,24 @@ void print(std::ostream &s, const CanError_short &cfe)
     s << std::dec;
     s << ", channel : " << (uint64_t)cfe.channel;
     s << ", length : " << (uint64_t)cfe.length;
+    s << '\n';
+}
+
+
+void print(std::ostream &s, const  CANErrorFrameExt & ce)
+{
+    s << "mChannel: " << static_cast<int> (ce.mChannel);
+    s << " mLength: " << (int) ce.mLength;
+    s << " mFlags: " << (int) ce.mFlags;
+    s << " mECC: " << (int) ce.mECC;
+    s << " mPosition: " << (int) ce.mPosition;
+    s << " mDLC: " << (int) ce.mDLC << '\n';
+    s << " mFrameLengthInNS: " << (int) ce.mFrameLengthInNS;
+    s << " mID: " << (int) ce.mID;
+    s << " mFlagsExt: " << (int) ce.mFlagsExt;
+    s << " mReserved2: " << (int) ce.mReserved2;
+    s << " mData:";
+    for (auto n : ce.mData)
+        s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) n;
     s << '\n';
 }

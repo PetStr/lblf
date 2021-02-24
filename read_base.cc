@@ -549,6 +549,130 @@ void go_through_file_header_base(const char * const filename)
 
 
 
+/*
+bool read_head(std::iostream &fs)
+{
+    struct ObjectHeaderCarry ohc;
+    if (read_headers(fs, ohc))
+        print(std::cout, ohc);
+    else
+        {
+            std::cout << "Error reading ObjectHeaderBase\n";
+            return false;
+        }
+
+    auto bytes_to_jump = 0;
+    if(ohb.headerSize == 16)
+        bytes_to_jump = ohb.objSize - ohb.headerSize;
+
+    if(ohb.headerSize == 32)
+        bytes_to_jump = ohb.objSize - ohb.headerSize + 16;
+
+    fs.seekg(bytes_to_jump,std::ios_base::cur);
+    std::cout << print(ohb.objectType) << " " << static_cast<int> (ohb.objectType) << " " << std::dec << (int) bytes_to_jump << '\n';
+    return true;
+}
+*/
+
+/*
+bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
+{
+    uint32_t bytes_left_in_container = lc.unCompressedFileSize;
+    bool run = true;
+    while(run)
+        {
+            struct ObjectHeaderBase ohb;
+            if (read (fs, ohb))
+                {
+                    //   print(std::cout, ohb);
+                }
+            else
+                {
+                    std::cout << "Error reading ObjectHeaderBase\n";
+                    return false;
+                }
+
+            auto bytes_to_jump = 0;
+            if(ohb.headerSize == 16)
+                bytes_to_jump = ohb.objSize - ohb.headerSize;
+
+            if(ohb.headerSize == 32)
+                bytes_to_jump = ohb.objSize - ohb.headerSize + 16;
+
+            fs.seekg(bytes_to_jump,std::ios_base::cur);
+            //std::cout << "Bytes_to_jump: " << bytes_to_jump << " current position " << std::hex << fs.tellg() << '\n';
+            std::cout << print(ohb.objectType) << "(" << static_cast<int> (ohb.objectType) << ") " << std::dec << (int) bytes_to_jump << '\n';
+
+            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
+            //std::cout << "bytes left: " << std::dec << bytes_left_in_container << '\n';
+            if(bytes_left_in_container <= 0)
+                run = false;
+        }
+    return true;
+}
+*/
+/*
+void go_through_file_header_base(const char * const filename)
+{
+    std::cout << "Opening file: " << filename;
+    std::fstream fs(filename, std::fstream::in | std::fstream::binary);
+    if (fs.fail())
+        {
+            std::cout << " ";
+            std::cout << "File open failed, Exiting program\n";
+            return;
+        }
+    else
+        {
+            std::cout << " ** SUCCESS **\n";
+        }
+
+    auto filelength = fileLength(fs);
+
+    if (fs)
+        {
+            struct fileStatistics fileStat;
+            if (read(fs, fileStat))
+                {
+                    print(std::cout, fileStat);
+                }
+            else
+                {
+                    std::cout << "Error file is not a BLF file\n";
+                    return;
+                }
+        }
+
+    while (!fs.eof())
+        {
+            if((filelength - fs.tellg() == 0))
+                break;
+            std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
+            struct ObjectHeaderBase ohb;
+            if (read(fs, ohb))
+                {
+                    std::cout << print(ohb.objectType) << " " << static_cast<int> (ohb.objectType) << '\n';
+                }
+
+            else
+                {
+                    std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
+                    break;
+                }
+
+            if(ohb.objectType == ObjectType_e::LOG_CONTAINER)
+                {
+                    struct LogContainer lc;
+                    read(fs,lc,ohb);
+                    parse_logcontainer_base(fs, lc);
+                }
+            else
+                read_head(fs);
+        }
+    fs.close();
+}
+*/
+
 
 
 int main(int argc, char* argv[])

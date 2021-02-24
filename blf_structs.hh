@@ -355,6 +355,30 @@ struct AppText
 };
 
 
+struct CANErrorFrameExt 
+{
+    uint16_t    mChannel;                    /* application channel */
+    uint16_t    mLength;                     /* CAN error frame length */
+    uint32_t    mFlags;                      /* extended CAN error frame flags */
+    uint8_t     mECC;                        /* error control code */
+    uint8_t     mPosition;                   /* error position */
+    uint8_t     mDLC;                        /* lower 4 bits: DLC from CAN-Core. Upper 4 bits: reserved */
+    uint8_t     mReserved1;
+    uint32_t    mFrameLengthInNS;            /* frame length in ns */
+    uint32_t    mID;                         /* frame ID from CAN-Core */
+    uint16_t    mFlagsExt;                   /* extended error flags */
+    uint16_t    mReserved2;
+    std::array<uint8_t,8> mData {};                    /* Payload, only for CAN-Core */
+};
+
+/*
+translate
+WORD = uint16_t
+DWORD = uint32_t
+BYTE = uint8_t
+*/
+
+
 struct reserved_5
 {
     std::array<uint32_t, 6> data {};

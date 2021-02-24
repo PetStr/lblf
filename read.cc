@@ -87,29 +87,12 @@ bool read(std::iostream & fs, uint32_t length, std::string & data)
 }
 
 
-bool read(std::iostream &fs, ObjectHeaderBase &ohb)
-{
-    fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
-    if (ohb.ObjSign != ObjectSignature)
-        {
-            std::cout << __LINE__ << ": Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
-            std::cout << '\n';
-            return false;
-        }
-    fs.read(reinterpret_cast<char *>(&ohb.headerSize), sizeof(ohb.headerSize));
-    fs.read(reinterpret_cast<char *>(&ohb.headerVer), sizeof(ohb.headerVer));
-    fs.read(reinterpret_cast<char *>(&ohb.objSize), sizeof(ohb.objSize));
-    fs.read(reinterpret_cast<char *>(&ohb.objectType), sizeof(ohb.objectType));
-    return true;
-}
-
-
 bool read_headers(std::iostream &fs, ObjectHeaderCarry &ohc)
 {
     fs.read(reinterpret_cast<char *>(&ohc.ohb.ObjSign), sizeof(ohc.ohb.ObjSign));
     if (ohc.ohb.ObjSign != ObjectSignature)
         {
-            std::cout << __LINE__ << ": Not Found LOBJ: " << std::hex << (int) ohc.ohb.ObjSign;
+            std::cout << std::dec << __LINE__ << ": Not Found LOBJ: " << std::hex << (int) ohc.ohb.ObjSign;
             std::cout << '\n';
             return false;
         }
@@ -214,9 +197,9 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
                 break;
 
             handle_ObjectType(uncompressedStream, ohc);
-            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
+            bytes_left_in_container = bytes_left_in_container - ohc.ohb.objSize;
 
-            std::cout << "Compressed LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
+            std::cout << std::dec << __LINE__ << ": Compressed LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
 
             if((bytes_left_in_container <= 0)  || (uncompressedStream.eof() ) )
                 run = false;
@@ -231,6 +214,8 @@ bool parse_container_uncompressed(std::iostream &fs, const LogContainer &lc)
     bool run = true;
     while(run)
         {
+
+            std::cout << std::dec << __LINE__ << ": " << std::hex << fs.tellg() << '\n';
             struct ObjectHeaderCarry ohc;
             if (read_headers(fs, ohc))
                 {
@@ -238,142 +223,27 @@ bool parse_container_uncompressed(std::iostream &fs, const LogContainer &lc)
                 }
             else
                 return false;
-
+            std::cout << std::dec << __LINE__ << ": " << std::hex << fs.tellg() << '\n';
             handle_ObjectType(fs, ohc);
-            bytes_left_in_container = bytes_left_in_container - ohc.ohb.objSize;
-            std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
+            std::cout << std::dec << __LINE__ << ": " << std::hex << fs.tellg() << '\n';
+
+            auto offset = fs.tellg() % 4;
+            std::cout << std::dec << __LINE__ << ": offset: " << std::hex << offset << '\n';
+            //fs.seekg(offset, std::ios_base::cur);
+
+            bytes_left_in_container = bytes_left_in_container - ohc.ohb.objSize; //- offset;
+            std::cout << std::dec << __LINE__ << ": LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
             if(bytes_left_in_container <= 0)
                 run = false;
         }
     return true;
-}
-
-
-bool read_head(std::iostream &fs)
-{
-    struct ObjectHeaderBase ohb;
-    if (read(fs, ohb))
-        print(std::cout, ohb);
-    else
-        {
-            std::cout << "Error reading ObjectHeaderBase\n";
-            return false;
-        }
-
-    auto bytes_to_jump = 0;
-    if(ohb.headerSize == 16)
-        bytes_to_jump = ohb.objSize - ohb.headerSize;
-
-    if(ohb.headerSize == 32)
-        bytes_to_jump = ohb.objSize - ohb.headerSize + 16;
-
-    fs.seekg(bytes_to_jump,std::ios_base::cur);
-    std::cout << print(ohb.objectType) << " " << static_cast<int> (ohb.objectType) << " " << std::dec << (int) bytes_to_jump << '\n';
-    return true;
-}
-
-
-bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
-{
-    uint32_t bytes_left_in_container = lc.unCompressedFileSize;
-    bool run = true;
-    while(run)
-        {
-            struct ObjectHeaderBase ohb;
-            if (read (fs, ohb))
-                {
-                    //   print(std::cout, ohb);
-                }
-            else
-                {
-                    std::cout << "Error reading ObjectHeaderBase\n";
-                    return false;
-                }
-
-            auto bytes_to_jump = 0;
-            if(ohb.headerSize == 16)
-                bytes_to_jump = ohb.objSize - ohb.headerSize;
-
-            if(ohb.headerSize == 32)
-                bytes_to_jump = ohb.objSize - ohb.headerSize + 16;
-
-            fs.seekg(bytes_to_jump,std::ios_base::cur);
-            //std::cout << "Bytes_to_jump: " << bytes_to_jump << " current position " << std::hex << fs.tellg() << '\n';
-            std::cout << print(ohb.objectType) << "(" << static_cast<int> (ohb.objectType) << ") " << std::dec << (int) bytes_to_jump << '\n';
-
-            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
-            //std::cout << "bytes left: " << std::dec << bytes_left_in_container << '\n';
-            if(bytes_left_in_container <= 0)
-                run = false;
-        }
-    return true;
-}
-
-
-void go_through_file_header_base(const char * const filename)
-{
-    std::cout << "Opening file: " << filename;
-    std::fstream fs(filename, std::fstream::in | std::fstream::binary);
-    if (fs.fail())
-        {
-            std::cout << " ";
-            std::cout << "File open failed, Exiting program\n";
-            return;
-        }
-    else
-        {
-            std::cout << " ** SUCCESS **\n";
-        }
-
-    auto filelength = fileLength(fs);
-
-    if (fs)
-        {
-            struct fileStatistics fileStat;
-            if (read(fs, fileStat))
-                {
-                    print(std::cout, fileStat);
-                }
-            else
-                {
-                    std::cout << "Error file is not a BLF file\n";
-                    return;
-                }
-        }
-
-    while (!fs.eof())
-        {
-            if((filelength - fs.tellg() == 0))
-                break;
-            std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
-            struct ObjectHeaderBase ohb;
-            if (read(fs, ohb))
-                {
-                    std::cout << print(ohb.objectType) << " " << static_cast<int> (ohb.objectType) << '\n';
-                }
-
-            else
-                {
-                    std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
-                    break;
-                }
-
-            if(ohb.objectType == ObjectType_e::LOG_CONTAINER)
-                {
-                    struct LogContainer lc;
-                    read(fs,lc,ohb);
-                    parse_logcontainer_base(fs, lc);
-                }
-            else
-                read_head(fs);
-        }
-    fs.close();
 }
 
 
 exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 {
     const auto payload_size = ohc.ohb.objSize-ohc.ohb.headerSize;
+    std::cout << std::dec << __LINE__ << ": payload: " << payload_size << '\n';
     switch (ohc.ohb.objectType)
         {
         case (ObjectType_e::CAN_MESSAGE): //read Can message;
@@ -484,6 +354,18 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
         }
         break;
 
+        case (ObjectType_e::CAN_ERROR_EXT):
+        {
+            struct CANErrorFrameExt cefe;
+            if (read_template(fs, cefe))
+            {
+                print(std::cout, cefe);
+            }
+        }
+        break;
+
+
+
         case (ObjectType_e::APP_TEXT):
         {
             struct AppText ap;
@@ -510,6 +392,7 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 
         default:
             std::cout << "New ObjectType: " << (int)ohc.ohb.objectType << '\n';
+            fs.seekg(payload_size, std::ios_base::cur);
             return exit_codes::UNHANDLED_OBJECT_TYPE;
         }
     return exit_codes::EXITING_SUCCESS;
@@ -570,7 +453,7 @@ exit_codes go_through_file(const char * const filename)
             }
             struct ObjectHeaderCarry ohc;
             if (read_headers(fs, ohc))
-                print(std::cout, ohc.ohb);
+                print(std::cout, ohc);
             else
                 {
                     std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
@@ -593,7 +476,6 @@ int main(int argc, char* argv[])
     if(argc > 1)
         {
             go_through_file( argv[1] );
-            //go_through_file_header_base ( argv[1] );
         }
     else
         {

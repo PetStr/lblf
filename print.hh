@@ -17,9 +17,10 @@ std::string print(timeStampStatus_e tss);
 void print(std::ostream &s, const sysTime_t &ts);
 void print(std::ostream &s, const fileStatistics &os);
 void print(std::ostream &s, const ObjectHeaderBase &ohb);
-void print(std::ostream &s, const ObjectHeader2 &oh2);
-void print(std::ostream &s, const LogContainer &lc);
 void print(std::ostream &s, const ObjectHeader &oh);
+void print(std::ostream &s, const ObjectHeader2 &oh2);
+void print(std::ostream &s, const ObjectHeaderCarry &ohc);
+void print(std::ostream &s, const LogContainer &lc);
 void print(std::ostream &s, const CanMessage &cm);
 void print(std::ostream &s, const CanOverload &co);
 void print(std::ostream &s, const CanOverload_short &co);
@@ -29,5 +30,6 @@ void print(std::ostream &s, const AppText &at);
 void print(std::ostream &s, const reserved_5 &r);
 void print(std::ostream &s, const CanError &cfe);
 void print(std::ostream &s, const CanError_short &cfe);
+void print(std::ostream &s, const  CANErrorFrameExt & ce);
 
 #endif

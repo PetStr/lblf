@@ -25,6 +25,10 @@ int main()
     std::cout << "uint            : " << std::dec << sizeof(unsigned int      ) << '\n';
     std::cout << "long int        : " << std::dec << sizeof(long int          ) << '\n';
     std::cout << "long            : " << std::dec << sizeof(long              ) << '\n';
+    std::cout << "ObjectHeaderCarry : " << std::dec << sizeof(ObjectHeaderCarry ) << '\n';
+    std::cout << "ObjectHeaders_e : " << std::dec << sizeof(ObjectHeaders_e ) << '\n';
+    std::cout << "CANErrorFrameExt : " << std::dec << sizeof(CANErrorFrameExt ) << '\n';
+    
 
 
     return 0;
