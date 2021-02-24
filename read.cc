@@ -17,19 +17,19 @@ const uint32_t FileSignature = 0x47474F4C;   //LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; //LOBJ
 
 //Forward declaration.
-exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb);
+exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderBase &ohb);
 
 
-uint32_t fileLength(std::fstream &fs)
+uint32_t fileLength(std::iostream &is)
 {
-    fs.seekg(0, fs.end);
-    uint32_t length = fs.tellg();
-    fs.seekg(0, fs.beg);
+    is.seekg(0, is.end);
+    uint32_t length = is.tellg();
+    is.seekg(0, is.beg);
     return length;
 }
 
 
-bool read(std::fstream &fs, fileStatistics &os)
+bool read(std::iostream &fs, fileStatistics &os)
 {
     fs.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
     if (os.FileSign != FileSignature)
@@ -59,7 +59,7 @@ bool read(std::fstream &fs, fileStatistics &os)
 }
 
 
-bool read(std::fstream & fs, uint32_t length, std::vector<uint8_t> & data)
+bool read(std::iostream & fs, uint32_t length, std::vector<uint8_t> & data)
 {
     for(uint32_t n = 0; n<length; n++)
         {
@@ -71,7 +71,7 @@ bool read(std::fstream & fs, uint32_t length, std::vector<uint8_t> & data)
 }
 
 
-bool read(std::fstream & fs, uint32_t length, std::string & data)
+bool read(std::iostream & fs, uint32_t length, std::string & data)
 {
     data.resize(length);
     fs.read(const_cast<char *>(data.data()), length);
@@ -79,7 +79,7 @@ bool read(std::fstream & fs, uint32_t length, std::string & data)
 }
 
 
-bool read(std::fstream &fs, ObjectHeaderBase &ohb)
+bool read(std::iostream &fs, ObjectHeaderBase &ohb)
 {
     fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -117,9 +117,9 @@ bool read(uint8_t * data, ObjectHeaderBase &ohb)
 }
 
 
-bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
+bool read(std::iostream &input_stream, LogContainer &lc, const ObjectHeaderBase &ohb)
 {
-    fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
+    input_stream.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
     if (lc.compressionMethod == compressionMethod_e::uncompressed)
         {
@@ -131,18 +131,10 @@ bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
 
 
 template <typename type_data>
-bool read_template(std::fstream &fs, type_data &data)
+bool read_template(std::iostream &fs, type_data &data)
 {
     fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
     return true;
-}
-
-
-template <typename type_data>
-size_t read_template(const uint8_t * indata_array, type_data &data)
-{
-    std::memcpy(reinterpret_cast<char *> (&data), indata_array, sizeof(type_data));
-    return sizeof(type_data);
 }
 
 
@@ -153,35 +145,39 @@ void current_position(std::ostream &s, const uint64_t pos)
 }
 
 
-bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
+bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
 {
-    std::cout << "Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
     std::cout << "Entering: " << __FUNCTION__ << '\n';
+
     uLong bytes_left_in_container = lc.unCompressedFileSize;
-    std::vector<uint8_t> compressedFile {};
-    std::vector<uint8_t> uncompressedFile {};
-    auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
-    compressedFile.resize(compressedFileSize);
+    std::vector<uint8_t> compressedData {};
+    std::vector<uint8_t> uncompressedData {};
+    auto compressedDataSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
+    compressedData.resize(compressedDataSize);
 
     std::cout << "Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
-    fs.read(reinterpret_cast<char *>(compressedFile.data()), compressedFileSize);
+    fs.read(reinterpret_cast<char *>(compressedData.data()), compressedDataSize);
 
 
     std::cout << "Bytes after : " << std::dec << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
-    uncompressedFile.resize(bytes_left_in_container);
+    uncompressedData.resize(bytes_left_in_container);
     int retVal = ::uncompress(
-                     reinterpret_cast<Byte *>(uncompressedFile.data()),
+                     reinterpret_cast<Byte *>(uncompressedData.data()),
                      &bytes_left_in_container,
-                     reinterpret_cast<Byte *>(compressedFile.data()),
-                     static_cast<uLong>(compressedFileSize));
-
-
+                     reinterpret_cast<Byte *>(compressedData.data()),
+                     static_cast<uLong>(compressedDataSize));
     std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
 
+//Transfer data to stream;
+    std::stringstream uncompressedStream; 
+    for (const auto & data : uncompressedData) 
+    {
+        uncompressedStream.write(reinterpret_cast<const char*>(&data), sizeof(uint8_t));
+    }
 
     size_t cnt = 0;
-    for(auto a: uncompressedFile)
+    for(auto a: uncompressedData)
         {
             std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
             cnt++;
@@ -190,50 +186,49 @@ bool parse_container_compressed(std::fstream &fs, const LogContainer &lc, const 
         }
     std::cout << '\n';
 
+    uncompressedData.clear();
+    compressedData.clear();
 
-    uint8_t * uncompresseddata = uncompressedFile.data();
     bool run = true;
     while(run)
         {
             struct ObjectHeaderBase ohb;
-            if (read(uncompresseddata, ohb))
+            if (read(uncompressedStream, ohb))
                 {
                     print(std::cout, ohb);
                 }
             else
                 break;
 
-            //Move pointer to next step
-            uncompresseddata += sizeof(ohb);
+    
             bytes_left_in_container -= sizeof(ohb);
             if(bytes_left_in_container <= 0)
                 return true;
 
             struct ObjectHeader oh;
-            auto bytes_read = read_template(uncompresseddata, oh);
-            uncompresseddata+=bytes_read;
-            bytes_left_in_container -= bytes_read;
+            if(read_template(uncompressedStream, oh))
+                bytes_left_in_container-=sizeof(ObjectHeader);
+
             //print(std::cout, oh);
             if(bytes_left_in_container <= 0)
                 return true;
 
 
             struct CanMessage cm;
-            bytes_read = read_template(uncompresseddata, cm);
-            uncompresseddata+=bytes_read;
-            bytes_left_in_container -= bytes_read;
+            if(read_template(uncompressedStream, cm))
+                bytes_left_in_container -= sizeof(CanMessage);
             print(std::cout, cm);
 
-            std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
+            std::cout << "Compressed LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
 
-            if(bytes_left_in_container <= 0)
+            if((bytes_left_in_container <= 0)  || (uncompressedStream.eof() ) )
                 run = false;
         }
     return true;
 }
 
 
-bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
+bool parse_container_uncompressed(std::iostream &fs, const LogContainer &lc)
 {
     int32_t bytes_left_in_container = lc.unCompressedFileSize;
     bool run = true;
@@ -257,7 +252,7 @@ bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
 }
 
 
-bool read_head(std::fstream &fs)
+bool read_head(std::iostream &fs)
 {
     struct ObjectHeaderBase ohb;
     if (read(fs, ohb))
@@ -380,7 +375,7 @@ void go_through_file_header_base(const char * const filename)
 }
 
 
-exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
+exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderBase &ohb)
 {
     const auto payload_size = ohb.objSize-ohb.headerSize;
     switch (ohb.objectType)
