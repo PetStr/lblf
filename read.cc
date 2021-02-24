@@ -17,7 +17,7 @@ const uint32_t FileSignature = 0x47474F4C;   //LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; //LOBJ
 
 //Forward declaration.
-exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderBase &ohb);
+exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc);
 
 
 uint32_t fileLength(std::iostream &is)
@@ -166,11 +166,11 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
     auto compressedDataSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
     compressedData.resize(compressedDataSize);
 
-    std::cout << __LINE__ << " Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
+    std::cout << std::dec << __LINE__ << " Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
     fs.read(reinterpret_cast<char *>(compressedData.data()), compressedDataSize);
 
 
-    std::cout << __LINE__ << " Bytes after : " << std::dec << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
+    std::cout << std::dec <<__LINE__ << " Bytes after : " << std::dec << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
     uncompressedData.resize(bytes_left_in_container);
     int retVal = ::uncompress(
@@ -205,15 +205,15 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
     bool run = true;
     while(run)
         {
-            struct ObjectHeaderBase ohb;
-            if (read(uncompressedStream, ohb))
+            struct ObjectHeaderCarry ohc;
+            if (read_headers(uncompressedStream, ohc))
                 {
-                    print(std::cout, ohb);
+                    print(std::cout, ohc.ohb);
                 }
             else
                 break;
 
-            handle_ObjectType(uncompressedStream, ohb);
+            handle_ObjectType(uncompressedStream, ohc);
             bytes_left_in_container = bytes_left_in_container - ohb.objSize;
 
             std::cout << "Compressed LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
@@ -232,7 +232,7 @@ bool parse_container_uncompressed(std::iostream &fs, const LogContainer &lc)
     while(run)
         {
             struct ObjectHeaderCarry ohc;
-            if (read(fs, ohc.ohb))
+            if (read_headers(fs, ohc))
                 {
                     print(std::cout, ohc.ohb);
                 }
@@ -240,7 +240,7 @@ bool parse_container_uncompressed(std::iostream &fs, const LogContainer &lc)
                 return false;
 
             handle_ObjectType(fs, ohc);
-            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
+            bytes_left_in_container = bytes_left_in_container - ohc.ohb.objSize;
             std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
             if(bytes_left_in_container <= 0)
                 run = false;
@@ -378,9 +378,6 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
         {
         case (ObjectType_e::CAN_MESSAGE): //read Can message;
         {
-            struct ObjectHeader oh;
-            (read_template(fs, oh));
-            //	  print(std::cout, oh);
             if(payload_size == sizeof(CanMessage))
                 {
                     struct CanMessage cm;
@@ -396,9 +393,6 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 
         case (ObjectType_e::CAN_ERROR): //CanErrorFrame
         {
-            struct ObjectHeader oh;
-            read_template(fs, oh);
-            print(std::cout, oh);
             switch(payload_size)
                 {
                 case sizeof(CanError_short) :
@@ -421,10 +415,6 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 
         case (ObjectType_e::CAN_OVERLOAD): //CanOverload
         {
-            print(std::cout, ohb);
-            struct ObjectHeader oh;
-            read_template(fs, oh);
-            print(std::cout, oh);
             switch(payload_size)
                 {
                 case sizeof(CanOverload) :
@@ -445,9 +435,6 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 
         case (ObjectType_e::APP_TRIGGER): //Handle apptrigger
         {
-            struct ObjectHeader oh;
-            read_template(fs, oh);
-            //print(std::cout, oh);
             struct AppTrigger ap;
             read_template(fs, ap);
             print(std::cout, ap);
@@ -457,7 +444,7 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
         case (ObjectType_e::LOG_CONTAINER): //Get Logcontainer
         {
             struct LogContainer lc;
-            if (read(fs, lc, ohb))
+            if (read(fs, lc, ohc.ohb))
                 print(std::cout, lc);
 
             if(lc.compressionMethod == compressionMethod_e::uncompressed)
@@ -475,7 +462,7 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
                 }
             if(lc.compressionMethod == compressionMethod_e::zlib)
                 {
-                    if(parse_container_compressed(fs, lc, ohb))
+                    if(parse_container_compressed(fs, lc, ohc.ohb))
                         {
                             std::cout << "LogContainer handled.\n";
                         }
@@ -491,9 +478,6 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 
         case (ObjectType_e::CAN_MESSAGE2):
         {
-            struct ObjectHeader oh;
-            (read_template(fs, oh));
-            //	  print(std::cout, oh);
             struct CanMessage2 cm2;
             if (read_template(fs, cm2))
                 print(std::cout, cm2);
@@ -502,8 +486,6 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 
         case (ObjectType_e::APP_TEXT):
         {
-            struct ObjectHeader oh;
-            read_template(fs, oh);
             struct AppText ap;
             read_template(fs,ap);
             print(std::cout,ap);
@@ -520,17 +502,14 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
         case (ObjectType_e::reserved_5):
         {
             std::cout << "sizeof (reserved5) " << sizeof(reserved_5) << '\n';
-            struct ObjectHeader oh;
-            read_template(fs, oh);
             struct reserved_5 r5;
             read_template(fs,r5);
             print(std::cout, r5);
         }
         break;
 
-
         default:
-            std::cout << "New ObjectType: " << (int)ohb.objectType << '\n';
+            std::cout << "New ObjectType: " << (int)ohc.ohb.objectType << '\n';
             return exit_codes::UNHANDLED_OBJECT_TYPE;
         }
     return exit_codes::EXITING_SUCCESS;
@@ -571,27 +550,27 @@ exit_codes go_through_file(const char * const filename)
 
     while (!fs.eof())
         {
-            if((filelength - fs.tellg() == 0))
+            if((filelength - fs.tellg() <= 16))
                 break;
-            std::cout << __LINE__ << ": Bytes left: " << filelength - fs.tellg() << '\n';
-            std::cout << __LINE__ << ": Bytes now: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
+            std::cout << std::dec << __LINE__ << ": Bytes left: " << filelength - fs.tellg() << '\n';
+            std::cout << std::dec << __LINE__ << ": Bytes now: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
             auto offset = fs.tellg() % 4;
 
-            std::cout << __LINE__  << ": Offset to move: " << offset << '\n';
+            std::cout << std::dec  << __LINE__  << ": Offset to move: " << offset << '\n';
 
             fs.seekg(offset, std::ios_base::cur);
 
-            std::cout << __LINE__  << ": Aftermove: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
+            std::cout << std::dec << __LINE__  << ": Aftermove: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
             if(fs.eof())
             {
                 std::cout << __LINE__ << " End of file reached\n";
                 break;
             }
-            struct ObjectHeaderBase ohb;
-            if (read(fs, ohb))
-                print(std::cout, ohb);
+            struct ObjectHeaderCarry ohc;
+            if (read_headers(fs, ohc))
+                print(std::cout, ohc.ohb);
             else
                 {
                     std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
@@ -599,7 +578,7 @@ exit_codes go_through_file(const char * const filename)
                     return exit_codes::UNABLE_TO_READ_OBJECT_HEADER_BASE;
                 }
 
-            handle_ObjectType(fs, ohb);
+            handle_ObjectType(fs, ohc);
         }
     fs.close();
     return exit_codes::EXITING_SUCCESS;
@@ -608,18 +587,8 @@ exit_codes go_through_file(const char * const filename)
 
 int main(int argc, char* argv[])
 {
-    /*
-        std::cout << "LogContainer    : " << std::dec << sizeof(LogContainer      ) << '\n';
-        std::cout << "CanMessage      : " << std::dec << sizeof(CanMessage        ) << '\n';
-        std::cout << "CanMessage2     : " << std::dec << sizeof(CanMessage2       ) << '\n';
-        std::cout << "AppTrigger      : " << std::dec << sizeof(AppTrigger        ) << '\n';
-        std::cout << "ObjectHeader      : " << std::dec << sizeof(ObjectHeader    ) << '\n';
-        std::cout << "ObjectHeader2      : " << std::dec << sizeof(ObjectHeader2  ) << '\n';
-        std::cout << "ObjectHeaderBase  : " << std::dec << sizeof(ObjectHeaderBase) << '\n';
-      */
 
-
-    std::cout << "----- START OF OUTPUT -----------------------------\n";
+    std::cout << "----- START OF OUTPUT -----\n";
 
     if(argc > 1)
         {
@@ -631,6 +600,6 @@ int main(int argc, char* argv[])
             std::cout << "run blf evaluation: " << argv[0] << " filname.blf\n";
         }
 
-    std::cout << "----- END OF OUTPUT -----------------------------\n";
+    std::cout << "----- END OF OUTPUT -----\n";
 
 }

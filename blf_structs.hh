@@ -210,6 +210,12 @@ struct fileStatistics
     sysTime_t meas_start_time;
     sysTime_t last_obj_time;
     uint64_t fileSize_less115;
+    fileStatistics() : FileSign(0), StatSize(0), AppId(AppId_e::UNKNOWN),
+        AppMaj(0), AppMin(0), AppBuild(0), ApiMaj(0), ApiMin(0),
+        ApiBuild(0),  ApiPatch(0), fileSize(0), uncompressedSize(0),
+        objCount(0), objRead(0),
+        meas_start_time({0,0,0,0,0,0,0,0}), last_obj_time({0,0,0,0,0,0,0,0}), fileSize_less115(0)
+    {}
 };
 
 
@@ -220,6 +226,8 @@ struct ObjectHeaderBase
     uint16_t headerVer;
     uint32_t objSize;
     enum ObjectType_e objectType; //  : uint32_t;
+    ObjectHeaderBase() : ObjSign(0), headerSize(0),
+        headerVer(0), objSize(0), objectType(ObjectType_e::UNKNOWN) {}
 };
 
 
@@ -249,7 +257,7 @@ struct ObjectHeader2
 enum class compressionMethod_e : int16_t
 {
     uncompressed = 0x00,
-    zlib = 0x02
+    zlib = 0x02,
 };
 
 
@@ -279,6 +287,7 @@ struct CanMessage
     uint8_t dlc;
     uint32_t id;
     std::array<uint8_t, 8> data {};
+    CanMessage() : channel(0), flags(0), dlc(0), id(0), data({0,0,0,0,0,0,0,0}) {}
 };
 
 
@@ -323,6 +332,8 @@ struct CanMessage2
     uint8_t bitCount;
     uint8_t reservedCanMessage1;
     uint16_t reservedCanMessage2;
+    CanMessage2() : channel(0), flags(0), dlc(0), id(0), data({0,0,0,0,0,0,0,0}), 
+        frameLength(0), bitCount(0), reservedCanMessage1(0), reservedCanMessage2(0) {}
 };
 
 
@@ -350,5 +361,27 @@ struct reserved_5
 };
 
 #pragma pack()
+
+
+//Application helper structs. 
+enum class ObjectHeaders_e
+{
+    NONE,
+    ONLY_HEADER_BASE,
+    BASE_AND_HEADER,
+    BASE_AND_HEADER2
+};
+
+
+struct ObjectHeaderCarry
+{
+    ObjectHeaders_e oh_enum;
+    struct ObjectHeaderBase ohb;
+    struct ObjectHeader oh;
+    struct ObjectHeader2 oh2;
+    ObjectHeaderCarry() : oh_enum(ObjectHeaders_e::NONE) {}
+};
+
+
 
 #endif
