@@ -29,6 +29,14 @@ uint32_t fileLength(std::iostream &is)
 }
 
 
+template <typename type_data>
+bool read_template(std::iostream &fs, type_data &data)
+{
+    fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
+    return true;
+}
+
+
 bool read(std::iostream &fs, fileStatistics &os)
 {
     fs.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
@@ -84,7 +92,7 @@ bool read(std::iostream &fs, ObjectHeaderBase &ohb)
     fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
         {
-            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
+            std::cout << __LINE__ << ": Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
             std::cout << '\n';
             return false;
         }
@@ -93,6 +101,38 @@ bool read(std::iostream &fs, ObjectHeaderBase &ohb)
     fs.read(reinterpret_cast<char *>(&ohb.objSize), sizeof(ohb.objSize));
     fs.read(reinterpret_cast<char *>(&ohb.objectType), sizeof(ohb.objectType));
     return true;
+}
+
+
+bool read_headers(std::iostream &fs, ObjectHeaderCarry &ohc)
+{
+    fs.read(reinterpret_cast<char *>(&ohc.ohb.ObjSign), sizeof(ohc.ohb.ObjSign));
+    if (ohc.ohb.ObjSign != ObjectSignature)
+        {
+            std::cout << __LINE__ << ": Not Found LOBJ: " << std::hex << (int) ohc.ohb.ObjSign;
+            std::cout << '\n';
+            return false;
+        }
+    fs.read(reinterpret_cast<char *>(&ohc.ohb.headerSize), sizeof(ohc.ohb.headerSize));
+    fs.read(reinterpret_cast<char *>(&ohc.ohb.headerVer),  sizeof(ohc.ohb.headerVer));
+    fs.read(reinterpret_cast<char *>(&ohc.ohb.objSize),    sizeof(ohc.ohb.objSize));
+    fs.read(reinterpret_cast<char *>(&ohc.ohb.objectType), sizeof(ohc.ohb.objectType));
+
+    switch (ohc.ohb.headerSize)
+    {
+        case 16 : 
+            ohc.oh_enum = ObjectHeaders_e::ONLY_HEADER_BASE;
+            break;
+        case 32 :
+                read_template(fs, ohc.oh);
+                ohc.oh_enum = ObjectHeaders_e::BASE_AND_HEADER;
+                break;
+        case 40 :
+                read_template(fs, ohc.oh2);
+                ohc.oh_enum = ObjectHeaders_e::BASE_AND_HEADER2;
+                break;
+    }
+    return true;    
 }
 
 
@@ -105,14 +145,6 @@ bool read(std::iostream &input_stream, LogContainer &lc, const ObjectHeaderBase 
             lc.unCompressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - sizeof(lc.reserv1) - sizeof(lc.reserv2) - sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
         }
 
-    return true;
-}
-
-
-template <typename type_data>
-bool read_template(std::iostream &fs, type_data &data)
-{
-    fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
     return true;
 }
 
@@ -134,11 +166,11 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
     auto compressedDataSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
     compressedData.resize(compressedDataSize);
 
-    std::cout << "Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
+    std::cout << __LINE__ << " Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
     fs.read(reinterpret_cast<char *>(compressedData.data()), compressedDataSize);
 
 
-    std::cout << "Bytes after : " << std::dec << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
+    std::cout << __LINE__ << " Bytes after : " << std::dec << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
     uncompressedData.resize(bytes_left_in_container);
     int retVal = ::uncompress(
@@ -146,6 +178,7 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
                      &bytes_left_in_container,
                      reinterpret_cast<Byte *>(compressedData.data()),
                      static_cast<uLong>(compressedDataSize));
+
     std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
 
 //Transfer data to stream;
@@ -155,6 +188,7 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
             uncompressedStream.write(reinterpret_cast<const char*>(&data), sizeof(uint8_t));
         }
 
+    std::cout << "Printing uncompressedData, size: " << uncompressedData.size() << "\n";
     size_t cnt = 0;
     for(auto a: uncompressedData)
         {
@@ -197,15 +231,15 @@ bool parse_container_uncompressed(std::iostream &fs, const LogContainer &lc)
     bool run = true;
     while(run)
         {
-            struct ObjectHeaderBase ohb;
-            if (read(fs, ohb))
+            struct ObjectHeaderCarry ohc;
+            if (read(fs, ohc.ohb))
                 {
-                    //print(std::cout, ohb);
+                    print(std::cout, ohc.ohb);
                 }
             else
                 return false;
 
-            handle_ObjectType(fs, ohb);
+            handle_ObjectType(fs, ohc);
             bytes_left_in_container = bytes_left_in_container - ohb.objSize;
             std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
             if(bytes_left_in_container <= 0)
@@ -245,7 +279,6 @@ bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
     bool run = true;
     while(run)
         {
-
             struct ObjectHeaderBase ohb;
             if (read (fs, ohb))
                 {
@@ -338,10 +371,10 @@ void go_through_file_header_base(const char * const filename)
 }
 
 
-exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderBase &ohb)
+exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 {
-    const auto payload_size = ohb.objSize-ohb.headerSize;
-    switch (ohb.objectType)
+    const auto payload_size = ohc.ohb.objSize-ohc.ohb.headerSize;
+    switch (ohc.ohb.objectType)
         {
         case (ObjectType_e::CAN_MESSAGE): //read Can message;
         {
@@ -540,18 +573,22 @@ exit_codes go_through_file(const char * const filename)
         {
             if((filelength - fs.tellg() == 0))
                 break;
-            std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
-            std::cout << "Bytes now: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
+            std::cout << __LINE__ << ": Bytes left: " << filelength - fs.tellg() << '\n';
+            std::cout << __LINE__ << ": Bytes now: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
             auto offset = fs.tellg() % 4;
 
-            std::cout << "Offset to move: " << offset << '\n';
+            std::cout << __LINE__  << ": Offset to move: " << offset << '\n';
 
             fs.seekg(offset, std::ios_base::cur);
 
-            std::cout << "Aftermove: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
+            std::cout << __LINE__  << ": Aftermove: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
-
+            if(fs.eof())
+            {
+                std::cout << __LINE__ << " End of file reached\n";
+                break;
+            }
             struct ObjectHeaderBase ohb;
             if (read(fs, ohb))
                 print(std::cout, ohb);
