@@ -96,27 +96,6 @@ bool read(std::iostream &fs, ObjectHeaderBase &ohb)
 }
 
 
-bool read(uint8_t * data, ObjectHeaderBase &ohb)
-{
-    std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
-    if (ohb.ObjSign != ObjectSignature)
-        {
-            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
-            std::cout << '\n';
-            return false;
-        }
-    data = data + sizeof(ohb.ObjSign);
-    std::memcpy(&ohb.headerSize, data, sizeof(ohb.headerSize));
-    data = data + sizeof(ohb.headerSize);
-    std::memcpy(&ohb.headerVer, data, sizeof(ohb.headerVer));
-    data = data + sizeof(ohb.headerVer);
-    std::memcpy(&ohb.objSize, data, sizeof(ohb.objSize));
-    data = data + sizeof(ohb.objSize);
-    std::memcpy(&ohb.objectType, data, sizeof(ohb.objectType));
-    return true;
-}
-
-
 bool read(std::iostream &input_stream, LogContainer &lc, const ObjectHeaderBase &ohb)
 {
     input_stream.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
@@ -200,24 +179,8 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
             else
                 break;
 
-    
-            bytes_left_in_container -= sizeof(ohb);
-            if(bytes_left_in_container <= 0)
-                return true;
-
-            struct ObjectHeader oh;
-            if(read_template(uncompressedStream, oh))
-                bytes_left_in_container-=sizeof(ObjectHeader);
-
-            //print(std::cout, oh);
-            if(bytes_left_in_container <= 0)
-                return true;
-
-
-            struct CanMessage cm;
-            if(read_template(uncompressedStream, cm))
-                bytes_left_in_container -= sizeof(CanMessage);
-            print(std::cout, cm);
+            handle_ObjectType(uncompressedStream, ohb);
+            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
 
             std::cout << "Compressed LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
 
