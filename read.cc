@@ -149,11 +149,11 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
     std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
 
 //Transfer data to stream;
-    std::stringstream uncompressedStream; 
-    for (const auto & data : uncompressedData) 
-    {
-        uncompressedStream.write(reinterpret_cast<const char*>(&data), sizeof(uint8_t));
-    }
+    std::stringstream uncompressedStream;
+    for (const auto & data : uncompressedData)
+        {
+            uncompressedStream.write(reinterpret_cast<const char*>(&data), sizeof(uint8_t));
+        }
 
     size_t cnt = 0;
     for(auto a: uncompressedData)

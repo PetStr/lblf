@@ -553,7 +553,7 @@ void go_through_file_header_base(const char * const filename)
 
 int main(int argc, char* argv[])
 {
-  
+
     std::cout << "----- START OF OUTPUT -----------------------------\n";
 
     if(argc > 1)
