@@ -332,8 +332,8 @@ struct CanMessage2
     uint8_t bitCount;
     uint8_t reservedCanMessage1;
     uint16_t reservedCanMessage2;
-    CanMessage2() : channel(0), flags(0), dlc(0), id(0), data({0,0,0,0,0,0,0,0}), 
-        frameLength(0), bitCount(0), reservedCanMessage1(0), reservedCanMessage2(0) {}
+    CanMessage2() : channel(0), flags(0), dlc(0), id(0), data({0,0,0,0,0,0,0,0}),
+    frameLength(0), bitCount(0), reservedCanMessage1(0), reservedCanMessage2(0) {}
 };
 
 
@@ -355,7 +355,7 @@ struct AppText
 };
 
 
-struct CANErrorFrameExt 
+struct CANErrorFrameExt
 {
     uint16_t    mChannel;                    /* application channel */
     uint16_t    mLength;                     /* CAN error frame length */
@@ -387,7 +387,7 @@ struct reserved_5
 #pragma pack()
 
 
-//Application helper structs. 
+//Application helper structs.
 enum class ObjectHeaders_e
 {
     NONE,

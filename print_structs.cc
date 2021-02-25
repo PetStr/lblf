@@ -28,7 +28,7 @@ int main()
     std::cout << "ObjectHeaderCarry : " << std::dec << sizeof(ObjectHeaderCarry ) << '\n';
     std::cout << "ObjectHeaders_e : " << std::dec << sizeof(ObjectHeaders_e ) << '\n';
     std::cout << "CANErrorFrameExt : " << std::dec << sizeof(CANErrorFrameExt ) << '\n';
-    
+
 
 
     return 0;

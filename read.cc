@@ -102,20 +102,20 @@ bool read_headers(std::iostream &fs, ObjectHeaderCarry &ohc)
     fs.read(reinterpret_cast<char *>(&ohc.ohb.objectType), sizeof(ohc.ohb.objectType));
 
     switch (ohc.ohb.headerSize)
-    {
-        case 16 : 
+        {
+        case 16 :
             ohc.oh_enum = ObjectHeaders_e::ONLY_HEADER_BASE;
             break;
         case 32 :
-                read_template(fs, ohc.oh);
-                ohc.oh_enum = ObjectHeaders_e::BASE_AND_HEADER;
-                break;
+            read_template(fs, ohc.oh);
+            ohc.oh_enum = ObjectHeaders_e::BASE_AND_HEADER;
+            break;
         case 40 :
-                read_template(fs, ohc.oh2);
-                ohc.oh_enum = ObjectHeaders_e::BASE_AND_HEADER2;
-                break;
-    }
-    return true;    
+            read_template(fs, ohc.oh2);
+            ohc.oh_enum = ObjectHeaders_e::BASE_AND_HEADER2;
+            break;
+        }
+    return true;
 }
 
 
@@ -358,9 +358,9 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
         {
             struct CANErrorFrameExt cefe;
             if (read_template(fs, cefe))
-            {
-                print(std::cout, cefe);
-            }
+                {
+                    print(std::cout, cefe);
+                }
         }
         break;
 
@@ -447,10 +447,10 @@ exit_codes go_through_file(const char * const filename)
             std::cout << std::dec << __LINE__  << ": Aftermove: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
             if(fs.eof())
-            {
-                std::cout << __LINE__ << " End of file reached\n";
-                break;
-            }
+                {
+                    std::cout << __LINE__ << " End of file reached\n";
+                    break;
+                }
             struct ObjectHeaderCarry ohc;
             if (read_headers(fs, ohc))
                 print(std::cout, ohc);

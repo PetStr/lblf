@@ -442,7 +442,7 @@ void print(std::ostream &s, const ObjectHeader &oh)
 void print(std::ostream &s, const ObjectHeaderCarry &ohc)
 {
     switch(ohc.oh_enum)
-    {
+        {
         case ObjectHeaders_e::ONLY_HEADER_BASE :
             print(s, ohc.ohb);
             break;
@@ -454,7 +454,7 @@ void print(std::ostream &s, const ObjectHeaderCarry &ohc)
             print(s,ohc.ohb);
             print(s,ohc.oh2);
             break;
-    }
+        }
 }
 
 
