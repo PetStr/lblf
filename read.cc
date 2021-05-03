@@ -162,9 +162,10 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
                      reinterpret_cast<Byte *>(compressedData.data()),
                      static_cast<uLong>(compressedDataSize));
 
-    std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
+    std::cout << __FUNCTION__ << "uncompress: retVal: " << std::dec << retVal << '\n';
 
 //Transfer data to stream;
+    //std::basic_stringstream<uint8_t> uncompressedStream;
     std::stringstream uncompressedStream;
     for (const auto & data : uncompressedData)
         {
