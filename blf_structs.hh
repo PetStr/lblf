@@ -1,6 +1,8 @@
 #ifndef BLF_STRUCTS_HH
 #define BLF_STRUCTS_HH
 
+#include <array>
+#include <cstdlib>
 
 enum class exit_codes : uint32_t
 {

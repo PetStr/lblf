@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <vector>
 #include <cstring>
+#include <sstream>
 
 #include <zlib.h>
 

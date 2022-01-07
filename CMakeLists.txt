@@ -15,7 +15,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 find_package(ZLIB)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wno-switch")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wno-switch -std=c++17")
 
 add_executable(read read.cc print.cc)
 target_link_libraries(read -lz )
