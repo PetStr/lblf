@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <fstream>
 #include <array>
@@ -11,14 +12,14 @@
 //hexdump -v -C -n 512 truck02.blf
 
 #include "blf_structs.hh"
-
 #include "print.hh"
 
 const uint32_t FileSignature = 0x47474F4C;   //LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; //LOBJ
 
 //Forward declaration.
-exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc);
+template <typename stream_type> 
+exit_codes handle_ObjectType(stream_type &fs, const ObjectHeaderCarry &ohc);
 
 
 uint32_t fileLength(std::iostream &is)
@@ -30,45 +31,106 @@ uint32_t fileLength(std::iostream &is)
 }
 
 
-template <typename type_data>
-bool read_template(std::iostream &fs, type_data &data)
+template <typename type_data, typename stream_type>
+bool read_template(stream_type &fs, type_data &data)
 {
-    fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
+    //fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
+    fs >> data;
     return true;
 }
 
 
-bool read(std::iostream &fs, fileStatistics &os)
+template <typename stream_type>
+std::istream& operator>> (stream_type& is, AppId_e& aid)
 {
-    fs.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
+    uint8_t temp;
+    is >> temp;
+    aid = static_cast<AppId_e> (temp);
+    return is;
+}
+
+
+/**
+* @brief support operator for getting data.  
+*
+*/
+template <typename stream_type>
+std::istream& operator>> (stream_type& is, sysTime_t& st)
+{
+    is >> st.year;
+    is >> st.month;
+    is >> st.dayOfWeek;
+    is >> st.day;
+    is >> st.hour;
+    is >> st.minute;
+    is >> st.second;
+    is >> st.milliseconds;
+    return is;
+}
+
+
+bool readX(std::iostream &fs, fileStatistics &os)
+{
+    fs >> os.FileSign;
     if (os.FileSign != FileSignature)
         {
             return false;
         }
 
-    fs.read(reinterpret_cast<char *>(&os.StatSize), sizeof(os.StatSize));
-    fs.read(reinterpret_cast<char *>(&os.AppId), sizeof(os.AppId));
-    fs.read(reinterpret_cast<char *>(&os.AppMaj), sizeof(os.AppMaj));
-    fs.read(reinterpret_cast<char *>(&os.AppMin), sizeof(os.AppMin));
-    fs.read(reinterpret_cast<char *>(&os.AppBuild), sizeof(os.AppBuild));
-    fs.read(reinterpret_cast<char *>(&os.ApiMaj), sizeof(os.ApiMaj));
-    fs.read(reinterpret_cast<char *>(&os.ApiMin), sizeof(os.ApiMin));
-    fs.read(reinterpret_cast<char *>(&os.ApiBuild), sizeof(os.ApiBuild));
-    fs.read(reinterpret_cast<char *>(&os.ApiPatch), sizeof(os.ApiPatch));
-    fs.read(reinterpret_cast<char *>(&os.fileSize), sizeof(os.fileSize));
-    fs.read(reinterpret_cast<char *>(&os.uncompressedSize), sizeof(os.uncompressedSize));
-    fs.read(reinterpret_cast<char *>(&os.objCount), sizeof(os.objCount));
-    fs.read(reinterpret_cast<char *>(&os.objRead), sizeof(os.objRead));
-    fs.read(reinterpret_cast<char *>(&os.meas_start_time), sizeof(os.meas_start_time));
-    fs.read(reinterpret_cast<char *>(&os.last_obj_time), sizeof(os.last_obj_time));
-    fs.read(reinterpret_cast<char *>(&os.fileSize_less115), sizeof(os.fileSize_less115));
+    fs >> os.StatSize;
+    fs >> os.AppId;
+    fs >> os.AppMaj;
+    fs >> os.AppMin;
+    fs >> os.AppBuild;
+    fs >> os.ApiMaj;
+    fs >> os.ApiMin;
+    fs >> os.ApiBuild;
+    fs >> os.ApiPatch;
+    fs >> os.fileSize;
+    fs >> os.uncompressedSize;
+    fs >> os.objCount;
+    fs >> os.objRead;
+    fs >> os.meas_start_time;
+    fs >> os.last_obj_time;
+    fs >> os.fileSize_less115;
     auto offset = os.StatSize - sizeof(fileStatistics);
     fs.seekg(offset, std::ios_base::cur);
     return true;
 }
 
 
-bool read(std::iostream & fs, uint32_t length, std::vector<uint8_t> & data)
+template <typename stream_type>
+bool read(stream_type &fs, fileStatistics &os)
+{
+    fs >> os.FileSign;
+    if (os.FileSign != FileSignature)
+        {
+            return false;
+        }
+    fs >> os.StatSize; 
+    fs >> os.AppId; 
+    fs >> os.AppMaj; 
+    fs >> os.AppMin; 
+    fs >> os.AppBuild; 
+    fs >> os.ApiMaj; 
+    fs >> os.ApiMin; 
+    fs >> os.ApiBuild; 
+    fs >> os.ApiPatch; 
+    fs >> os.fileSize; 
+    fs >> os.uncompressedSize; 
+    fs >> os.objCount; 
+    fs >> os.objRead; 
+    fs >> os.meas_start_time; 
+    fs >> os.last_obj_time; 
+    fs >> os.fileSize_less115; 
+    auto offset = os.StatSize - sizeof(fileStatistics);
+    fs.seekg(offset, std::ios_base::cur);
+    return true;
+}
+
+
+template <typename stream_type>
+bool read(stream_type & fs, uint32_t length, std::vector<uint8_t> & data)
 {
     for(uint32_t n = 0; n<length; n++)
         {
@@ -80,7 +142,8 @@ bool read(std::iostream & fs, uint32_t length, std::vector<uint8_t> & data)
 }
 
 
-bool read(std::iostream & fs, uint32_t length, std::string & data)
+template <typename stream_type>
+bool read(stream_type & fs, uint32_t length, std::string & data)
 {
     data.resize(length);
     fs.read(const_cast<char *>(data.data()), length);
@@ -88,19 +151,26 @@ bool read(std::iostream & fs, uint32_t length, std::string & data)
 }
 
 
-bool read_headers(std::iostream &fs, ObjectHeaderCarry &ohc)
+template <typename stream_type>
+bool read_headers(stream_type /* std::basic_stringstream<uint8_t>*/  &fs, ObjectHeaderCarry &ohc)
 {
-    fs.read(reinterpret_cast<char *>(&ohc.ohb.ObjSign), sizeof(ohc.ohb.ObjSign));
+    fs >> ohc.ohb.ObjSign;
+
     if (ohc.ohb.ObjSign != ObjectSignature)
         {
             std::cout << std::dec << __LINE__ << ": Not Found LOBJ: " << std::hex << (int) ohc.ohb.ObjSign;
             std::cout << '\n';
             return false;
         }
-    fs.read(reinterpret_cast<char *>(&ohc.ohb.headerSize), sizeof(ohc.ohb.headerSize));
-    fs.read(reinterpret_cast<char *>(&ohc.ohb.headerVer),  sizeof(ohc.ohb.headerVer));
-    fs.read(reinterpret_cast<char *>(&ohc.ohb.objSize),    sizeof(ohc.ohb.objSize));
-    fs.read(reinterpret_cast<char *>(&ohc.ohb.objectType), sizeof(ohc.ohb.objectType));
+    
+    fs >> ohc.ohb.headerSize;
+    fs >> ohc.ohb.headerVer;
+    fs >> ohc.ohb.objSize;
+
+    uint32_t ot;
+    fs >> ot;
+    ohc.ohb.objectType = static_cast<ObjectType_e> (ot);
+
 
     switch (ohc.ohb.headerSize)
         {
@@ -108,15 +178,56 @@ bool read_headers(std::iostream &fs, ObjectHeaderCarry &ohc)
             ohc.oh_enum = ObjectHeaders_e::ONLY_HEADER_BASE;
             break;
         case 32 :
-            read_template(fs, ohc.oh);
+            {     
+            uint32_t oF;
+            fs >> oF;
+            ohc.oh.objectFlag = static_cast<ObjectFlags_e> (oF);
+            fs >> ohc.oh.clientIndex;
+            fs >> ohc.oh.objectVersion;
+            fs >> ohc.oh.objectTimeStamp;
             ohc.oh_enum = ObjectHeaders_e::BASE_AND_HEADER;
+            }
             break;
         case 40 :
-            read_template(fs, ohc.oh2);
+            {
+            uint32_t oF;
+            fs >> oF;
+            ohc.oh2.objectFlags = static_cast<ObjectFlags_e> (oF);
+            uint8_t tss;
+            fs >> tss;
+            ohc.oh2.timeStampStatus = static_cast<timeStampStatus_e> (tss);
+            fs >> ohc.oh2.reservObjHeader;
+            fs >> ohc.oh2.ObjectHeaderVersion;
+            fs >> ohc.oh2.ObjectTimeStamp;
+            fs >> ohc.oh2.originalObjectTimeStamp;
             ohc.oh_enum = ObjectHeaders_e::BASE_AND_HEADER2;
+            }
             break;
         }
     return true;
+}
+
+
+template <typename stream_type_data>
+auto read_logcontainer(stream_type_data &input_stream, const ObjectHeaderBase &ohb) -> LogContainer
+{
+    struct LogContainer lc;
+    int16_t temp;
+    input_stream >> temp;
+
+    lc.compressionMethod = static_cast<compressionMethod_e> (temp);
+    input_stream >> lc.reserv1;
+    input_stream >> lc.reserv2;
+    input_stream >> lc.unCompressedFileSize;
+    input_stream >> lc.reserv3;
+
+    if (lc.compressionMethod == compressionMethod_e::uncompressed)
+        {
+            lc.unCompressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - 
+                sizeof(lc.reserv1) - sizeof(lc.reserv2) - sizeof(lc.unCompressedFileSize) - 
+                sizeof(lc.reserv3);
+        }
+    return lc;
 }
 
 
@@ -140,7 +251,8 @@ void current_position(std::ostream &s, const uint64_t pos)
 }
 
 
-bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
+template <typename stream_type>
+bool parse_container_compressed(stream_type &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
 {
     std::cout << "Entering: " << __FUNCTION__ << '\n';
 
@@ -166,11 +278,12 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
     std::cout << __FUNCTION__ << "uncompress: retVal: " << std::dec << retVal << '\n';
 
 //Transfer data to stream;
-    //std::basic_stringstream<uint8_t> uncompressedStream;
-    std::stringstream uncompressedStream;
-    for (const auto & data : uncompressedData)
+    std::basic_stringstream<uint8_t> uncompressedStream;
+    //std::stringstream                       uncompressedStream;
+    for (uint8_t data : uncompressedData)
         {
-            uncompressedStream.write(reinterpret_cast<const char*>(&data), sizeof(uint8_t));
+            //uncompressedStream.write(reinterpret_cast<uint8_t*>(&data), sizeof(uint8_t));
+            uncompressedStream.write(&data, sizeof(uint8_t));
         }
 
     std::cout << "Printing uncompressedData, size: " << uncompressedData.size() << "\n";
@@ -191,7 +304,7 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
     while(run)
         {
             struct ObjectHeaderCarry ohc;
-            if (read_headers(uncompressedStream, ohc))
+            if (read_headers<std::basic_stringstream<uint8_t>>(uncompressedStream, ohc))
                 {
                     print(std::cout, ohc.ohb);
                 }
@@ -210,7 +323,8 @@ bool parse_container_compressed(std::iostream &fs, const LogContainer &lc, const
 }
 
 
-bool parse_container_uncompressed(std::iostream &fs, const LogContainer &lc)
+template <typename type_stream_data> 
+bool parse_container_uncompressed(type_stream_data &fs, const LogContainer &lc)
 {
     int32_t bytes_left_in_container = lc.unCompressedFileSize;
     bool run = true;
@@ -219,7 +333,7 @@ bool parse_container_uncompressed(std::iostream &fs, const LogContainer &lc)
 
             std::cout << std::dec << __LINE__ << ": " << std::hex << fs.tellg() << '\n';
             struct ObjectHeaderCarry ohc;
-            if (read_headers(fs, ohc))
+            if (read_headers<type_stream_data>(fs, ohc))
                 {
                     print(std::cout, ohc.ohb);
                 }
@@ -242,7 +356,8 @@ bool parse_container_uncompressed(std::iostream &fs, const LogContainer &lc)
 }
 
 
-exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
+template <typename stream_type> 
+auto handle_ObjectType(stream_type  &fs, const ObjectHeaderCarry &ohc) -> exit_codes
 {
     const auto payload_size = ohc.ohb.objSize-ohc.ohb.headerSize;
     std::cout << std::dec << __LINE__ << ": payload: " << payload_size << '\n';
@@ -315,9 +430,8 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 
         case (ObjectType_e::LOG_CONTAINER): //Get Logcontainer
         {
-            struct LogContainer lc;
-            if (read(fs, lc, ohc.ohb))
-                print(std::cout, lc);
+            auto lc = read_logcontainer(fs, ohc.ohb);
+            print(std::cout, lc);
 
             if(lc.compressionMethod == compressionMethod_e::uncompressed)
                 {
@@ -401,7 +515,7 @@ exit_codes handle_ObjectType(std::iostream &fs, const ObjectHeaderCarry &ohc)
 }
 
 
-exit_codes go_through_file(const char * const filename)
+auto go_through_file(const char * const filename) -> exit_codes
 {
     std::cout << "Opening file: " << filename;
     std::fstream fs(filename, std::fstream::in | std::fstream::binary);
@@ -454,7 +568,7 @@ exit_codes go_through_file(const char * const filename)
                     break;
                 }
             struct ObjectHeaderCarry ohc;
-            if (read_headers(fs, ohc))
+            if (read_headers<std::fstream>(fs, ohc))
                 print(std::cout, ohc);
             else
                 {
