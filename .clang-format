@@ -4,6 +4,9 @@ BreakBeforeBraces: GNU
 Cpp11BracedListStyle: true
 DerivePointerAlignment: true
 MaxEmptyLinesToKeep: 2
-SortIncludes: false
+SortIncludes: true
 SpaceAfterCStyleCast: true
 SpaceBeforeRangeBasedForLoopColon: false
+#SpacesInConditionalStatement: true
+#SpacesInParentheses: true
+

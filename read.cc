@@ -35,7 +35,7 @@ template <typename type_data, typename stream_type>
 bool read_template(stream_type &fs, type_data &data)
 {
     //fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
-    fs >> data;
+ //   fs >> data;
     return true;
 }
 
@@ -577,7 +577,7 @@ auto go_through_file(const char * const filename) -> exit_codes
                     return exit_codes::UNABLE_TO_READ_OBJECT_HEADER_BASE;
                 }
 
-            handle_ObjectType(fs, ohc);
+            handle_ObjectType<std::fstream>(fs, ohc);
         }
     fs.close();
     return exit_codes::EXITING_SUCCESS;
