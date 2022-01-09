@@ -9,17 +9,14 @@
 
 #include <zlib.h>
 
-//hexdump -v -C -n 512 truck02.blf
-
 #include "blf_structs.hh"
 #include "print.hh"
 
 const uint32_t FileSignature = 0x47474F4C;   //LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; //LOBJ
 
-//Forward declaration.
 template <typename stream_type> 
-exit_codes handle_ObjectType(stream_type &fs, const ObjectHeaderCarry &ohc);
+auto handle_ObjectType(stream_type  &fs, const ObjectHeaderCarry &ohc) -> exit_codes;
 
 
 uint32_t fileLength(std::iostream &is)
@@ -30,16 +27,6 @@ uint32_t fileLength(std::iostream &is)
     return length;
 }
 
-
-template <typename type_data, typename stream_type>
-bool read_template(stream_type &fs, type_data &data)
-{
-    //fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
- //   fs >> data;
-    return true;
-}
-
-
 template <typename stream_type>
 std::istream& operator>> (stream_type& is, AppId_e& aid)
 {
@@ -48,6 +35,9 @@ std::istream& operator>> (stream_type& is, AppId_e& aid)
     aid = static_cast<AppId_e> (temp);
     return is;
 }
+
+
+
 
 
 /**
@@ -69,32 +59,85 @@ stream_type& operator>> (stream_type& is, sysTime_t& st)
 }
 
 
-bool readX(std::iostream &fs, fileStatistics &os)
-{
-    fs >> os.FileSign;
-    if (os.FileSign != FileSignature)
-        {
-            return false;
-        }
 
-    fs >> os.StatSize;
-    fs >> os.AppId;
-    fs >> os.AppMaj;
-    fs >> os.AppMin;
-    fs >> os.AppBuild;
-    fs >> os.ApiMaj;
-    fs >> os.ApiMin;
-    fs >> os.ApiBuild;
-    fs >> os.ApiPatch;
-    fs >> os.fileSize;
-    fs >> os.uncompressedSize;
-    fs >> os.objCount;
-    fs >> os.objRead;
-    fs >> os.meas_start_time;
-    fs >> os.last_obj_time;
-    fs >> os.fileSize_less115;
-    auto offset = os.StatSize - sizeof(fileStatistics);
-    fs.seekg(offset, std::ios_base::cur);
+/**
+* @brief support operator for getting data.  
+*
+*/
+template <typename stream_type>
+stream_type& operator>> (stream_type& is, CanMessage& cm)
+{
+    is >> cm.channel;
+    is >> cm.flags;
+    is >> cm.dlc;
+    is >> cm.id;
+    is >> cm.data[0];
+    is >> cm.data[1];
+    is >> cm.data[2];
+    is >> cm.data[3];
+    is >> cm.data[4];
+    is >> cm.data[5];
+    is >> cm.data[6];
+    is >> cm.data[7];
+    return is;
+}
+
+
+template <typename stream_type>
+stream_type& operator>> (stream_type& is, CanError_short& cm)
+{
+    is >> cm.channel;
+    is >> cm.length;
+    return is;
+}
+
+template <typename stream_type>
+stream_type& operator>> (stream_type& is, CanError& cm)
+{
+    is >> cm.channel;
+    is >> cm.length;
+    is >> cm.reservedCanErrorFrame;
+    return is;
+}
+
+
+template <typename stream_type>
+stream_type& operator>> (stream_type& is, uint8_t& byte)
+{
+    is >> byte;
+    return is;
+}
+
+
+template <typename stream_type>
+stream_type& operator>> (stream_type& is, uint16_t& small)
+{
+    is >> small;
+    return is;
+}
+
+
+template <typename stream_type>
+stream_type& operator>> (stream_type& is, uint32_t& small)
+{
+    is >> small;
+    return is;
+}
+
+
+template <typename stream_type>
+stream_type& operator>> (stream_type& is, uint64_t& bigger)
+{
+    is >> bigger;
+    return is;
+}
+
+
+template <typename type_data, typename stream_type>
+bool read_template(stream_type &fs, type_data &data)
+{
+    //fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
+    fs >> data;
     return true;
 }
 
@@ -130,29 +173,7 @@ bool read(stream_type &fs, fileStatistics &os)
 
 
 template <typename stream_type>
-bool read(stream_type & fs, uint32_t length, std::vector<uint8_t> & data)
-{
-    for(uint32_t n = 0; n<length; n++)
-        {
-            uint8_t value;
-            fs.read((char *) &value, 1);
-            data.push_back(value);
-        }
-    return true;
-}
-
-
-template <typename stream_type>
-bool read(stream_type & fs, uint32_t length, std::string & data)
-{
-    data.resize(length);
-    fs.read(const_cast<char *>(data.data()), length);
-    return true;
-}
-
-
-template <typename stream_type>
-bool read_headers(stream_type /* std::basic_stringstream<uint8_t>*/  &fs, ObjectHeaderCarry &ohc)
+bool read_headers(stream_type &fs, ObjectHeaderCarry &ohc)
 {
     fs >> ohc.ohb.ObjSign;
 
@@ -174,10 +195,10 @@ bool read_headers(stream_type /* std::basic_stringstream<uint8_t>*/  &fs, Object
 
     switch (ohc.ohb.headerSize)
         {
-        case 16 :
+        case 16U :
             ohc.oh_enum = ObjectHeaders_e::ONLY_HEADER_BASE;
             break;
-        case 32 :
+        case 32U :
             {     
             uint32_t oF;
             fs >> oF;
@@ -188,7 +209,7 @@ bool read_headers(stream_type /* std::basic_stringstream<uint8_t>*/  &fs, Object
             ohc.oh_enum = ObjectHeaders_e::BASE_AND_HEADER;
             }
             break;
-        case 40 :
+        case 40U :
             {
             uint32_t oF;
             fs >> oF;
@@ -231,24 +252,18 @@ auto read_logcontainer(stream_type_data &input_stream, const ObjectHeaderBase &o
 }
 
 
-bool read(std::iostream &input_stream, LogContainer &lc, const ObjectHeaderBase &ohb)
+template <typename stream_type>
+bool read(stream_type & fs, uint32_t length, std::vector<uint8_t> & data)
 {
-    input_stream.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
-
-    if (lc.compressionMethod == compressionMethod_e::uncompressed)
+    for(uint32_t n = 0; n<length; n++)
         {
-            lc.unCompressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - sizeof(lc.reserv1) - sizeof(lc.reserv2) - sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
+            uint8_t value;
+            fs.read((char *) &value, 1);
+            data.push_back(value);
         }
-
     return true;
 }
 
-
-void current_position(std::ostream &s, const uint64_t pos)
-{
-    s << "Current position: "
-      << "0x" << std::hex << (uint64_t)pos << ", " << std::dec << (uint64_t)pos << '\n';
-}
 
 
 template <typename stream_type>
@@ -263,8 +278,11 @@ bool parse_container_compressed(stream_type &fs, const LogContainer &lc, const O
     compressedData.resize(compressedDataSize);
 
     std::cout << std::dec << __LINE__ << " Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
-    fs.read(reinterpret_cast<char *>(compressedData.data()), compressedDataSize);
-
+    for (auto value : compressedData)
+    {
+        fs >> value;
+    }
+    //fs.read(reinterpret_cast<char *>(compressedData.data()), compressedDataSize);
 
     std::cout << std::dec <<__LINE__ << " Bytes after : " << std::dec << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
 
@@ -279,10 +297,8 @@ bool parse_container_compressed(stream_type &fs, const LogContainer &lc, const O
 
 //Transfer data to stream;
     std::basic_stringstream<uint8_t> uncompressedStream;
-    //std::stringstream                       uncompressedStream;
     for (uint8_t data : uncompressedData)
         {
-            //uncompressedStream.write(reinterpret_cast<uint8_t*>(&data), sizeof(uint8_t));
             uncompressedStream.write(&data, sizeof(uint8_t));
         }
 
@@ -400,34 +416,6 @@ auto handle_ObjectType(stream_type  &fs, const ObjectHeaderCarry &ohc) -> exit_c
         }
         break;
 
-        case (ObjectType_e::CAN_OVERLOAD): //CanOverload
-        {
-            switch(payload_size)
-                {
-                case sizeof(CanOverload) :
-                    struct CanOverload col;
-                    read_template(fs, col);
-                    print(std::cout, col);
-                    break;
-                case sizeof(CanOverload_short) :
-                    struct CanOverload_short cols;
-                    read_template(fs, cols);
-                    print(std::cout, cols);
-                    break;
-                default:
-                    std::cout << "Error wrong CanOverload Frame!\n";
-                }
-        }
-        break;
-
-        case (ObjectType_e::APP_TRIGGER): //Handle apptrigger
-        {
-            struct AppTrigger ap;
-            read_template(fs, ap);
-            print(std::cout, ap);
-        }
-        break;
-
         case (ObjectType_e::LOG_CONTAINER): //Get Logcontainer
         {
             auto lc = read_logcontainer(fs, ohc.ohb);
@@ -459,50 +447,6 @@ auto handle_ObjectType(stream_type  &fs, const ObjectHeaderCarry &ohc) -> exit_c
                         }
                 }
 
-        }
-        break;
-
-        case (ObjectType_e::CAN_MESSAGE2):
-        {
-            struct CanMessage2 cm2;
-            if (read_template(fs, cm2))
-                print(std::cout, cm2);
-        }
-        break;
-
-        case (ObjectType_e::CAN_ERROR_EXT):
-        {
-            struct CANErrorFrameExt cefe;
-            if (read_template(fs, cefe))
-                {
-                    print(std::cout, cefe);
-                }
-        }
-        break;
-
-
-
-        case (ObjectType_e::APP_TEXT):
-        {
-            struct AppText ap;
-            read_template(fs,ap);
-            print(std::cout,ap);
-            //std::vector<uint8_t> data;
-            std::string data;
-            read(fs, ap.mTextLength, data);
-            //std::cout << "Length: " << data.size() << '\n';
-            //for (auto i : data)
-            //    std::cout << static_cast<int> (i) << ' ';
-            std::cout << "Sträng: " << data << '\n';
-        }
-        break;
-
-        case (ObjectType_e::reserved_5):
-        {
-            std::cout << "sizeof (reserved5) " << sizeof(reserved_5) << '\n';
-            struct reserved_5 r5;
-            read_template(fs,r5);
-            print(std::cout, r5);
         }
         break;
 
@@ -577,11 +521,12 @@ auto go_through_file(const char * const filename) -> exit_codes
                     return exit_codes::UNABLE_TO_READ_OBJECT_HEADER_BASE;
                 }
 
-            handle_ObjectType<std::fstream>(fs, ohc);
+            handle_ObjectType(fs, ohc);
         }
     fs.close();
     return exit_codes::EXITING_SUCCESS;
 }
+
 
 
 int main(int argc, char* argv[])
@@ -601,3 +546,4 @@ int main(int argc, char* argv[])
     std::cout << "----- END OF OUTPUT -----\n";
 
 }
+
