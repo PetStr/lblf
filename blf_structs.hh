@@ -221,14 +221,14 @@ struct fileStatistics
 };
 
 
-struct ObjectHeaderBase
+struct BaseHeader
 {
     uint32_t ObjSign; //LOBJ
     uint16_t headerSize;
     uint16_t headerVer;
     uint32_t objSize;
     enum ObjectType_e objectType; //  : uint32_t;
-    ObjectHeaderBase() : ObjSign(0), headerSize(0),
+    BaseHeader() : ObjSign(0), headerSize(0),
         headerVer(0), objSize(0), objectType(ObjectType_e::UNKNOWN) {}
 };
 
@@ -402,7 +402,7 @@ enum class ObjectHeaders_e
 struct ObjectHeaderCarry
 {
     ObjectHeaders_e oh_enum;
-    struct ObjectHeaderBase ohb;
+    struct BaseHeader ohb;
     struct ObjectHeader oh;
     struct ObjectHeader2 oh2;
     ObjectHeaderCarry() : oh_enum(ObjectHeaders_e::NONE) {}

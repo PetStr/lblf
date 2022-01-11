@@ -24,7 +24,7 @@ const uint32_t FileSignature = 0x47474F4C;   //LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; //LOBJ
 
 //Forward declaration.
-exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb);
+exit_codes handle_ObjectType(std::fstream &fs, const BaseHeader &ohb);
 
 struct can_counter_record
 {
@@ -249,7 +249,7 @@ bool read(std::fstream &fs, fileStatistics &os)
 }
 
 
-bool read(std::fstream &fs, ObjectHeaderBase &ohb)
+bool read(std::fstream &fs, BaseHeader &ohb)
 {
     fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -266,7 +266,7 @@ bool read(std::fstream &fs, ObjectHeaderBase &ohb)
 }
 
 
-bool read(const uint8_t * data, ObjectHeaderBase &ohb)
+bool read(const uint8_t * data, BaseHeader &ohb)
 {
     std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -287,7 +287,7 @@ bool read(const uint8_t * data, ObjectHeaderBase &ohb)
 }
 
 
-bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
+bool read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb)
 {
     fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
@@ -314,7 +314,7 @@ exit_codes parse_container_uncompressed(std::fstream &fs, const LogContainer &lc
     bool run = true;
     while(run)
         {
-            struct ObjectHeaderBase ohb;
+            struct BaseHeader ohb;
             if (read(fs, ohb))
                 {
                     //print(std::cout, ohb);
@@ -332,7 +332,7 @@ exit_codes parse_container_uncompressed(std::fstream &fs, const LogContainer &lc
 }
 
 
-exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
+exit_codes handle_ObjectType(std::fstream &fs, const BaseHeader &ohb)
 {
     const auto payload_size = ohb.objSize-ohb.headerSize;
     switch (ohb.objectType)
@@ -451,14 +451,14 @@ exit_codes go_through_blf_file(const char * const filename)
             if((filelength - fs.tellg() == 0))
                 break;
             //std::cout << __FUNCTION__ << "Bytes left: " << filelength - fs.tellg() << '\n';
-            struct ObjectHeaderBase ohb;
+            struct BaseHeader ohb;
             if (read(fs, ohb))
                 {
                     handle_ObjectType(fs, ohb);
                 }
             else
                 {
-                    std::cout << __FUNCTION__ << ':' << __LINE__ << " Unable to read ObjectHeaderBase\n";
+                    std::cout << __FUNCTION__ << ':' << __LINE__ << " Unable to read BaseHeader\n";
                     fs.close();
                     return exit_codes::UNABLE_TO_READ_OBJECT_HEADER_BASE;
                 }

@@ -400,9 +400,9 @@ void print(std::ostream &s, const fileStatistics &os)
 }
 
 
-void print(std::ostream &s, const ObjectHeaderBase &ohb)
+void print(std::ostream &s, const BaseHeader &ohb)
 {
-    s << "ObjectHeaderBase ";
+    s << "BaseHeader ";
     //s << "ObjSign " << std::hex << (int)ohb.ObjSign;
     //s << std::dec;
     s << std::dec;

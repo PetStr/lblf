@@ -16,7 +16,7 @@ std::string print(ObjectFlags_e of);
 std::string print(timeStampStatus_e tss);
 void print(std::ostream &s, const sysTime_t &ts);
 void print(std::ostream &s, const fileStatistics &os);
-void print(std::ostream &s, const ObjectHeaderBase &ohb);
+void print(std::ostream &s, const BaseHeader &ohb);
 void print(std::ostream &s, const ObjectHeader &oh);
 void print(std::ostream &s, const ObjectHeader2 &oh2);
 void print(std::ostream &s, const ObjectHeaderCarry &ohc);

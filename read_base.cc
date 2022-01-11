@@ -17,7 +17,7 @@ const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 
 // Forward declaration.
-exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb);
+exit_codes handle_ObjectType(std::fstream &fs, const BaseHeader &ohb);
 
 
 uint32_t fileLength(std::fstream &fs)
@@ -79,7 +79,7 @@ bool read(std::fstream &fs, uint32_t length, std::string &data)
 }
 
 
-bool read(std::fstream &fs, ObjectHeaderBase &ohb)
+bool read(std::fstream &fs, BaseHeader &ohb)
 {
     fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -96,7 +96,7 @@ bool read(std::fstream &fs, ObjectHeaderBase &ohb)
 }
 
 
-bool read(uint8_t *data, ObjectHeaderBase &ohb)
+bool read(uint8_t *data, BaseHeader &ohb)
 {
     std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -117,7 +117,7 @@ bool read(uint8_t *data, ObjectHeaderBase &ohb)
 }
 
 
-bool read(std::fstream &fs, LogContainer &lc, const ObjectHeaderBase &ohb)
+bool read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb)
 {
     fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
@@ -153,7 +153,7 @@ void current_position(std::ostream &s, const uint64_t pos)
 }
 
 
-bool parse_container_compressed(std::istream &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
+bool parse_container_compressed(std::istream &fs, const LogContainer &lc, const BaseHeader &ohb)
 {
     std::cout << "Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
     std::cout << "Entering: " << __FUNCTION__ << '\n';
@@ -195,7 +195,7 @@ bool parse_container_compressed(std::istream &fs, const LogContainer &lc, const 
     bool run = true;
     while (run)
         {
-            struct ObjectHeaderBase ohb;
+            struct BaseHeader ohb;
             if (read(uncompresseddata, ohb))
                 {
                     print(std::cout, ohb);
@@ -239,7 +239,7 @@ bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
     bool run = true;
     while (run)
         {
-            struct ObjectHeaderBase ohb;
+            struct BaseHeader ohb;
             if (read(fs, ohb))
                 {
                     // print(std::cout, ohb);
@@ -259,12 +259,12 @@ bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
 
 bool read_head(std::fstream &fs)
 {
-    struct ObjectHeaderBase ohb;
+    struct BaseHeader ohb;
     if (read(fs, ohb))
         print(std::cout, ohb);
     else
         {
-            std::cout << "Error reading ObjectHeaderBase\n";
+            std::cout << "Error reading BaseHeader\n";
             return false;
         }
 
@@ -288,14 +288,14 @@ bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
     while (run)
         {
 
-            struct ObjectHeaderBase ohb;
+            struct BaseHeader ohb;
             if (read(fs, ohb))
                 {
                     //   print(std::cout, ohb);
                 }
             else
                 {
-                    std::cout << "Error reading ObjectHeaderBase\n";
+                    std::cout << "Error reading BaseHeader\n";
                     return false;
                 }
 
@@ -319,7 +319,7 @@ bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
 }
 
 
-exit_codes handle_ObjectType(std::fstream &fs, const ObjectHeaderBase &ohb)
+exit_codes handle_ObjectType(std::fstream &fs, const BaseHeader &ohb)
 {
     const auto payload_size = ohb.objSize - ohb.headerSize;
     switch (ohb.objectType)
@@ -520,7 +520,7 @@ void go_through_file_header_base(const char *const filename)
             if ((filelength - fs.tellg() == 0))
                 break;
             std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
-            struct ObjectHeaderBase ohb;
+            struct BaseHeader ohb;
             if (read(fs, ohb))
                 {
                     std::cout << print(ohb.objectType) << " " << static_cast<int>(ohb.objectType) << '\n';
@@ -528,7 +528,7 @@ void go_through_file_header_base(const char *const filename)
 
             else
                 {
-                    std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
+                    std::cout << __LINE__ << " Unable to read BaseHeader\n";
                     break;
                 }
 
@@ -553,7 +553,7 @@ bool read_head(std::iostream &fs)
         print(std::cout, ohc);
     else
         {
-            std::cout << "Error reading ObjectHeaderBase\n";
+            std::cout << "Error reading BaseHeader\n";
             return false;
         }
 
@@ -577,14 +577,14 @@ bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
     bool run = true;
     while(run)
         {
-            struct ObjectHeaderBase ohb;
+            struct BaseHeader ohb;
             if (read (fs, ohb))
                 {
                     //   print(std::cout, ohb);
                 }
             else
                 {
-                    std::cout << "Error reading ObjectHeaderBase\n";
+                    std::cout << "Error reading BaseHeader\n";
                     return false;
                 }
 
@@ -644,7 +644,7 @@ void go_through_file_header_base(const char * const filename)
             if((filelength - fs.tellg() == 0))
                 break;
             std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
-            struct ObjectHeaderBase ohb;
+            struct BaseHeader ohb;
             if (read(fs, ohb))
                 {
                     std::cout << print(ohb.objectType) << " " << static_cast<int> (ohb.objectType) << '\n';
@@ -652,7 +652,7 @@ void go_through_file_header_base(const char * const filename)
 
             else
                 {
-                    std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
+                    std::cout << __LINE__ << " Unable to read BaseHeader\n";
                     break;
                 }
 

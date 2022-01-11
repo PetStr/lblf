@@ -10,7 +10,7 @@ int main()
 
     std::cout << "sysTime_t       : " << std::dec << sizeof(sysTime_t         ) << '\n';
     std::cout << "fileStatistics  : " << std::dec << sizeof(fileStatistics    ) << '\n';
-    std::cout << "ObjectHeaderBase: " << std::dec << sizeof(ObjectHeaderBase  ) << '\n';
+    std::cout << "BaseHeader: " << std::dec << sizeof(BaseHeader  ) << '\n';
     std::cout << "ObjectHeader    : " << std::dec << sizeof(ObjectHeader      ) << '\n';
     std::cout << "ObjectHeader2   : " << std::dec << sizeof(ObjectHeader2     ) << '\n';
     std::cout << "LogContainer    : " << std::dec << sizeof(LogContainer      ) << '\n';

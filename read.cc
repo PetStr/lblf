@@ -209,7 +209,7 @@ bool read_headers(stream_type /* std::basic_stringstream<uint8_t>*/  &fs, Object
 
 
 template <typename stream_type_data>
-auto read_logcontainer(stream_type_data &input_stream, const ObjectHeaderBase &ohb) -> LogContainer
+auto read_logcontainer(stream_type_data &input_stream, const BaseHeader &ohb) -> LogContainer
 {
     struct LogContainer lc;
     int16_t temp;
@@ -231,7 +231,7 @@ auto read_logcontainer(stream_type_data &input_stream, const ObjectHeaderBase &o
 }
 
 
-bool read(std::iostream &input_stream, LogContainer &lc, const ObjectHeaderBase &ohb)
+bool read(std::iostream &input_stream, LogContainer &lc, const BaseHeader &ohb)
 {
     input_stream.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
@@ -252,7 +252,7 @@ void current_position(std::ostream &s, const uint64_t pos)
 
 
 template <typename stream_type>
-bool parse_container_compressed(stream_type &fs, const LogContainer &lc, const ObjectHeaderBase &ohb)
+bool parse_container_compressed(stream_type &fs, const LogContainer &lc, const BaseHeader &ohb)
 {
     std::cout << "Entering: " << __FUNCTION__ << '\n';
 
@@ -572,7 +572,7 @@ auto go_through_file(const char * const filename) -> exit_codes
                 print(std::cout, ohc);
             else
                 {
-                    std::cout << __LINE__ << " Unable to read ObjectHeaderBase\n";
+                    std::cout << __LINE__ << " Unable to read BaseHeader\n";
                     fs.close();
                     return exit_codes::UNABLE_TO_READ_OBJECT_HEADER_BASE;
                 }
