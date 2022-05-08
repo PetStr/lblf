@@ -443,6 +443,9 @@ void print(std::ostream &s, const ObjectHeaderCarry &ohc)
 {
     switch(ohc.oh_enum)
         {
+        case ObjectHeaders_e::NONE :
+            s << "No Header Carry defined\n";
+            break;    
         case ObjectHeaders_e::ONLY_HEADER_BASE :
             print(s, ohc.ohb);
             break;

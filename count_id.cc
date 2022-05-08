@@ -219,37 +219,66 @@ uint32_t fileLength(std::fstream &fs)
 }
 
 
-bool read(std::fstream &fs, fileStatistics &os)
+template <typename stream_type>
+std::istream& operator>> (stream_type& is, AppId_e& aid)
 {
-    fs.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
+    uint8_t temp;
+    is >> temp;
+    aid = static_cast<AppId_e> (temp);
+    return is;
+}
+
+
+/**
+* @brief support operator for getting data.  
+*
+*/
+template <typename stream_type>
+stream_type& operator>> (stream_type& is, sysTime_t& st)
+{
+    is >> st.year;
+    is >> st.month;
+    is >> st.dayOfWeek;
+    is >> st.day;
+    is >> st.hour;
+    is >> st.minute;
+    is >> st.second;
+    is >> st.milliseconds;
+    return is;
+}
+
+
+auto read(std::fstream &fs, fileStatistics &os) -> bool
+{
+    fs >> os.FileSign;
     if (os.FileSign != FileSignature)
         {
             return false;
         }
 
-    fs.read(reinterpret_cast<char *>(&os.StatSize), sizeof(os.StatSize));
-    fs.read(reinterpret_cast<char *>(&os.AppId), sizeof(os.AppId));
-    fs.read(reinterpret_cast<char *>(&os.AppMaj), sizeof(os.AppMaj));
-    fs.read(reinterpret_cast<char *>(&os.AppMin), sizeof(os.AppMin));
-    fs.read(reinterpret_cast<char *>(&os.AppBuild), sizeof(os.AppBuild));
-    fs.read(reinterpret_cast<char *>(&os.ApiMaj), sizeof(os.ApiMaj));
-    fs.read(reinterpret_cast<char *>(&os.ApiMin), sizeof(os.ApiMin));
-    fs.read(reinterpret_cast<char *>(&os.ApiBuild), sizeof(os.ApiBuild));
-    fs.read(reinterpret_cast<char *>(&os.ApiPatch), sizeof(os.ApiPatch));
-    fs.read(reinterpret_cast<char *>(&os.fileSize), sizeof(os.fileSize));
-    fs.read(reinterpret_cast<char *>(&os.uncompressedSize), sizeof(os.uncompressedSize));
-    fs.read(reinterpret_cast<char *>(&os.objCount), sizeof(os.objCount));
-    fs.read(reinterpret_cast<char *>(&os.objRead), sizeof(os.objRead));
-    fs.read(reinterpret_cast<char *>(&os.meas_start_time), sizeof(os.meas_start_time));
-    fs.read(reinterpret_cast<char *>(&os.last_obj_time), sizeof(os.last_obj_time));
-    fs.read(reinterpret_cast<char *>(&os.fileSize_less115), sizeof(os.fileSize_less115));
+    fs >> os.StatSize;
+    fs >> os.AppId;
+    fs >> os.AppMaj;
+    fs >> os.AppMin;
+    fs >> os.AppBuild;
+    fs >> os.ApiMaj;
+    fs >> os.ApiMin;
+    fs >> os.ApiBuild;
+    fs >> os.ApiPatch;
+    fs >> os.fileSize;
+    fs >> os.uncompressedSize;
+    fs >> os.objCount;
+    fs >> os.objRead;
+    fs >> os.meas_start_time;
+    fs >> os.last_obj_time;
+    fs >> os.fileSize_less115;
     auto offset = os.StatSize - sizeof(fileStatistics);
     fs.seekg(offset, std::ios_base::cur);
     return true;
 }
 
 
-bool read(std::fstream &fs, BaseHeader &ohb)
+auto read(std::fstream &fs, BaseHeader &ohb) -> bool
 {
     fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -266,7 +295,7 @@ bool read(std::fstream &fs, BaseHeader &ohb)
 }
 
 
-bool read(const uint8_t * data, BaseHeader &ohb)
+auto read(const uint8_t * data, BaseHeader &ohb) -> bool
 {
     std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -287,7 +316,7 @@ bool read(const uint8_t * data, BaseHeader &ohb)
 }
 
 
-bool read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb)
+auto read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb) -> bool
 {
     fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
@@ -301,7 +330,7 @@ bool read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb)
 
 
 template <typename type_data>
-bool read_template(std::fstream &fs, type_data &data)
+auto read_template(std::fstream &fs, type_data &data) -> bool
 {
     fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
     return true;
