@@ -219,6 +219,10 @@ uint32_t fileLength(std::fstream &fs)
 }
 
 
+/**
+* @brief support operator for enum typed data.
+*
+*/
 template <typename stream_type>
 std::istream& operator>> (stream_type& is, AppId_e& aid)
 {
@@ -230,7 +234,7 @@ std::istream& operator>> (stream_type& is, AppId_e& aid)
 
 
 /**
-* @brief support operator for getting data.  
+* @brief support operator for getting sysTime.  
 *
 */
 template <typename stream_type>
@@ -248,30 +252,35 @@ stream_type& operator>> (stream_type& is, sysTime_t& st)
 }
 
 
-auto read(std::fstream &fs, fileStatistics &os) -> bool
+/**
+* @brief read the beginning of the blf file. 
+*
+*/
+template <typename stream_type>
+auto read(stream_type &fs, fileStatistics &os) -> bool
 {
-    fs >> os.FileSign;
+    fs.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
     if (os.FileSign != FileSignature)
         {
             return false;
         }
 
-    fs >> os.StatSize;
-    fs >> os.AppId;
-    fs >> os.AppMaj;
-    fs >> os.AppMin;
-    fs >> os.AppBuild;
-    fs >> os.ApiMaj;
-    fs >> os.ApiMin;
-    fs >> os.ApiBuild;
-    fs >> os.ApiPatch;
-    fs >> os.fileSize;
-    fs >> os.uncompressedSize;
-    fs >> os.objCount;
-    fs >> os.objRead;
-    fs >> os.meas_start_time;
-    fs >> os.last_obj_time;
-    fs >> os.fileSize_less115;
+    fs.read(reinterpret_cast<char *> (&os.StatSize), sizeof( os.StatSize));
+    fs.read(reinterpret_cast<char *> (&os.AppId), sizeof( os.AppId));
+    fs.read(reinterpret_cast<char *> (&os.AppMaj), sizeof( os.AppMaj));
+    fs.read(reinterpret_cast<char *> (&os.AppMin), sizeof( os.AppMin));
+    fs.read(reinterpret_cast<char *> (&os.AppBuild), sizeof( os.AppBuild));
+    fs.read(reinterpret_cast<char *> (&os.ApiMaj), sizeof( os.ApiMaj));
+    fs.read(reinterpret_cast<char *> (&os.ApiMin), sizeof( os.ApiMin));
+    fs.read(reinterpret_cast<char *> (&os.ApiBuild), sizeof( os.ApiBuild));
+    fs.read(reinterpret_cast<char *> (&os.ApiPatch), sizeof( os.ApiPatch));
+    fs.read(reinterpret_cast<char *> (&os.fileSize), sizeof( os.fileSize));
+    fs.read(reinterpret_cast<char *> (&os.uncompressedSize), sizeof( os.uncompressedSize));
+    fs.read(reinterpret_cast<char *> (&os.objCount), sizeof( os.objCount));
+    fs.read(reinterpret_cast<char *> (&os.objRead), sizeof( os.objRead));
+    fs.read(reinterpret_cast<char *> (&os.meas_start_time), sizeof( os.meas_start_time));
+    fs.read(reinterpret_cast<char *> (&os.last_obj_time), sizeof( os.last_obj_time));
+    fs.read(reinterpret_cast<char *> (&os.fileSize_less115), sizeof( os.fileSize_less115));
     auto offset = os.StatSize - sizeof(fileStatistics);
     fs.seekg(offset, std::ios_base::cur);
     return true;
@@ -443,7 +452,7 @@ exit_codes handle_ObjectType(std::fstream &fs, const BaseHeader &ohb)
 }
 
 
-exit_codes go_through_blf_file(const char * const filename)
+auto go_through_blf_file(const char * const filename) -> exit_codes
 {
     std::cout << "Opening file: " << filename;
     std::fstream fs(filename, std::fstream::in | std::fstream::binary);
@@ -465,7 +474,7 @@ exit_codes go_through_blf_file(const char * const filename)
             struct fileStatistics fileStat;
             if (read(fs, fileStat))
                 {
-                    //
+                    print(std::cout, fileStat);
                 }
             else
                 {

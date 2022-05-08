@@ -102,7 +102,9 @@ bool readX(std::iostream &fs, fileStatistics &os)
 template <typename stream_type>
 bool read(stream_type &fs, fileStatistics &os)
 {
+    std::cout << __LINE__ << ": file pointer: " << fs.tellg()<< '\n';
     fs >> os.FileSign;
+    std::cout << __LINE__ << ": file pointer: " << fs.tellg()<< '\n';
     if (os.FileSign != FileSignature)
         {
             return false;
