@@ -587,18 +587,18 @@ void print(std::ostream &s, const CanError_short &cfe)
 
 void print(std::ostream &s, const CANErrorFrameExt &ce)
 {
-    s << "mChannel: " << static_cast<int>(ce.mChannel);
-    s << " mLength: " << (int) ce.mLength;
-    s << " mFlags: " << (int) ce.mFlags;
-    s << " mECC: " << (int) ce.mECC;
-    s << " mPosition: " << (int) ce.mPosition;
-    s << " mDLC: " << (int) ce.mDLC << '\n';
-    s << " mFrameLengthInNS: " << (int) ce.mFrameLengthInNS;
-    s << " mID: " << (int) ce.mID;
-    s << " mFlagsExt: " << (int) ce.mFlagsExt;
-    s << " mReserved2: " << (int) ce.mReserved2;
+    s << "mChannel: " << static_cast<int>(ce.Channel);
+    s << " mLength: " << (int) ce.Length;
+    s << " mFlags: " << (int) ce.Flags;
+    s << " mECC: " << (int) ce.ECC;
+    s << " mPosition: " << (int) ce.Position;
+    s << " mDLC: " << (int) ce.DLC << '\n';
+    s << " mFrameLengthInNS: " << (int) ce.FrameLengthInNS;
+    s << " mID: " << (int) ce.ID;
+    s << " mFlagsExt: " << (int) ce.FlagsExt;
+    s << " mReserved2: " << (int) ce.Reserved2;
     s << " mData:";
-    for (auto n: ce.mData)
+    for (auto n: ce.Data)
         s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) n;
     s << '\n';
 }

@@ -13,6 +13,8 @@
 #include "blf_structs.hh"
 #include "print.hh"
 
+using namespace lblf;
+
 const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 
@@ -519,27 +521,36 @@ void go_through_file_header_base(const char *const filename)
         {
             if ((filelength - fs.tellg() == 0))
                 break;
-            std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
+//            std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
+            const auto position = fs.tellg();
+            std::cout << "Position: " << position << " mod 4 " << position % 4 << '\n';
+            
+        //    fs.seekg(position % 4, std::ios_base::cur); 
+
             struct BaseHeader ohb;
             if (read(fs, ohb))
                 {
-                    std::cout << print(ohb.objectType) << " " << static_cast<int>(ohb.objectType) << '\n';
+                    //std::cout << print(ohb.objectType) << " " << static_cast<int>(ohb.objectType) << '\n';
+                    print(std::cout, ohb);
+                    const size_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
+                    std::cout << "To jump: " << bytes_to_jump << '\n';
+                    fs.seekg(bytes_to_jump,std::ios_base::cur); 
                 }
 
             else
                 {
-                    std::cout << __LINE__ << " Unable to read BaseHeader\n";
-                    break;
+                    std::cout << std::dec << __LINE__ << " Unable to read BaseHeader\n";
+                 //   fs.seekg(1,std::ios_base::cur);
                 }
 
-            if (ohb.objectType == ObjectType_e::LOG_CONTAINER)
-                {
-                    struct LogContainer lc;
-                    read(fs, lc, ohb);
-                    parse_logcontainer_base(fs, lc);
-                }
-            else
-                read_head(fs);
+           // if (ohb.objectType == ObjectType_e::LOG_CONTAINER)
+           //     {
+           //         struct LogContainer lc;
+           //         read(fs, lc, ohb);
+           //         parse_logcontainer_base(fs, lc);
+           //     }
+           // else
+               // read_head(fs);
         }
     fs.close();
 }
