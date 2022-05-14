@@ -248,22 +248,22 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
 
     std::cout << "compressed file size: " << compressedFile.size() << '\n';
     std::cout << "uncompressed file size: " << bytes_left_in_container << '\n';
-           
 
-    if(1)
-    {
 
-        std::cout << "compressed file size: " << compressedFile.size() << '\n';
-        size_t cnt = 0;
-        for (auto a: compressedFile)
-            {
-                std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
-                cnt++;
-                if ((cnt % 48) == 0)
-                    std::cout << '\n';
-            }
-        std::cout << '\n';
-    }
+    if (0)
+        {
+
+            std::cout << "compressed file size: " << compressedFile.size() << '\n';
+            size_t cnt = 0;
+            for (auto a: compressedFile)
+                {
+                    std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
+                    cnt++;
+                    if ((cnt % 48) == 0)
+                        std::cout << '\n';
+                }
+            std::cout << '\n';
+        }
 
 
     int retVal = uncompress(
@@ -275,17 +275,18 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
 
     std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
 
-
-    size_t cnt = 0;
-    for (auto a: uncompressedFile)
+    if (0)
         {
-            std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
-            cnt++;
-            if ((cnt % 48) == 0)
-                std::cout << '\n';
+            size_t cnt = 0;
+            for (auto a: uncompressedFile)
+                {
+                    std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
+                    cnt++;
+                    if ((cnt % 48) == 0)
+                        std::cout << '\n';
+                }
+            std::cout << '\n';
         }
-    std::cout << '\n';
-
 
     uint8_t *uncompresseddata = uncompressedFile.data();
     bool run = true;
@@ -684,7 +685,7 @@ void go_through_file_log_container(const char *const filename)
                 {
                     struct LogContainer lc;
                     read(fs, lc, ohb);
-                    print(std::cout , lc);
+                    print(std::cout, lc);
                     std::vector<uint8_t> container_data;
                     auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
 
@@ -693,6 +694,8 @@ void go_through_file_log_container(const char *const filename)
                     container_data.resize(compressedFileSize);
 
                     fs.read(reinterpret_cast<char *>(container_data.data()), compressedFileSize);
+
+                    fs.seekg(ohb.objSize % 4, std::ios_base::cur);
 
                     std::cout << "data size: " << container_data.size() << '\n';
 
