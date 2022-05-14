@@ -1,6 +1,9 @@
 #include "print.hh"
 
-std::string print(exit_codes ec)
+namespace lblf
+{
+
+auto print(exit_codes ec) -> std::string
 {
     switch (ec)
         {
@@ -23,7 +26,7 @@ std::string print(exit_codes ec)
 }
 
 
-std::string print(ObjectType_e ot)
+auto print(ObjectType_e ot) -> std::string
 {
     switch (ot)
         {
@@ -290,7 +293,7 @@ std::string print(ObjectType_e ot)
 }
 
 
-std::string print(AppId_e ai)
+auto print(AppId_e ai) -> std::string
 {
     switch (ai)
         {
@@ -325,13 +328,12 @@ std::string print(compressionMethod_e cm)
             return "Uncompressed";
         case compressionMethod_e::zlib:
             return "zlib";
-
         }
     return "Undeclared AppId: ";
 }
 
 
-std::string print(ObjectFlags_e of)
+auto print(ObjectFlags_e of) -> std::string
 {
     switch (of)
         {
@@ -344,13 +346,13 @@ std::string print(ObjectFlags_e of)
 }
 
 
-std::string print(timeStampStatus_e tss)
+auto print(timeStampStatus_e tss) -> std::string
 {
-    switch(tss)
+    switch (tss)
         {
-        case timeStampStatus_e::orginal :
+        case timeStampStatus_e::orginal:
             return "Orginal";
-        case timeStampStatus_e::SwGen :
+        case timeStampStatus_e::SwGen:
             return "Software Generated";
         case timeStampStatus_e::User:
             return "User defined";
@@ -362,14 +364,14 @@ std::string print(timeStampStatus_e tss)
 void print(std::ostream &s, const sysTime_t &ts)
 {
     s << std::dec;
-    s << "year: " << (int)ts.year;
-    s << " month: " << (int)ts.month;
-    s << " dayOfWeek : " << (int)ts.dayOfWeek;
-    s << " day :" << (int)ts.day;
-    s << " hour :" << (int)ts.hour;
-    s << " minute :" << (int)ts.minute;
-    s << " second :" << (int)ts.second;
-    s << " milliseconds :" << (int)ts.milliseconds;
+    s << "year: " << (int) ts.year;
+    s << " month: " << (int) ts.month;
+    s << " dayOfWeek : " << (int) ts.dayOfWeek;
+    s << " day :" << (int) ts.day;
+    s << " hour :" << (int) ts.hour;
+    s << " minute :" << (int) ts.minute;
+    s << " second :" << (int) ts.second;
+    s << " milliseconds :" << (int) ts.milliseconds;
     s << '\n';
 }
 
@@ -380,7 +382,7 @@ void print(std::ostream &s, const fileStatistics &os)
     s << "os.StatSize           " << static_cast<uint64_t>(os.StatSize);
     s << " dec: " << std::dec << static_cast<uint64_t>(os.StatSize) << '\n';
     s << "os.AppId              " << print(os.AppId);
-    s << " " << static_cast<uint64_t> (os.AppId) << '\n';
+    s << " " << static_cast<uint64_t>(os.AppId) << '\n';
     s << "os.AppMaj             " << static_cast<uint64_t>(os.AppMaj) << '\n';
     s << "os.AppMin             " << static_cast<uint64_t>(os.AppMin) << '\n';
     s << "os.AppBuild           " << static_cast<uint64_t>(os.AppBuild) << '\n';
@@ -403,13 +405,13 @@ void print(std::ostream &s, const fileStatistics &os)
 void print(std::ostream &s, const BaseHeader &ohb)
 {
     s << "BaseHeader ";
-    //s << "ObjSign " << std::hex << (int)ohb.ObjSign;
-    //s << std::dec;
+    // s << "ObjSign " << std::hex << (int)ohb.ObjSign;
+    // s << std::dec;
     s << std::dec;
-    s << " headerSize " << (int)ohb.headerSize;
-    s << ", headerVer " << (int)ohb.headerVer;
-    s << ", objSize " << (int)ohb.objSize;
-    s << ", objectType# " << static_cast<int> (ohb.objectType);
+    s << " headerSize " << (int) ohb.headerSize;
+    s << ", headerVer " << (int) ohb.headerVer;
+    s << ", objSize " << (int) ohb.objSize;
+    s << ", objectType# " << static_cast<int>(ohb.objectType);
     s << ", " << print(ohb.objectType);
     s << '\n';
 }
@@ -419,11 +421,11 @@ void print(std::ostream &s, const ObjectHeader2 &oh2)
 {
     s << "ObjectHeader2: ";
     s << std::dec;
-    s << "objectFlags " << std::hex << (int)oh2.objectFlags;
-    s << ", timeStampStatus " << (int)oh2.timeStampStatus;
-    s << ", reservObjHeader " << (int)oh2.reservObjHeader;
-    s << ", ObjectTimeStamp " << (int)oh2.ObjectTimeStamp;
-    s << ", originalObjectTimeStamp " << (int)oh2.originalObjectTimeStamp;
+    s << "objectFlags " << std::hex << (int) oh2.objectFlags;
+    s << ", timeStampStatus " << (int) oh2.timeStampStatus;
+    s << ", reservObjHeader " << (int) oh2.reservObjHeader;
+    s << ", ObjectTimeStamp " << (int) oh2.ObjectTimeStamp;
+    s << ", originalObjectTimeStamp " << (int) oh2.originalObjectTimeStamp;
     s << '\n';
 }
 
@@ -432,7 +434,7 @@ void print(std::ostream &s, const ObjectHeader &oh)
 {
     s << "ObjectHeader : ";
     s << std::dec;
-    s << "objectFlag: " << (int)oh.clientIndex;
+    s << "objectFlag: " << (int) oh.clientIndex;
     s << ", objectVersion: " << std::dec << oh.objectVersion;
     s << ", objectTimeStamp: " << std::dec << oh.objectTimeStamp;
     s << '\n';
@@ -441,21 +443,21 @@ void print(std::ostream &s, const ObjectHeader &oh)
 
 void print(std::ostream &s, const ObjectHeaderCarry &ohc)
 {
-    switch(ohc.oh_enum)
+    switch (ohc.oh_enum)
         {
-        case ObjectHeaders_e::NONE :
+        case ObjectHeaders_e::NONE:
             s << "No Header Carry defined\n";
-            break;    
-        case ObjectHeaders_e::ONLY_HEADER_BASE :
+            break;
+        case ObjectHeaders_e::ONLY_HEADER_BASE:
             print(s, ohc.ohb);
             break;
-        case ObjectHeaders_e::BASE_AND_HEADER :
-            print(s,ohc.ohb);
-            print(s,ohc.oh);
+        case ObjectHeaders_e::BASE_AND_HEADER:
+            print(s, ohc.ohb);
+            print(s, ohc.oh);
             break;
-        case ObjectHeaders_e::BASE_AND_HEADER2 :
-            print(s,ohc.ohb);
-            print(s,ohc.oh2);
+        case ObjectHeaders_e::BASE_AND_HEADER2:
+            print(s, ohc.ohb);
+            print(s, ohc.oh2);
             break;
         }
 }
@@ -466,7 +468,7 @@ void print(std::ostream &s, const LogContainer &lc)
     s << "LogContainer : ";
     s << std::dec;
     s << "compressionMethod: " << print(lc.compressionMethod);
-    s << ", uncompressedFileSize: " << std::dec << (int)lc.unCompressedFileSize;
+    s << ", uncompressedFileSize: " << std::dec << (int) lc.unCompressedFileSize;
     s << '\n';
 }
 
@@ -475,14 +477,14 @@ void print(std::ostream &s, const CanMessage &cm)
 {
     s << "CanMessage : ";
     s << std::dec;
-    s << "channel: " << (int)cm.channel;
-    s << ", flags: " << std::dec << (int)cm.flags;
-    s << ", dlc: " << std::dec << (int)cm.dlc;
+    s << "channel: " << (int) cm.channel;
+    s << ", flags: " << std::dec << (int) cm.flags;
+    s << ", dlc: " << std::dec << (int) cm.dlc;
     auto dlc = cm.dlc;
-    if(dlc > 8)
+    if (dlc > 8)
         dlc = 8;
-    s << ", dlc: " << std::dec << (int)dlc;
-    s << ", id: 0x" << std::hex << (int)cm.id;
+    s << ", dlc: " << std::dec << (int) dlc;
+    s << ", id: 0x" << std::hex << (int) cm.id;
     s << ", data: ";
     for (auto n = 0; n < dlc; n++)
         s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) cm.data[n];
@@ -494,9 +496,9 @@ void print(std::ostream &s, const CanOverload &co)
 {
     s << "CanOverload : ";
     s << std::dec;
-    s << "channel: " << (int)co.channel;
-    s << ", reservedCanOverloadFrame1: " << std::hex << (int)co.reservedCanOverloadFrame1;
-    s << ", reservedCanOverloadFrame2: " << std::hex << (int)co.reservedCanOverloadFrame2;
+    s << "channel: " << (int) co.channel;
+    s << ", reservedCanOverloadFrame1: " << std::hex << (int) co.reservedCanOverloadFrame1;
+    s << ", reservedCanOverloadFrame2: " << std::hex << (int) co.reservedCanOverloadFrame2;
     s << '\n';
 }
 
@@ -505,8 +507,8 @@ void print(std::ostream &s, const CanOverload_short &co)
 {
     s << "CanOverload : ";
     s << std::dec;
-    s << "channel: " << (int)co.channel;
-    s << ", reservedCanOverloadFrame1: " << std::hex << (int)co.reservedCanOverloadFrame1;
+    s << "channel: " << (int) co.channel;
+    s << ", reservedCanOverloadFrame1: " << std::hex << (int) co.reservedCanOverloadFrame1;
     s << '\n';
 }
 
@@ -515,16 +517,16 @@ void print(std::ostream &s, const CanMessage2 &cm2)
 {
     s << "CanMessage2 : ";
     s << std::dec;
-    s << "channel: " << (int)cm2.channel;
-    s << ", flags: " << std::dec << (int)cm2.flags;
+    s << "channel: " << (int) cm2.channel;
+    s << ", flags: " << std::dec << (int) cm2.flags;
     auto dlc = cm2.dlc;
-    if(dlc > 8)
+    if (dlc > 8)
         dlc = 8;
     s << ", dlc: " << std::dec << dlc;
     s << ", dlc: " << std::dec << cm2.dlc;
-    s << ", id: 0x" << std::hex << (int)cm2.id;
+    s << ", id: 0x" << std::hex << (int) cm2.id;
     s << ", data: ";
-    for(auto d : cm2.data)
+    for (auto d: cm2.data)
         s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) d;
     s << '\n';
 }
@@ -534,11 +536,11 @@ void print(std::ostream &s, const AppTrigger &at)
 {
     s << "Apptrigger: ";
     s << std::dec;
-    s << "preTriggerTime: " << (uint64_t)at.preTriggerTime;
-    s << ", postTriggerTime : " << (uint64_t)at.postTriggerTime;
-    s << ", channel: " << (uint64_t)at.channel;
-    s << ", flags: " << (uint64_t)at.flags;
-    s << ", appSpecific2: " << (uint64_t)at.appSpecific2;
+    s << "preTriggerTime: " << (uint64_t) at.preTriggerTime;
+    s << ", postTriggerTime : " << (uint64_t) at.postTriggerTime;
+    s << ", channel: " << (uint64_t) at.channel;
+    s << ", flags: " << (uint64_t) at.flags;
+    s << ", appSpecific2: " << (uint64_t) at.appSpecific2;
     s << '\n';
 }
 
@@ -547,8 +549,8 @@ void print(std::ostream &s, const AppText &at)
 {
     s << "AppText: ";
     s << std::dec;
-    s << "mSource: " << (uint64_t)at.mSource ;
-    s << ", mTextLength: " << (uint64_t)at.mTextLength;
+    s << "mSource: " << (uint64_t) at.mSource;
+    s << ", mTextLength: " << (uint64_t) at.mTextLength;
     s << '\n';
 }
 
@@ -556,7 +558,7 @@ void print(std::ostream &s, const AppText &at)
 void print(std::ostream &s, const reserved_5 &r)
 {
     s << "Reserved_5: ";
-    for(auto a : r.data)
+    for (auto a: r.data)
         s << " 0x" << std::hex << a;
     s << '\n';
 }
@@ -566,9 +568,9 @@ void print(std::ostream &s, const CanError &cfe)
 {
     s << "CanError: ";
     s << std::dec;
-    s << ", channel : " << (uint64_t)cfe.channel;
-    s << ", length : " << (uint64_t)cfe.length;
-    s << ", reservedCanErrorFrame : " << (uint64_t)cfe.reservedCanErrorFrame;
+    s << ", channel : " << (uint64_t) cfe.channel;
+    s << ", length : " << (uint64_t) cfe.length;
+    s << ", reservedCanErrorFrame : " << (uint64_t) cfe.reservedCanErrorFrame;
     s << '\n';
 }
 
@@ -577,15 +579,15 @@ void print(std::ostream &s, const CanError_short &cfe)
 {
     s << "CanError_short: ";
     s << std::dec;
-    s << ", channel : " << (uint64_t)cfe.channel;
-    s << ", length : " << (uint64_t)cfe.length;
+    s << ", channel : " << (uint64_t) cfe.channel;
+    s << ", length : " << (uint64_t) cfe.length;
     s << '\n';
 }
 
 
-void print(std::ostream &s, const  CANErrorFrameExt & ce)
+void print(std::ostream &s, const CANErrorFrameExt &ce)
 {
-    s << "mChannel: " << static_cast<int> (ce.mChannel);
+    s << "mChannel: " << static_cast<int>(ce.mChannel);
     s << " mLength: " << (int) ce.mLength;
     s << " mFlags: " << (int) ce.mFlags;
     s << " mECC: " << (int) ce.mECC;
@@ -596,7 +598,10 @@ void print(std::ostream &s, const  CANErrorFrameExt & ce)
     s << " mFlagsExt: " << (int) ce.mFlagsExt;
     s << " mReserved2: " << (int) ce.mReserved2;
     s << " mData:";
-    for (auto n : ce.mData)
+    for (auto n: ce.mData)
         s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) n;
     s << '\n';
+}
+
+
 }

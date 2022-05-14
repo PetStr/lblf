@@ -16,6 +16,8 @@
 #include "print.hh"
 
 
+using namespace lblf;
+
 const size_t CAN_ID_MARK = 1;
 const size_t CAN_NAME_MARK = 2;
 

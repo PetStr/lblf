@@ -11,6 +11,8 @@ DWORD = uint32_t
 BYTE = uint8_t
 */
 
+namespace lblf 
+{
 
 enum class exit_codes : uint32_t
 {
@@ -453,5 +455,7 @@ struct ObjectHeaderCarry
     }
 };
 
+
+} //namespace lblf 
 
 #endif
