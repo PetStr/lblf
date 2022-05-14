@@ -307,7 +307,7 @@ enum class compressionMethod_e : int16_t
 
 struct LogContainer
 {
-    compressionMethod_e compressionMethod;
+    compressionMethod_e compressionMethod; //int16_t
     uint16_t reserv1;
     uint32_t reserv2;
     uint32_t unCompressedFileSize;
