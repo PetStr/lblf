@@ -15,6 +15,8 @@
 const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 
+using namespace lblf;
+
 template <typename stream_type>
 auto handle_ObjectType(stream_type& fs, const ObjectHeaderCarry& ohc) -> exit_codes;
 

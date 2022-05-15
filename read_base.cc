@@ -155,85 +155,6 @@ void current_position(std::ostream &s, const uint64_t pos)
 }
 
 
-bool parse_container_compressed(std::istream &fs, const LogContainer &lc, const BaseHeader &ohb)
-{
-    std::cout << "Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
-    std::cout << "Entering: " << __FUNCTION__ << '\n';
-    uLong bytes_left_in_container = lc.unCompressedFileSize;
-    std::vector<uint8_t> compressedFile {};
-    std::vector<uint8_t> uncompressedFile {};
-    auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
-    compressedFile.resize(compressedFileSize);
-
-    std::cout << "Bytes be4 read: " << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
-    fs.read(reinterpret_cast<char *>(compressedFile.data()), compressedFileSize);
-
-
-    std::cout << "Bytes after : " << std::dec << fs.tellg() << std::hex << ", 0x" << fs.tellg() << '\n';
-
-    uncompressedFile.resize(bytes_left_in_container);
-    int retVal = uncompress(
-        reinterpret_cast<Byte *>(uncompressedFile.data()),
-        &bytes_left_in_container,
-        reinterpret_cast<Byte *>(compressedFile.data()),
-        static_cast<uLong>(compressedFileSize));
-
-
-    std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
-
-
-    size_t cnt = 0;
-    for (auto a: uncompressedFile)
-        {
-            std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
-            cnt++;
-            if ((cnt % 48) == 0)
-                std::cout << '\n';
-        }
-    std::cout << '\n';
-
-
-    uint8_t *uncompresseddata = uncompressedFile.data();
-    bool run = true;
-    while (run)
-        {
-            struct BaseHeader ohb;
-            if (read(uncompresseddata, ohb))
-                {
-                    print(std::cout, ohb);
-                }
-            else
-                break;
-
-            // Move pointer to next step
-            uncompresseddata += sizeof(ohb);
-            bytes_left_in_container -= sizeof(ohb);
-            if (bytes_left_in_container <= 0)
-                return true;
-
-            struct ObjectHeader oh;
-            auto bytes_read = read_template(uncompresseddata, oh);
-            uncompresseddata += bytes_read;
-            bytes_left_in_container -= bytes_read;
-            // print(std::cout, oh);
-            if (bytes_left_in_container <= 0)
-                return true;
-
-
-            struct CanMessage cm;
-            bytes_read = read_template(uncompresseddata, cm);
-            uncompresseddata += bytes_read;
-            bytes_left_in_container -= bytes_read;
-            print(std::cout, cm);
-
-            std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
-
-            if (bytes_left_in_container <= 0)
-                run = false;
-        }
-    return true;
-}
-
 
 auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContainer &lc, const BaseHeader &ohb) -> bool
 {
@@ -344,30 +265,6 @@ bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
             if (bytes_left_in_container <= 0)
                 run = false;
         }
-    return true;
-}
-
-
-bool read_head(std::fstream &fs)
-{
-    struct BaseHeader ohb;
-    if (read(fs, ohb))
-        print(std::cout, ohb);
-    else
-        {
-            std::cout << "Error reading BaseHeader\n";
-            return false;
-        }
-
-    auto bytes_to_jump = 0;
-    if (ohb.headerSize == 16)
-        bytes_to_jump = ohb.objSize - ohb.headerSize;
-
-    if (ohb.headerSize == 32)
-        bytes_to_jump = ohb.objSize - ohb.headerSize + 16;
-
-    fs.seekg(bytes_to_jump, std::ios_base::cur);
-    std::cout << print(ohb.objectType) << " " << static_cast<int>(ohb.objectType) << " " << std::dec << (int) bytes_to_jump << '\n';
     return true;
 }
 
@@ -514,7 +411,7 @@ auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes
                     }
                 if (lc.compressionMethod == compressionMethod_e::zlib)
                     {
-                        if (parse_container_compressed(fs, lc, ohb))
+                        if ( 0 /*handle_container_compressed(fs, lc, ohb) */)
                             {
                                 std::cout << "LogContainer handled.\n";
                             }
@@ -572,62 +469,6 @@ auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes
             return exit_codes::UNHANDLED_OBJECT_TYPE;
         }
     return exit_codes::EXITING_SUCCESS;
-}
-
-
-void go_through_file_header_base(const char *const filename)
-{
-    std::cout << "Opening file: " << filename;
-    std::fstream fs(filename, std::fstream::in | std::fstream::binary);
-    if (fs.fail())
-        {
-            std::cout << " ";
-            std::cout << "File open failed, Exiting program\n";
-            return;
-        }
-    else
-        {
-            std::cout << " ** SUCCESS **\n";
-        }
-
-    auto filelength = fileLength(fs);
-
-    if (fs)
-        {
-            struct fileStatistics fileStat;
-            if (read(fs, fileStat))
-                {
-                    print(std::cout, fileStat);
-                }
-            else
-                {
-                    std::cout << "Error file is not a BLF file\n";
-                    return;
-                }
-        }
-
-    while (!fs.eof())
-        {
-            if ((filelength - fs.tellg() == 0))
-                break;
-            // std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
-
-            struct BaseHeader ohb;
-            if (read(fs, ohb))
-                {
-                    // std::cout << print(ohb.objectType) << " " << static_cast<int>(ohb.objectType) << '\n';
-                    print(std::cout, ohb);
-                    const size_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
-                    // std::cout << "To jump: " << bytes_to_jump << '\n';
-                    fs.seekg(bytes_to_jump, std::ios_base::cur);
-                }
-
-            else
-                {
-                    std::cout << std::dec << __LINE__ << " Unable to read BaseHeader\n";
-                }
-        }
-    fs.close();
 }
 
 
