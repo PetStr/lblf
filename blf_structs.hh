@@ -389,12 +389,20 @@ struct CanMessage2
 };
 
 
+enum class AppTriggerFlags : uint16_t
+{
+    BL_TRIGGER_FLAG_SINGLE_TRIGGER = 0x00000000 ,  /* single trigger type */
+    BL_TRIGGER_FLAG_LOGGING_START  = 0x00000001,   /* start of logging trigger type */
+    BL_TRIGGER_FLAG_LOGGING_STOP   = 0x00000002   /* stop of logging trigger type */
+};
+
+
 struct AppTrigger
 {
     uint64_t preTriggerTime;
     uint64_t postTriggerTime;
     uint16_t channel;
-    uint16_t flags;
+    AppTriggerFlags flags;
     uint32_t appSpecific2;
 };
 
