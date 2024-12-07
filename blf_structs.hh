@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdlib>
+#include <cstdint>
 
 /*
 translate
