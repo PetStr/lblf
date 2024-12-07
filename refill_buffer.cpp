@@ -68,15 +68,17 @@ int main()
     // Example source reader: Simulates intermittent data source
     auto source_reader = [](char* buffer, std::size_t max_bytes) -> std::size_t {
         static int call_count = 0;
+        static int read_bytes = 32;
         ++call_count;
 
-        if (call_count <= 10)
+        if (call_count <= 100)
             {
                 // Fill buffer with 'A', 'B', 'C'... for demo purposes
                 std::size_t bytes_to_write = std::min<std::size_t>(max_bytes, 50);
                 for (std::size_t i = 0; i < bytes_to_write; ++i)
                     {
-                        buffer[i] = 'A' + i;
+                        buffer[i] = read_bytes;
+                        read_bytes++;
                     }
                 return bytes_to_write;
             }
@@ -89,26 +91,41 @@ int main()
 
     BufferedReader buffered_reader(5, source_reader);
 
-    char read_buffer[10];
-    std::size_t total_bytes_read = buffered_reader.read(read_buffer, 10);
+    std::vector<char> read_buffer(10);
+    std::size_t total_bytes_read = buffered_reader.read(read_buffer.data(), read_buffer.size());
 
     std::cout << "Read " << total_bytes_read << " bytes: ";
     for (auto value : read_buffer)
         {
-            std::cout << value;
+            std::cout << std::hex << (int)value<< ' ';
         }
     std::cout << '\n';
     std::cout << '\n';
 
-    char read_buffer2[32];
-    total_bytes_read = buffered_reader.read(read_buffer2, 32);
-
-    std::cout << "Read " << total_bytes_read << " bytes: ";
+    std::vector<char>  read_buffer2(23);
+    total_bytes_read = buffered_reader.read(read_buffer2.data(), read_buffer2.size());
+    std::cout << "Read " << std::dec << total_bytes_read << " bytes: ";
     for (auto value : read_buffer2)
         {
-            std::cout << value;
+            std::cout << std::hex << (int)value<< ' ';
         }
     std::cout << '\n';
 
+  total_bytes_read = buffered_reader.read(read_buffer2.data(), read_buffer2.size());
+    std::cout << "Read " << std::dec << total_bytes_read << " bytes: ";
+    for (auto value : read_buffer2)
+        {
+            std::cout << std::hex << (int)value << ' ';
+        }
+    std::cout << '\n';
+
+
+    total_bytes_read = buffered_reader.read(read_buffer2.data(), read_buffer2.size());
+    std::cout << "Read " << std::dec << total_bytes_read << " bytes: ";
+    for (auto value : read_buffer2)
+        {
+            std::cout << std::hex << (int)value << ' ';
+        }
+    std::cout << '\n';
     return 0;
 }
