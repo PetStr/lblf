@@ -14,6 +14,8 @@
 #include "blf_structs.hh"
 #include "print.hh"
 
+using namespace lblf;
+
 const uint32_t FileSignature = 0x47474F4C;   //LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; //LOBJ
 
