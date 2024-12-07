@@ -9,6 +9,7 @@
 
 #include "blf_structs.hh"
 #include "print.hh"
+#include <deque>
 
 using namespace lblf;
 
@@ -176,7 +177,7 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
                 {
                     std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
                     cnt++;
-                    if ((cnt % 48) == 0)
+                    if ((cnt % 16) == 0)
                         std::cout << '\n';
                 }
             std::cout << '\n';
@@ -191,6 +192,7 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
 
 
     std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
+    std::cout << "Beginning of LogContainer:\n";
 
     if (0)
         {
@@ -199,7 +201,7 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
                 {
                     std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
                     cnt++;
-                    if ((cnt % 48) == 0)
+                    if ((cnt % 16) == 0)
                         {
                             std::cout << '\n';
                         }
@@ -248,6 +250,49 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
                 }
         }
     return true;
+}
+
+
+void print(const std::vector<uint8_t> &data)
+{
+    size_t cnt = 0;
+    for (auto a: data)
+        {
+            std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
+            cnt++;
+            if ((cnt % 16) == 0)
+                std::cout << '\n';
+        }
+    std::cout << '\n';
+}
+
+
+auto handle_container_compressed(std::vector<uint8_t> &compressedData, 
+    LogContainer &lc, 
+    const BaseHeader &ohb, 
+    std::deque<char> & logcontainer_que) -> int
+{
+    uLong bytes_left_in_container = lc.unCompressedFileSize;
+    std::vector<uint8_t> uncompressedData {};
+    auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
+    compressedData.resize(compressedFileSize);
+
+    uncompressedData.resize(bytes_left_in_container);
+
+    // std::cout << "compressed file size: " << compressedData.size() << '\n';
+    // std::cout << "uncompressed file size: " << bytes_left_in_container << '\n';
+
+    int retVal = uncompress(
+        reinterpret_cast<Byte *>(uncompressedData.data()),
+        &bytes_left_in_container,
+        reinterpret_cast<Byte *>(compressedData.data()),
+        static_cast<uLong>(compressedFileSize));
+
+    std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
+
+    logcontainer_que.insert(logcontainer_que.end(), uncompressedData.begin(), uncompressedData.end());
+
+    return retVal;
 }
 
 
@@ -486,10 +531,39 @@ auto handle_ObjectType(std::fstream &fstr, const BaseHeader &ohb) -> exit_codes
 }
 
 
+auto go_through_log_data(std::deque<char> &logcontainer_que) -> bool
+{
+    std::vector<char> data;
+    data.reserve(sizeof(BaseHeader));
+    while (not logcontainer_que.empty()) 
+    {
+        if(logcontainer_que.size() >= sizeof(BaseHeader))
+        {
+            for (size_t i = 0; i < sizeof(BaseHeader); ++i) 
+            {
+                data.push_back(logcontainer_que.front());
+                logcontainer_que.pop_front();
+            }
+            BaseHeader obh;
+            std::memcpy(&obh, data.data(), sizeof(BaseHeader));
+            //PSPS
+        }
+        else
+        {
+            return false;
+        }
+
+    }
+
+    return true;
+}
+
+
 void go_through_file_log_container(const char *const filename)
 {
     std::cout << "Opening file: " << filename;
     std::fstream fs(filename, std::fstream::in | std::fstream::binary);
+    std::deque<char> logcontainer_que;
     if (fs.fail())
         {
             std::cout << " ";
@@ -536,34 +610,34 @@ void go_through_file_log_container(const char *const filename)
                     //   fs.seekg(1,std::ios_base::cur);
                 }
 
-            if (ohb.objectType == ObjectType_e::LOG_CONTAINER)
-                {
-                    struct LogContainer lc;
-                    read(fs, lc, ohb);
-                    print(std::cout, lc);
-                    std::vector<uint8_t> container_data;
-                    auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
+          if (ohb.objectType == ObjectType_e::LOG_CONTAINER)
+              {
+                  struct LogContainer lc;
+                  read(fs, lc, ohb);
+                  print(std::cout, lc);
+                  std::vector<uint8_t> container_data;
+                  auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
 
-                    // std::cout << "compressed blob: " << compressedFileSize << '\n';
+                 // std::cout << "compressed blob: " << compressedFileSize << '\n';
 
-                    container_data.resize(compressedFileSize);
+                 container_data.resize(compressedFileSize);
 
-                    fs.read(reinterpret_cast<char *>(container_data.data()), compressedFileSize);
+                 fs.read(reinterpret_cast<char *>(container_data.data()), compressedFileSize);
 
-                    // Padding
-                    fs.seekg(ohb.objSize % 4, std::ios_base::cur);
+                 // Padding
+                  fs.seekg(ohb.objSize % 4, std::ios_base::cur);
 
-                    std::cout << "data size: " << container_data.size() << '\n';
+                 std::cout << "data size: " << container_data.size() << '\n';
 
-                    if (lc.compressionMethod == compressionMethod_e::zlib)
-                        {
-                            handle_container_compressed(container_data, lc, ohb);
-                        }
-                }
-            else
+                 if (lc.compressionMethod == compressionMethod_e::zlib)
+                      {
+                          handle_container_compressed(container_data, lc, ohb, logcontainer_que);
+                      }
+              }
+          else
                 {
                     const size_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
-                    // std::cout << "To jump: " << bytes_to_jump << '\n';
+                    //std::cout << "To jump: " << bytes_to_jump << '\n';
                     fs.seekg(bytes_to_jump, std::ios_base::cur);
                 }
         }
