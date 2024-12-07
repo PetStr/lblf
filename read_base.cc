@@ -2,10 +2,7 @@
 #include <cstring>
 #include <fstream>
 #include <iomanip>
-
 #include <vector>
-
-
 #include <zlib.h>
 
 // hexdump -v -C -n 512 truck02.blf
@@ -19,10 +16,10 @@ const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 
 // Forward declaration.
-exit_codes handle_ObjectType(std::fstream &fs, const BaseHeader &ohb);
+auto handle_ObjectType(std::fstream &fstr, const BaseHeader &obh) -> exit_codes;
 
 
-uint32_t fileLength(std::fstream &fs)
+auto fileLength(std::fstream &fs) -> uint32_t
 {
     fs.seekg(0, std::fstream::end);
     uint32_t length = fs.tellg();
@@ -31,7 +28,7 @@ uint32_t fileLength(std::fstream &fs)
 }
 
 
-bool read(std::fstream &fs, fileStatistics &os)
+auto read(std::fstream &fs, fileStatistics &os) -> bool
 {
     fs.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
     if (os.FileSign != FileSignature)
@@ -55,13 +52,13 @@ bool read(std::fstream &fs, fileStatistics &os)
     fs.read(reinterpret_cast<char *>(&os.meas_start_time), sizeof(os.meas_start_time));
     fs.read(reinterpret_cast<char *>(&os.last_obj_time), sizeof(os.last_obj_time));
     fs.read(reinterpret_cast<char *>(&os.fileSize_less115), sizeof(os.fileSize_less115));
-    auto offset = os.StatSize - sizeof(fileStatistics);
+    const uint32_t offset = os.StatSize - sizeof(fileStatistics);
     fs.seekg(offset, std::ios_base::cur);
     return true;
 }
 
 
-bool read(std::fstream &fs, uint32_t length, std::vector<uint8_t> &data)
+auto read(std::fstream &fs, uint32_t length, std::vector<uint8_t> &data) -> bool
 {
     for (uint32_t n = 0; n < length; n++)
         {
@@ -73,7 +70,7 @@ bool read(std::fstream &fs, uint32_t length, std::vector<uint8_t> &data)
 }
 
 
-bool read(std::fstream &fs, uint32_t length, std::string &data)
+auto read(std::fstream &fs, uint32_t length, std::string &data) -> bool
 {
     data.resize(length);
     fs.read(const_cast<char *>(data.data()), length);
@@ -81,7 +78,7 @@ bool read(std::fstream &fs, uint32_t length, std::string &data)
 }
 
 
-bool read(std::fstream &fs, BaseHeader &ohb)
+auto read(std::fstream &fs, BaseHeader &ohb) -> bool
 {
     fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -98,7 +95,7 @@ bool read(std::fstream &fs, BaseHeader &ohb)
 }
 
 
-bool read(uint8_t *data, BaseHeader &ohb)
+auto read(uint8_t *data, BaseHeader &ohb) -> bool
 {
     std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
@@ -119,7 +116,7 @@ bool read(uint8_t *data, BaseHeader &ohb)
 }
 
 
-bool read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb)
+auto read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb) -> bool
 {
     fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
@@ -133,7 +130,7 @@ bool read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb)
 
 
 template <typename type_data>
-bool read_template(std::fstream &fs, type_data &data)
+auto read_template(std::fstream &fs, type_data &data) -> bool
 {
     fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
     return true;
@@ -141,7 +138,7 @@ bool read_template(std::fstream &fs, type_data &data)
 
 
 template <typename type_data>
-size_t read_template(const uint8_t *indata_array, type_data &data)
+auto read_template(const uint8_t *indata_array, type_data &data) -> size_t
 {
     std::memcpy(reinterpret_cast<char *>(&data), indata_array, sizeof(type_data));
     return sizeof(type_data);
@@ -203,7 +200,9 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
                     std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
                     cnt++;
                     if ((cnt % 48) == 0)
-                        std::cout << '\n';
+                        {
+                            std::cout << '\n';
+                        }
                 }
             std::cout << '\n';
         }
@@ -218,13 +217,17 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
                     print(std::cout, ohb);
                 }
             else
-                break;
+                {
+                    break;
+                }
 
             // Move pointer to next step
             uncompresseddata += sizeof(ohb);
             bytes_left_in_container -= sizeof(ohb);
             if (bytes_left_in_container <= 0)
-                return true;
+                {
+                    return true;
+                }
 
             struct ObjectHeader oh;
             auto bytes_read = read_template(uncompresseddata, oh);
@@ -232,49 +235,56 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
             bytes_left_in_container -= bytes_read;
             // print(std::cout, oh);
             if (bytes_left_in_container <= 0)
-                return true;
-
-
-            std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
-
-            if (bytes_left_in_container <= 0)
-                run = false;
-        }
-    return true;
-}
-
-
-bool parse_container_uncompressed(std::fstream &fs, const LogContainer &lc)
-{
-    int32_t bytes_left_in_container = lc.unCompressedFileSize;
-    bool run = true;
-    while (run)
-        {
-            struct BaseHeader ohb;
-            if (read(fs, ohb))
                 {
-                    // print(std::cout, ohb);
+                    return true;
                 }
-            else
-                return false;
 
-            handle_ObjectType(fs, ohb);
-            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
+
             std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
+
             if (bytes_left_in_container <= 0)
-                run = false;
+                {
+                    run = false;
+                }
         }
     return true;
 }
 
 
-bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
+auto parse_container_uncompressed(std::fstream &fstr, const LogContainer &lc) -> bool
 {
     uint32_t bytes_left_in_container = lc.unCompressedFileSize;
     bool run = true;
     while (run)
         {
+            struct BaseHeader ohb;
+            if (read(fstr, ohb))
+                {
+                    // print(std::cout, ohb);
+                }
+            else
+                {
+                    return false;
+                }
 
+            handle_ObjectType(fstr, ohb);
+            bytes_left_in_container = bytes_left_in_container - ohb.objSize;
+            std::cout << "LogContainer/ bytes left: " << std::dec << bytes_left_in_container << '\n';
+            if (bytes_left_in_container <= 0)
+                {
+                    run = false;
+                }
+        }
+    return true;
+}
+
+
+auto parse_logcontainer_base(std::fstream &fs, const LogContainer &lc) -> bool
+{
+    uint32_t bytes_left_in_container = lc.unCompressedFileSize;
+    bool run = true;
+    while (run)
+        {
             struct BaseHeader ohb;
             if (read(fs, ohb))
                 {
@@ -286,12 +296,16 @@ bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
                     return false;
                 }
 
-            auto bytes_to_jump = 0;
+            uint32_t bytes_to_jump = 0;
             if (ohb.headerSize == 16)
-                bytes_to_jump = ohb.objSize - ohb.headerSize;
+                {
+                    bytes_to_jump = ohb.objSize - ohb.headerSize;
+                }
 
             if (ohb.headerSize == 32)
-                bytes_to_jump = ohb.objSize - ohb.headerSize + 16;
+                {
+                    bytes_to_jump = ohb.objSize - ohb.headerSize + 16;
+                }
 
             fs.seekg(bytes_to_jump, std::ios_base::cur);
             // std::cout << "Bytes_to_jump: " << bytes_to_jump << " current position " << std::hex << fs.tellg() << '\n';
@@ -300,27 +314,31 @@ bool parse_logcontainer_base(std::fstream &fs, const LogContainer &lc)
             bytes_left_in_container = bytes_left_in_container - ohb.objSize;
             // std::cout << "bytes left: " << std::dec << bytes_left_in_container << '\n';
             if (bytes_left_in_container <= 0)
-                run = false;
+                {
+                    run = false;
+                }
         }
     return true;
 }
 
 
-auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes
+auto handle_ObjectType(std::fstream &fstr, const BaseHeader &ohb) -> exit_codes
 {
     const auto payload_size = ohb.objSize - ohb.headerSize;
     switch (ohb.objectType)
         {
         case (ObjectType_e::CAN_MESSAGE): // read Can message;
             {
-                struct ObjectHeader oh;
-                (read_template(fs, oh));
-                //	  print(std::cout, oh);
+                struct ObjectHeader oheader;
+                (read_template(fstr, oheader));
+                //	  print(std::cout, oheader);
                 if (payload_size == sizeof(CanMessage))
                     {
-                        struct CanMessage cm;
-                        if (read_template(fs, cm))
-                            print(std::cout, cm);
+                        struct CanMessage cmessage;
+                        if (read_template(fstr, cmessage))
+                            {
+                                print(std::cout, cmessage);
+                            }
                     }
                 else
                     {
@@ -331,48 +349,45 @@ auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes
 
         case (ObjectType_e::CAN_ERROR): // CanErrorFrame
             {
-                struct ObjectHeader oh;
-                read_template(fs, oh);
-                print(std::cout, oh);
-                switch (payload_size)
+                struct ObjectHeader oheader;
+                read_template(fstr, oheader);
+                print(std::cout, oheader);
+                if (payload_size == sizeof(CanError_short))
                     {
-                    case sizeof(CanError_short):
-                        {
-                            struct CanError_short cef;
-                            read_template(fs, cef);
-                            print(std::cout, cef);
-                            break;
-                        }
-                    case sizeof(CanError):
-                        {
-                            struct CanError cef;
-                            read_template(fs, cef);
-                            print(std::cout, cef);
-                            break;
-                        }
+                        struct CanError_short cef;
+                        read_template(fstr, cef);
+                        print(std::cout, cef);
+                    }
+                else if (payload_size == sizeof(CanError))
+                    {
+                        struct CanError cef;
+                        read_template(fstr, cef);
+                        print(std::cout, cef);
                     }
             }
             break;
 
+
         case (ObjectType_e::CAN_OVERLOAD): // CanOverload
             {
                 print(std::cout, ohb);
-                struct ObjectHeader oh;
-                read_template(fs, oh);
-                print(std::cout, oh);
-                switch (payload_size)
+                struct ObjectHeader oheader;
+                read_template(fstr, oheader);
+                print(std::cout, oheader);
+                if (payload_size == sizeof(CanOverload))
                     {
-                    case sizeof(CanOverload):
                         struct CanOverload col;
-                        read_template(fs, col);
+                        read_template(fstr, col);
                         print(std::cout, col);
-                        break;
-                    case sizeof(CanOverload_short):
+                    }
+                else if (payload_size == sizeof(CanOverload_short))
+                    {
                         struct CanOverload_short cols;
-                        read_template(fs, cols);
+                        read_template(fstr, cols);
                         print(std::cout, cols);
-                        break;
-                    default:
+                    }
+                else
+                    {
                         std::cout << "Error wrong CanOverload Frame!\n";
                     }
             }
@@ -381,10 +396,10 @@ auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes
         case (ObjectType_e::APP_TRIGGER): // Handle apptrigger
             {
                 struct ObjectHeader oh;
-                read_template(fs, oh);
+                read_template(fstr, oh);
                 // print(std::cout, oh);
                 struct AppTrigger ap;
-                read_template(fs, ap);
+                read_template(fstr, ap);
                 print(std::cout, ap);
             }
             break;
@@ -392,13 +407,13 @@ auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes
         case (ObjectType_e::LOG_CONTAINER): // Get Logcontainer
             {
                 struct LogContainer lc;
-                if (read(fs, lc, ohb))
+                if (read(fstr, lc, ohb))
                     print(std::cout, lc);
 
                 if (lc.compressionMethod == compressionMethod_e::uncompressed)
                     {
                         // Lets work through the logcontainer.
-                        if (parse_container_uncompressed(fs, lc))
+                        if (parse_container_uncompressed(fstr, lc))
                             {
                                 std::cout << "LogContainer handled.\n";
                             }
@@ -426,10 +441,10 @@ auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes
         case (ObjectType_e::CAN_MESSAGE2):
             {
                 struct ObjectHeader oh;
-                (read_template(fs, oh));
+                (read_template(fstr, oh));
                 //	  print(std::cout, oh);
                 struct CanMessage2 cm2;
-                if (read_template(fs, cm2))
+                if (read_template(fstr, cm2))
                     print(std::cout, cm2);
             }
             break;
@@ -437,13 +452,13 @@ auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes
         case (ObjectType_e::APP_TEXT):
             {
                 struct ObjectHeader oh;
-                read_template(fs, oh);
+                read_template(fstr, oh);
                 struct AppText ap;
-                read_template(fs, ap);
+                read_template(fstr, ap);
                 print(std::cout, ap);
                 // std::vector<uint8_t> data;
                 std::string data;
-                read(fs, ap.mTextLength, data);
+                read(fstr, ap.mTextLength, data);
                 // std::cout << "Length: " << data.size() << '\n';
                 // for (auto i : data)
                 //     std::cout << static_cast<int> (i) << ' ';
@@ -455,9 +470,9 @@ auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes
             {
                 std::cout << "sizeof (reserved5) " << sizeof(reserved_5) << '\n';
                 struct ObjectHeader oh;
-                read_template(fs, oh);
+                read_template(fstr, oh);
                 struct reserved_5 r5;
-                read_template(fs, r5);
+                read_template(fstr, r5);
                 print(std::cout, r5);
             }
             break;
@@ -481,10 +496,10 @@ void go_through_file_log_container(const char *const filename)
             std::cout << "File open failed, Exiting program\n";
             return;
         }
-    else
-        {
-            std::cout << " ** SUCCESS **\n";
-        }
+
+    {
+        std::cout << " ** SUCCESS **\n";
+    }
 
     auto filelength = fileLength(fs);
 
@@ -506,7 +521,7 @@ void go_through_file_log_container(const char *const filename)
         {
             if ((filelength - fs.tellg() == 0))
                 break;
-            std::cout << "Bytes left: " << filelength - fs.tellg() << '\n';
+            std::cout << "Bytes left: " << std::dec << filelength - fs.tellg() << '\n';
 
             struct BaseHeader ohb;
             if (read(fs, ohb))

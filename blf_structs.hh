@@ -206,61 +206,33 @@ struct sysTime_t
 
 struct fileStatistics
 {
-    uint32_t FileSign; // LOGG
-    uint32_t StatSize;
-    AppId_e AppId; // uint8_t
-    uint8_t AppMaj;
-    uint8_t AppMin;
-    uint8_t AppBuild;
-    uint8_t ApiMaj;
-    uint8_t ApiMin;
-    uint8_t ApiBuild;
-    uint8_t ApiPatch;
-    uint64_t fileSize;
-    uint64_t uncompressedSize;
-    uint32_t objCount;
-    uint32_t objRead;
-    sysTime_t meas_start_time;
-    sysTime_t last_obj_time;
-    uint64_t fileSize_less115;
-    fileStatistics()
-        : FileSign(0)
-        , StatSize(0)
-        , AppId(AppId_e::UNKNOWN)
-        , AppMaj(0)
-        , AppMin(0)
-        , AppBuild(0)
-        , ApiMaj(0)
-        , ApiMin(0)
-        , ApiBuild(0)
-        , ApiPatch(0)
-        , fileSize(0)
-        , uncompressedSize(0)
-        , objCount(0)
-        , objRead(0)
-        , meas_start_time({0, 0, 0, 0, 0, 0, 0, 0})
-        , last_obj_time({0, 0, 0, 0, 0, 0, 0, 0})
-        , fileSize_less115(0)
-    {
-    }
+    uint32_t FileSign{0};
+    uint32_t StatSize{0};
+    AppId_e AppId{0};
+    uint8_t AppMaj{0};
+    uint8_t AppMin{0};
+    uint8_t AppBuild{0};
+    uint8_t ApiMaj{0};
+    uint8_t ApiMin{0};
+    uint8_t ApiBuild{0};
+    uint8_t ApiPatch{0};
+    uint64_t fileSize{0};
+    uint64_t uncompressedSize{0};
+    uint32_t objCount{0};
+    uint32_t objRead{0};
+    sysTime_t meas_start_time{0, 0, 0, 0, 0, 0, 0, 0};
+    sysTime_t last_obj_time{0, 0, 0, 0, 0, 0, 0, 0};
+    uint64_t fileSize_less115{0};
 };
 
 
 struct BaseHeader
 {
-    uint32_t ObjSign; // LOBJ
-    uint16_t headerSize;
-    uint16_t headerVer;
-    uint32_t objSize;
-    enum ObjectType_e objectType; //  : uint32_t;
-    BaseHeader()
-        : ObjSign(0)
-        , headerSize(0)
-        , headerVer(0)
-        , objSize(0)
-        , objectType(ObjectType_e::UNKNOWN)
-    {
-    }
+    uint32_t ObjSign{0}; // LOBJ
+    uint16_t headerSize{0};
+    uint16_t headerVer{0};
+    uint32_t objSize{0};
+    enum ObjectType_e objectType{0}; //  : uint32_t;
 };
 
 
@@ -281,21 +253,22 @@ enum class timeStampStatus_e : uint8_t
 
 struct ObjectHeader
 {
-    ObjectFlags_e objectFlag;
-    uint16_t clientIndex;
-    uint16_t objectVersion;
-    uint64_t objectTimeStamp;
+    ObjectFlags_e objectFlag{};
+    uint16_t clientIndex{0};
+    uint16_t objectVersion{0};
+    uint64_t objectTimeStamp{0};
+    
 };
 
 
 struct ObjectHeader2
 {
-    ObjectFlags_e objectFlags;
-    timeStampStatus_e timeStampStatus;
-    uint8_t reservObjHeader;
-    uint16_t ObjectHeaderVersion;
-    uint64_t ObjectTimeStamp;
-    uint64_t originalObjectTimeStamp;
+    ObjectFlags_e objectFlags{0};
+    timeStampStatus_e timeStampStatus{0};
+    uint8_t reservObjHeader {0};
+    uint16_t ObjectHeaderVersion {0};
+    uint64_t ObjectTimeStamp {0};
+    uint64_t originalObjectTimeStamp {0};
 };
 
 
@@ -308,85 +281,65 @@ enum class compressionMethod_e : int16_t
 
 struct LogContainer
 {
-    compressionMethod_e compressionMethod; //int16_t
-    uint16_t reserv1;
-    uint32_t reserv2;
-    uint32_t unCompressedFileSize;
-    uint32_t reserv3;
+    compressionMethod_e compressionMethod{0}; //int16_t
+    uint16_t reserv1{0};
+    uint32_t reserv2{0};
+    uint32_t unCompressedFileSize{0};
+    uint32_t reserv3{0};
 };
 
 
 struct CanMessage
 {
-    uint16_t channel;
-    uint8_t flags;
-    uint8_t dlc;
-    uint32_t id;
-    std::array<uint8_t, 8> data {};
-    CanMessage()
-        : channel(0)
-        , flags(0)
-        , dlc(0)
-        , id(0)
-        , data({0, 0, 0, 0, 0, 0, 0, 0})
-    {
-    }
+    uint16_t channel{0};
+    uint8_t flags{0};
+    uint8_t dlc{0};
+    uint32_t id{0};
+    std::array<uint8_t, 8> data {0,0,0,0,0,0,0,0};
 };
 
 
 struct CanError
 {
-    uint16_t channel;
-    uint16_t length;
-    uint32_t reservedCanErrorFrame;
+    uint16_t channel {0};
+    uint16_t length {0};
+    uint32_t reservedCanErrorFrame {0};
 };
 
 
 struct CanError_short
 {
-    uint16_t channel;
-    uint16_t length;
+    uint16_t channel{0};
+    uint16_t length{0};
 };
 
 
 struct CanOverload
 {
-    uint16_t channel;
-    uint16_t reservedCanOverloadFrame1;
-    uint32_t reservedCanOverloadFrame2; // Corrected //??
+    uint16_t channel{0};
+    uint16_t reservedCanOverloadFrame1{0};
+    uint32_t reservedCanOverloadFrame2{0}; // Corrected //??
 };
 
 
 struct CanOverload_short
 {
-    uint16_t channel;
-    uint16_t reservedCanOverloadFrame1;
+    uint16_t channel {0};
+    uint16_t reservedCanOverloadFrame1 {0};
 };
 
 
 struct CanMessage2
 {
-    uint16_t channel;
-    uint8_t flags;
-    uint8_t dlc;
-    uint32_t id;
-    std::array<uint8_t, 8> data {};
-    uint32_t frameLength;
-    uint8_t bitCount;
-    uint8_t reservedCanMessage1;
-    uint16_t reservedCanMessage2;
-    CanMessage2()
-        : channel(0)
-        , flags(0)
-        , dlc(0)
-        , id(0)
-        , data({0, 0, 0, 0, 0, 0, 0, 0})
-        , frameLength(0)
-        , bitCount(0)
-        , reservedCanMessage1(0)
-        , reservedCanMessage2(0)
-    {
-    }
+    uint16_t channel{0};
+    uint8_t flags{0};
+    uint8_t dlc{0};
+    uint32_t id{0};
+    std::array<uint8_t, 8> data {0, 0, 0, 0, 0, 0, 0, 0};
+    uint32_t frameLength{0};
+    uint8_t bitCount{0};
+    uint8_t reservedCanMessage1{0};
+    uint16_t reservedCanMessage2{0};
 };
 
 
@@ -400,43 +353,43 @@ enum class AppTriggerFlags : uint16_t
 
 struct AppTrigger
 {
-    uint64_t preTriggerTime;
-    uint64_t postTriggerTime;
-    uint16_t channel;
-    AppTriggerFlags flags;
-    uint32_t appSpecific2;
+    uint64_t preTriggerTime{0};
+    uint64_t postTriggerTime{0};
+    uint16_t channel{0};
+    AppTriggerFlags flags{0};
+    uint32_t appSpecific2{0};
 };
 
 
 struct AppText
 {
-    uint32_t mSource;
-    uint32_t reserved;
-    uint32_t mTextLength;
-    char *mText;
+    uint32_t mSource{0};
+    uint32_t reserved{0};
+    uint32_t mTextLength{0};
+    char *mText{nullptr};
 };
 
 
 struct CANErrorFrameExt // CAN_DRIVER_ERROR_EXT
 {
-    uint16_t Channel; /* application channel */
-    uint16_t Length;  /* CAN error frame length */
-    uint32_t Flags;   /* extended CAN error frame flags */
-    uint8_t ECC;      /* error control code */
-    uint8_t Position; /* error position */
-    uint8_t DLC;      /* lower 4 bits: DLC from CAN-Core. Upper 4 bits: reserved */
-    uint8_t Reserved1;
-    uint32_t FrameLengthInNS; /* frame length in ns */
-    uint32_t ID;              /* frame ID from CAN-Core */
-    uint16_t FlagsExt;        /* extended error flags */
-    uint16_t Reserved2;
-    std::array<uint8_t, 8> Data {}; /* Payload, only for CAN-Core */
+    uint16_t Channel{0}; /* application channel */
+    uint16_t Length{0};  /* CAN error frame length */
+    uint32_t Flags{0};   /* extended CAN error frame flags */
+    uint8_t ECC{0};      /* error control code */
+    uint8_t Position{0}; /* error position */
+    uint8_t DLC{0};      /* lower 4 bits: DLC from CAN-Core. Upper 4 bits: reserved */
+    uint8_t Reserved1{0};
+    uint32_t FrameLengthInNS{0}; /* frame length in ns */
+    uint32_t ID{0};              /* frame ID from CAN-Core */
+    uint16_t FlagsExt{0};        /* extended error flags */
+    uint16_t Reserved2{0};
+    std::array<uint8_t, 8> Data {0,0,0,0,0,0,0,0}; /* Payload, only for CAN-Core */
 };
 
 
 struct reserved_5
 {
-    std::array<uint32_t, 6> data {};
+    std::array<uint32_t, 6> data {0,0,0,0,0,0};
 };
 
 
