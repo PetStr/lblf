@@ -33,7 +33,7 @@ void print(const std::deque<char> &data, size_t counts_to_print)
                 {
                     std::cout << '\n';
                 }
-            if (cnt == counts_to_print)
+            if (cnt >= counts_to_print)
                 {
                     break;
                 }
@@ -550,7 +550,7 @@ auto handle_ObjectType(std::deque<char> &log_que, const BaseHeader &ohb) -> exit
                 consume_que(log_que, dummy);
                 std::cout << std::dec << "objSize: " << (int) ohb.objSize << ", TextLength: " << (int) ap.mTextLength;
                 std::string app_text_string;
-                for (long i = 0; i < ap.mTextLength; ++i)
+                for (uint32_t i = 0; i < ap.mTextLength; ++i)
                     {
                         app_text_string.insert(app_text_string.begin() + i, log_que.front());
                         log_que.pop_front();
