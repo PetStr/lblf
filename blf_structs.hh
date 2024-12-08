@@ -393,6 +393,18 @@ struct reserved_5
 };
 
 
+struct CANDriverStatistic
+{
+    uint16_t           mChannel{0};                    /* application channel */
+    uint16_t           mBusLoad{0};                    /* CAN bus load */
+    uint32_t           mStandardDataFrames{0};         /* standard CAN id data frames */
+    uint32_t           mExtendedDataFrames{0};         /* extended CAN id data frames */
+    uint32_t           mStandardRemoteFrames{0};       /* standard CAN id remote frames */
+    uint32_t           mExtendedRemoteFrames{0};       /* extended CAN id remote frames */
+    uint32_t           mErrorFrames{0};                /* CAN error frames */
+    uint32_t           mOverloadFrames{0};             /* CAN overload frames */
+};
+
 #pragma pack()
 
 // Application helper structs.

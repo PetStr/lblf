@@ -2,6 +2,7 @@
 #include <cstring>
 #include <fstream>
 #include <iomanip>
+#include <type_traits>
 #include <vector>
 #include <zlib.h>
 
@@ -18,6 +19,27 @@ const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 
 // Forward declaration.
 auto handle_ObjectType(std::fstream &fstr, const BaseHeader &obh) -> exit_codes;
+auto handle_ObjectType(std::deque<char> &log_que, const BaseHeader &obh) -> exit_codes;
+
+
+void print(const std::deque<char> &data, size_t counts_to_print)
+{
+    size_t cnt = 0;
+    for (auto a: data)
+        {
+            std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) static_cast<uint8_t>(a);
+            cnt++;
+            if ((cnt % 16) == 0)
+                {
+                    std::cout << '\n';
+                }
+            if (cnt == counts_to_print)
+                {
+                    break;
+                }
+        }
+    std::cout << '\n';
+}
 
 
 auto fileLength(std::fstream &fs) -> uint32_t
@@ -113,6 +135,49 @@ auto read(uint8_t *data, BaseHeader &ohb) -> bool
     std::memcpy(&ohb.objSize, data, sizeof(ohb.objSize));
     data = data + sizeof(ohb.objSize);
     std::memcpy(&ohb.objectType, data, sizeof(ohb.objectType));
+    return true;
+}
+
+
+template <typename param>
+auto consume_que(std::deque<char> &que, param &output) -> bool
+{
+    if (que.size() >= sizeof(param))
+        {
+            std::vector<char> data(sizeof(param));
+            for (auto &cvalue: data)
+                {
+                    cvalue = que.front();
+                    que.pop_front();
+                }
+            std::memcpy(&output, data.data(), sizeof(param));
+            return true;
+        }
+    return false;
+}
+
+
+auto read(std::deque<char> &que, BaseHeader &ohb) -> bool
+{
+    // print(que, 16);
+    consume_que(que, ohb.ObjSign);
+    // print(que, 16);
+    if (ohb.ObjSign != ObjectSignature)
+        {
+            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
+            std::cout << '\n';
+            return false;
+        }
+
+    consume_que(que, ohb.headerSize);
+    // print(que, 16);
+    consume_que(que, ohb.headerVer);
+    // print(que, 16);
+    consume_que(que, ohb.objSize);
+    // print(que, 16);
+    consume_que(que, ohb.objectType);
+    // print(que, 16);
+
     return true;
 }
 
@@ -261,16 +326,18 @@ void print(const std::vector<uint8_t> &data)
             std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
             cnt++;
             if ((cnt % 16) == 0)
-                std::cout << '\n';
+                {
+                    std::cout << '\n';
+                }
         }
     std::cout << '\n';
 }
 
 
-auto handle_container_compressed(std::vector<uint8_t> &compressedData, 
-    LogContainer &lc, 
-    const BaseHeader &ohb, 
-    std::deque<char> & logcontainer_que) -> int
+auto handle_container_compressed_deque(std::vector<uint8_t> &compressedData,
+    LogContainer &lc,
+    const BaseHeader &ohb,
+    std::deque<char> &logcontainer_que) -> int
 {
     uLong bytes_left_in_container = lc.unCompressedFileSize;
     std::vector<uint8_t> uncompressedData {};
@@ -291,6 +358,8 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedData,
     std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
 
     logcontainer_que.insert(logcontainer_que.end(), uncompressedData.begin(), uncompressedData.end());
+
+    // print(uncompressedData);
 
     return retVal;
 }
@@ -364,6 +433,160 @@ auto parse_logcontainer_base(std::fstream &fs, const LogContainer &lc) -> bool
                 }
         }
     return true;
+}
+
+
+auto handle_ObjectType(std::deque<char> &log_que, const BaseHeader &ohb) -> exit_codes
+{
+    const auto payload_size = ohb.objSize - ohb.headerSize;
+    switch (ohb.objectType)
+        {
+        case (ObjectType_e::CAN_MESSAGE): // read Can message;
+            {
+                struct ObjectHeader oheader;
+                consume_que(log_que, oheader);
+                //	  print(std::cout, oheader);
+                if (payload_size == sizeof(CanMessage))
+                    {
+                        struct CanMessage cmessage;
+                        if (consume_que(log_que, cmessage))
+                            {
+                                print(std::cout, cmessage);
+                            }
+                    }
+                else
+                    {
+                        return exit_codes::CAN_MESSAGE_INVALID_LENGTH;
+                    }
+            }
+            break;
+
+        case (ObjectType_e::CAN_ERROR): // CanErrorFrame
+            {
+                struct ObjectHeader oheader;
+                consume_que(log_que, oheader);
+                print(std::cout, oheader);
+                if (payload_size == sizeof(CanError_short))
+                    {
+                        struct CanError_short cef;
+                        consume_que(log_que, cef);
+                        print(std::cout, cef);
+                    }
+                else if (payload_size == sizeof(CanError))
+                    {
+                        struct CanError cef;
+                        consume_que(log_que, cef);
+                        print(std::cout, cef);
+                    }
+            }
+            break;
+
+
+        case (ObjectType_e::CAN_OVERLOAD): // CanOverload
+            {
+                print(std::cout, ohb);
+                struct ObjectHeader oheader;
+                consume_que(log_que, oheader);
+                print(std::cout, oheader);
+                if (payload_size == sizeof(CanOverload))
+                    {
+                        struct CanOverload col;
+                        consume_que(log_que, col);
+                        print(std::cout, col);
+                    }
+                else if (payload_size == sizeof(CanOverload_short))
+                    {
+                        struct CanOverload_short cols;
+                        consume_que(log_que, cols);
+                        print(std::cout, cols);
+                    }
+                else
+                    {
+                        std::cout << "Error wrong CanOverload Frame!\n";
+                    }
+            }
+            break;
+
+        case (ObjectType_e::APP_TRIGGER): // Handle apptrigger
+            {
+                struct ObjectHeader oh;
+                consume_que(log_que, oh);
+                // print(std::cout, oh);
+                struct AppTrigger ap;
+                consume_que(log_que, ap);
+                print(std::cout, ap);
+            }
+            break;
+
+        case (ObjectType_e::LOG_CONTAINER): // Get Logcontainer
+            {
+                std::cout << "Log container not implemented inside a log container\n";
+                return exit_codes::UNHANDLED_OBJECT_TYPE;
+                break;
+            }
+
+        case (ObjectType_e::CAN_MESSAGE2):
+            {
+                struct ObjectHeader oh;
+                consume_que(log_que, oh);
+                //	  print(std::cout, oh);
+                struct CanMessage2 cm2;
+                if (consume_que(log_que, cm2))
+                    {
+                        print(std::cout, cm2);
+                    }
+            }
+            break;
+
+        case (ObjectType_e::APP_TEXT):
+            {
+                struct ObjectHeader oh;
+                consume_que(log_que, oh);
+                struct AppText ap;
+                consume_que(log_que, ap.mSource);
+                consume_que(log_que, ap.reserved);
+                consume_que(log_que, ap.mTextLength);
+                uint32_t dummy = 0;
+                consume_que(log_que, dummy);
+                std::cout << std::dec << "objSize: " << (int) ohb.objSize << ", TextLength: " << (int) ap.mTextLength;
+                std::string app_text_string;
+                for (long i = 0; i < ap.mTextLength; ++i)
+                    {
+                        app_text_string.insert(app_text_string.begin() + i, log_que.front());
+                        log_que.pop_front();
+                    }
+                // std::cout << "App_text: " << app_text_string << '\n';
+            }
+            break;
+
+        case (ObjectType_e::reserved_5):
+            {
+                struct ObjectHeader oh;
+                consume_que(log_que, oh);
+                struct reserved_5 r5;
+                consume_que(log_que, r5);
+                print(std::cout, r5);
+            }
+            break;
+
+        case (ObjectType_e::CAN_STATISTIC):
+            {
+                ObjectHeader oh;
+                consume_que(log_que, oh);
+                CANDriverStatistic can_stat;
+                consume_que(log_que, can_stat);
+                print(std::cout, can_stat);
+                std::cout << "rest: " << payload_size - sizeof(CANDriverStatistic) << 'n';
+                const auto rest = payload_size - sizeof(CANDriverStatistic);
+                log_que.erase(log_que.begin(), log_que.begin() + rest);
+            }
+            break;
+
+        default:
+            std::cout << "New ObjectType: " << (int) ohb.objectType << '\n';
+            return exit_codes::UNHANDLED_OBJECT_TYPE;
+        }
+    return exit_codes::EXITING_SUCCESS;
 }
 
 
@@ -533,28 +756,38 @@ auto handle_ObjectType(std::fstream &fstr, const BaseHeader &ohb) -> exit_codes
 
 auto go_through_log_data(std::deque<char> &logcontainer_que) -> bool
 {
-    std::vector<char> data;
-    data.reserve(sizeof(BaseHeader));
-    while (not logcontainer_que.empty()) 
-    {
-        if(logcontainer_que.size() >= sizeof(BaseHeader))
+    while (not logcontainer_que.empty())
         {
-            for (size_t i = 0; i < sizeof(BaseHeader); ++i) 
-            {
-                data.push_back(logcontainer_que.front());
-                logcontainer_que.pop_front();
-            }
-            BaseHeader obh;
-            std::memcpy(&obh, data.data(), sizeof(BaseHeader));
-            //PSPS
+            if (logcontainer_que.size() >= sizeof(BaseHeader))
+                {
+                    BaseHeader ohb;
+                    read(logcontainer_que, ohb);
+                    std::cout << "Inside compressed LogContainer: ";
+                    lblf::print(std::cout, ohb);
+                    const size_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
+                    std::cout << "size_left: " << logcontainer_que.size() << " to jump: " << bytes_to_jump << '\n';
+                    print(logcontainer_que, bytes_to_jump);
+                    if (logcontainer_que.size() >= bytes_to_jump)
+                        {
+                            handle_ObjectType(logcontainer_que, ohb);
+                            const auto jump = (ohb.objSize % 4);
+                            std::cout << "additional jump: " << jump << '\n';
+                            logcontainer_que.erase(logcontainer_que.begin(), logcontainer_que.begin() + jump);
+                        }
+                    else
+                        {
+                            std::cout << "Need to reload from log Container 1\n";
+                            return false;
+                        }
+                }
+            else
+                {
+                    std::cout << std::dec << logcontainer_que.size() << " " << sizeof(BaseHeader) << '\n';
+                    std::cout << "Need to reload from log Container 2\n";
+                    return false;
+                }
         }
-        else
-        {
-            return false;
-        }
-
-    }
-
+    std::cout << "Need to reload from log Container 3\n";
     return true;
 }
 
@@ -595,7 +828,7 @@ void go_through_file_log_container(const char *const filename)
         {
             if ((filelength - fs.tellg() == 0))
                 break;
-            std::cout << "Bytes left: " << std::dec << filelength - fs.tellg() << '\n';
+            std::cout << "Line: " << std::dec << __LINE__ << ", Bytes left: " << filelength - fs.tellg() << '\n';
 
             struct BaseHeader ohb;
             if (read(fs, ohb))
@@ -610,34 +843,35 @@ void go_through_file_log_container(const char *const filename)
                     //   fs.seekg(1,std::ios_base::cur);
                 }
 
-          if (ohb.objectType == ObjectType_e::LOG_CONTAINER)
-              {
-                  struct LogContainer lc;
-                  read(fs, lc, ohb);
-                  print(std::cout, lc);
-                  std::vector<uint8_t> container_data;
-                  auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
+            if (ohb.objectType == ObjectType_e::LOG_CONTAINER)
+                {
+                    struct LogContainer lc;
+                    read(fs, lc, ohb);
+                    print(std::cout, lc);
+                    std::vector<uint8_t> container_data;
+                    auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
 
-                 // std::cout << "compressed blob: " << compressedFileSize << '\n';
+                    // std::cout << "compressed blob: " << compressedFileSize << '\n';
 
-                 container_data.resize(compressedFileSize);
+                    container_data.resize(compressedFileSize);
 
-                 fs.read(reinterpret_cast<char *>(container_data.data()), compressedFileSize);
+                    fs.read(reinterpret_cast<char *>(container_data.data()), compressedFileSize);
 
-                 // Padding
-                  fs.seekg(ohb.objSize % 4, std::ios_base::cur);
+                    // Padding
+                    fs.seekg(ohb.objSize % 4, std::ios_base::cur);
 
-                 std::cout << "data size: " << container_data.size() << '\n';
+                    std::cout << "Log container data size: " << container_data.size() << '\n';
 
-                 if (lc.compressionMethod == compressionMethod_e::zlib)
-                      {
-                          handle_container_compressed(container_data, lc, ohb, logcontainer_que);
-                      }
-              }
-          else
+                    if (lc.compressionMethod == compressionMethod_e::zlib)
+                        {
+                            handle_container_compressed_deque(container_data, lc, ohb, logcontainer_que);
+                            go_through_log_data(logcontainer_que);
+                        }
+                }
+            else
                 {
                     const size_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
-                    //std::cout << "To jump: " << bytes_to_jump << '\n';
+                    // std::cout << "To jump: " << bytes_to_jump << '\n';
                     fs.seekg(bytes_to_jump, std::ios_base::cur);
                 }
         }
@@ -645,7 +879,7 @@ void go_through_file_log_container(const char *const filename)
 }
 
 
-int main(int argc, char *argv[])
+auto main(int argc, char *argv[]) -> int
 {
 
     std::cout << "----- START OF OUTPUT -----------------------------\n";

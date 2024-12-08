@@ -1,5 +1,15 @@
----
-Checks:          '*,-fuchsia-*,-llvmlibc-*,,-google-*,-zircon-*,-abseil-*,-altera-unroll-loops,-cppcoreguidelines-avoid-magic-numbers, -readability-magic-numbers,-altera-id-dependent-backward-branch,-readability-identifier-length,-misc-non-private-member-variables-in-classes,-altera-struct-pack-align,-misc-confusable-identifiers'
-WarningsAsErrors: '*'
-HeaderFilterRegex: ''
-FormatStyle:     none
+Checks: >
+  *,-fuchsia-*,-llvmlibc-*,-google-*,-zircon-*,-abseil-*,-altera-unroll-loops,
+  -cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,
+  -altera-id-dependent-backward-branch,-readability-identifier-length,
+  -misc-non-private-member-variables-in-classes,-altera-struct-pack-align,
+  -misc-confusable-identifiers,-cppcoreguidelines-pro-type-reinterpret-cast
+
+WarningsAsErrors: ''
+CheckOptions:
+  - key: readability-magic-numbers.MagicNumberPattern
+    value: '[0-9]+'
+  - key: readability-identifier-length.IgnoreShortIdentifiers
+    value: '0'
+  - key: modernize-avoid-c-arrays.IgnorePositiveIntegerLiterals
+    value: 'true'

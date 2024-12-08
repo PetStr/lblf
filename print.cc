@@ -407,11 +407,15 @@ void print(std::ostream &s, const BaseHeader &ohb)
     s << "BaseHeader ";
     // s << "ObjSign " << std::hex << (int)ohb.ObjSign;
     // s << std::dec;
-    s << std::dec;
-    s << " headerSize " << (int) ohb.headerSize;
-    s << ", headerVer " << (int) ohb.headerVer;
-    s << ", objSize " << (int) ohb.objSize;
-    s << ", objectType# " << static_cast<int>(ohb.objectType);
+    s << std::hex;
+    s << " headerSize 0x" << std::hex << (int) ohb.headerSize;
+    s << std::dec << "(" << (int) ohb.headerSize << ")";
+    s << ", headerVer 0x" << std::hex << (int) ohb.headerVer;
+    s << std::dec << "(" << (int) ohb.headerVer << ")";
+    s << ", objSize 0x" << std::hex << (int) ohb.objSize;
+    s << std::dec << "(" << (int) ohb.objSize << ")";
+    s << ", objectType 0x" << std::hex << static_cast<int>(ohb.objectType);
+    s << std::dec << "(" << (int) ohb.objectType << ")";
     s << ", " << print(ohb.objectType);
     s << '\n';
 }
@@ -480,14 +484,12 @@ void print(std::ostream &s, const CanMessage &cm)
     s << "channel: " << (int) cm.channel;
     s << ", flags: " << std::dec << (int) cm.flags;
     s << ", dlc: " << std::dec << (int) cm.dlc;
-    auto dlc = cm.dlc;
-    if (dlc > 8)
-        dlc = 8;
-    s << ", dlc: " << std::dec << (int) dlc;
     s << ", id: 0x" << std::hex << (int) cm.id;
     s << ", data: ";
-    for (auto n = 0; n < dlc; n++)
-        s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) cm.data[n];
+    for (auto d: cm.data)
+        {
+            s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) d;
+        }
     s << '\n';
 }
 
@@ -516,18 +518,15 @@ void print(std::ostream &s, const CanOverload_short &co)
 void print(std::ostream &s, const CanMessage2 &cm2)
 {
     s << "CanMessage2 : ";
-    s << std::dec;
-    s << "channel: " << (int) cm2.channel;
+    s << "channel: " << std::dec << (int) cm2.channel;
     s << ", flags: " << std::dec << (int) cm2.flags;
-    auto dlc = cm2.dlc;
-    if (dlc > 8)
-        dlc = 8;
-    s << ", dlc: " << std::dec << dlc;
-    s << ", dlc: " << std::dec << cm2.dlc;
+    s << ", dlc: " << std::dec << (int) cm2.dlc;
     s << ", id: 0x" << std::hex << (int) cm2.id;
     s << ", data: ";
     for (auto d: cm2.data)
-        s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) d;
+        {
+            s << " " << std::hex << std::setfill('0') << std::setw(2) << (int) d;
+        }
     s << '\n';
 }
 
@@ -604,4 +603,18 @@ void print(std::ostream &s, const CANErrorFrameExt &ce)
 }
 
 
+void print(std::ostream &s, const CANDriverStatistic &can_stat)
+{
+    s << std::dec;
+    s << "mChannel: " << can_stat.mChannel << '\n';
+    s << "mBusLoad: " << can_stat.mBusLoad << '\n';
+    s << "mStandardDataFrames: " << can_stat.mStandardDataFrames << '\n';
+    s << "mExtendedDataFrames: " << can_stat.mExtendedDataFrames << '\n';
+    s << "mStandardRemoteFrames: " << can_stat.mStandardRemoteFrames << '\n';
+    s << "mExtendedRemoteFrames: " << can_stat.mExtendedRemoteFrames << '\n';
+    s << "mErrorFrames: " << can_stat.mErrorFrames << '\n';
+    s << "mOverloadFrames: " << can_stat.mOverloadFrames << '\n';
 }
+
+
+} // namespace lblf
