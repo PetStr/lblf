@@ -27,5 +27,8 @@ target_link_libraries(read_base -lz )
 
 add_executable(count_id count_id.cc print.cc)
 
+add_executable(print_structs print_structs.cc)
+
+
 #add_executable(tell_gear tell_gear.cc print.cc)
 

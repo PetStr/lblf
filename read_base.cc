@@ -833,14 +833,11 @@ void go_through_file_log_container(const char *const filename)
             struct BaseHeader ohb;
             if (read(fs, ohb))
                 {
-                    // std::cout << print(ohb.objectType) << " " << static_cast<int>(ohb.objectType) << '\n';
                     print(std::cout, ohb);
                 }
-
             else
                 {
                     std::cout << std::dec << __LINE__ << " Unable to read BaseHeader\n";
-                    //   fs.seekg(1,std::ios_base::cur);
                 }
 
             if (ohb.objectType == ObjectType_e::LOG_CONTAINER)

@@ -7,7 +7,7 @@
 
 int main()
 {
-
+    using namespace lblf;
     std::cout << "sysTime_t       : " << std::dec << sizeof(sysTime_t         ) << '\n';
     std::cout << "fileStatistics  : " << std::dec << sizeof(fileStatistics    ) << '\n';
     std::cout << "BaseHeader: " << std::dec << sizeof(BaseHeader  ) << '\n';
