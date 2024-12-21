@@ -1,6 +1,7 @@
 #include <functional> // For std::function
 #include <iostream>
 #include <optional>
+#include <utility>
 #include <vector>
 
 class BufferedReader
@@ -10,7 +11,7 @@ public:
 
     BufferedReader(std::size_t buffer_capacity, SourceReader source_reader)
         : buffer_(buffer_capacity)
-        , source_reader_(source_reader)
+        , source_reader_(std::move(source_reader))
         , read_pos_(0)
         , buffer_size_(0)
     {
