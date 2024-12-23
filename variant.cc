@@ -20,7 +20,7 @@ struct StructB {
 
 using VariantType = std::variant<StructA, StructB>;
 
-int main() {
+auto main() -> int {
     std::deque<VariantType> deque;
 
     // Add different types of structs

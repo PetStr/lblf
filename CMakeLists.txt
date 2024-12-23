@@ -31,6 +31,8 @@ add_executable(print_structs print_structs.cc)
 
 add_executable(deque_replenish deque_replenish.cc)
 
+add_executable(deque_example deque_example.cc)
+
 add_executable(variant variant.cc)
 #add_executable(tell_gear tell_gear.cc print.cc)
 
