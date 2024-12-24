@@ -409,7 +409,7 @@ struct VBLCANDriverErrorExt_t
     uint8_t mState;            /* state register */
     uint8_t mReserved1;
     uint16_t mReserved2;
-    uint32_t mReserved3[4];
+    std::array<uint32_t, 4> mReserved3;
 };
 
 #define BL_HWSYNC_FLAGS_TX 1      /* sync was sent from this channel */
@@ -466,7 +466,7 @@ struct VBLCANFDMessage_t
     uint8_t mReserved1;            /* reserved */
     uint32_t mReserved2;           /* reserved */
     std::array<uint8_t, 64> mData; /* CAN FD data */
-} VBLCANFDMessage;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -480,7 +480,7 @@ struct VBLCANFDExtFrameData_t
     uint32_t mBTRExtArb;
     uint32_t mBTRExtData;
     // may be extended in future versions
-} VBLCANFDExtFrameData;
+};
 
 #define BLHasExtFrameData(b) (((b)->mExtDataOffset != 0) && ((b)->mHeader.mBase.mObjectSize >= ((b)->mExtDataOffset + sizeof(VBLCANFDExtFrameData))))
 #define BLExtFrameDataPtr(b) ((VBLCANFDExtFrameData*) ((byte*) (b) + (b)->mExtDataOffset))
@@ -506,7 +506,7 @@ struct VBLCANFDMessage64_t
     uint32_t mCRC;                 /* CRC for CAN */
     std::array<uint8_t, 64> mData; /* CAN FD data */
     VBLCANFDExtFrameData_t mExtFrameData;
-} VBLCANFDMessage64;
+};
 
 
 struct VBLCANFDErrorFrame64_t
@@ -648,10 +648,10 @@ struct VBLLINSchedulerModeChange_t
 /* HINT: Extension of this structure is not allowed! */
 struct VBLLINSyncError_t
 {
-    VBLObjectHeader_t mHeader; /* object header */
-    uint16_t mChannel;         /* application channel */
-    uint16_t mDummy;           /* t.b.d */
-    uint16_t mTimeDiff[4];     /* t.b.d */
+    VBLObjectHeader_t mHeader;         /* object header */
+    uint16_t mChannel;                 /* application channel */
+    uint16_t mDummy;                   /* t.b.d */
+    std::array<uint16_t, 4> mTimeDiff; /* t.b.d */
 };
 
 /* HINT: Extension of this structure is not allowed! */
@@ -1440,7 +1440,7 @@ struct VBLFLEXRAYV6Message_t
     uint8_t mHeaderBitMask;     /* Bit0 = NMBit, Bit1 = SyncBit, Bit2 = Reserved */
     uint8_t mReserved1;
     uint16_t mReserved2;
-    std::array <uint8_t,64> mDataBytes; /* array of databytes*/
+    std::array<uint8_t, 64> mDataBytes; /* array of databytes*/
 };
 
 /* HINT: Extension of this structure is not allowed! */
@@ -1531,18 +1531,18 @@ struct VBLFLEXRAYVFrStartCycle_t
 /* HINT: Extension of this structure is not allowed! */
 struct VBLFLEXRAYVFrStatus_t
 {
-    VBLObjectHeader_t mHeader; /* object header */
-    uint16_t mChannel;         /* application channel */
-    uint16_t mVersion;         /* object version */
-    uint16_t mChannelMask;     /* channel mask */
-    uint8_t mCycle;            /* current cycle,  uint8_t */
-    uint32_t mClientIndex;     /* clientindex of send node */
-    uint32_t mClusterNo;       /* number of cluster */
-    uint32_t mWus;             /* wakeup status */
-    uint32_t mCcSyncState;     /* sync state of cc */
-    uint32_t mTag;             /* type of cc */
-    uint32_t mData[2];         /* register flags */
-    uint16_t mReserved[16];
+    VBLObjectHeader_t mHeader;     /* object header */
+    uint16_t mChannel;             /* application channel */
+    uint16_t mVersion;             /* object version */
+    uint16_t mChannelMask;         /* channel mask */
+    uint8_t mCycle;                /* current cycle,  uint8_t */
+    uint32_t mClientIndex;         /* clientindex of send node */
+    uint32_t mClusterNo;           /* number of cluster */
+    uint32_t mWus;                 /* wakeup status */
+    uint32_t mCcSyncState;         /* sync state of cc */
+    uint32_t mTag;                 /* type of cc */
+    std::array<uint32_t, 2> mData; /* register flags */
+    std::array<uint16_t, 16> mReserved;
 };
 
 /* HINT: Extension of this structure is not allowed! */
@@ -1574,7 +1574,7 @@ struct VBLJ1708Message_t
     uint16_t mError;                /* error code */
     uint8_t mSize;                  /* data size */
     std::array<uint8_t, 255> mData; /* data */
-} VBLJ1708Message;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1592,7 +1592,7 @@ struct VBLEnvironmentVariable_t
     uint32_t mDataLength;      /* length of variable data inuint8_ts */
     // BL_LPSTR mName;          /* variable name in MBCS */
     // BL_LPBYTE mData;         /* variable data */
-} VBLEnvironmentVariable;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1673,7 +1673,7 @@ struct VBLSingleByteSerialEvent_t
 struct VBLCompactSerialEvent_t
 {
     uint8_t mCompactLength;
-    uint8_t mCompactData[15];
+    std::array<uint8_t, 15> mCompactData;
 };
 
 /* HINT: this struct might be extended in future versions! */
@@ -1704,7 +1704,7 @@ struct VBLKLineStatusEvent_t
     uint32_t mPort;                /* channel of event */
     uint32_t mReserved;            /* t.b.d. */
     std::array<uint64_t, 3> mData; /* the actual data, but only mDataLenuint8_tS are used! */
-} VBLKLineStatusEvent;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1725,7 +1725,7 @@ struct VBLEthernetFrame_t
     uint16_t mTCI;
     uint16_t mPayLoadLength; /* Number of valid mPayLoaduint8_ts */
     // BL_LPBYTE mPayLoad;      /* Max 1582 (1600 packet length - 18 header) datauint8_ts per frame  */
-} VBLEthernetFrame;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1753,7 +1753,7 @@ struct VBLEthernetFrameEx_t
     uint32_t mFrameHandle;     /* Handle which refer the corresponding VBLEthernetFrameForwarded event */
     uint32_t mReserved;
     // BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
-} VBLEthernetFrameEx;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1781,7 +1781,7 @@ struct VBLEthernetFrameForwarded_t
     uint32_t mFrameHandle;     /* Handle which refer the corresponding VBLEthernetFrameForwarded event */
     uint32_t mReserved;
     // BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
-} VBLEthernetFrameForwarded;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1803,7 +1803,7 @@ struct VBLEthernetRxError_t
     uint16_t mReserved2;       /* Gap */
     uint32_t mError;
     // BL_LPBYTE mFrameData; /* Max 1600 datauint8_ts per frame  */
-} VBLEthernetRxError;
+};
 
 /*----------------------------------------------------------------------------
 |
