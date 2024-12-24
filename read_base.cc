@@ -17,6 +17,8 @@ using namespace lblf;
 const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 
+const uint32_t defaultConteinerSize = 0x20000;
+
 // Forward declaration.
 auto handle_ObjectType(std::fstream &fstr, const BaseHeader &obh) -> exit_codes;
 auto handle_ObjectType(std::deque<char> &log_que, const BaseHeader &obh) -> exit_codes;
@@ -96,10 +98,10 @@ auto read(std::fstream &fs, uint32_t length, std::vector<uint8_t> &data) -> bool
 auto read(std::fstream &fs, uint32_t length, std::string &data) -> bool
 {
     data.resize(length);
-    fs.read(const_cast<char *>(data.data()), length);
+    fs.read(reinterpret_cast<char *>(data.data()), length);
     return true;
 }
-
+    
 
 auto read(std::fstream &fs, BaseHeader &ohb) -> bool
 {

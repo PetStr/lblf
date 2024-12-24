@@ -24,7 +24,9 @@
 |
 -----------------------------------------------------------------------------*/
 
+#include <array>
 #include <cstdint>
+
 #define BL_OBJ_SIGNATURE 0x4A424F4C /* object signature */
 
 #define BL_OBJ_TYPE_UNKNOWN 0        /* unknown object */
@@ -34,7 +36,7 @@
 #define BL_OBJ_TYPE_CAN_STATISTIC 4  /* CAN driver statistics object */
 #define BL_OBJ_TYPE_APP_TRIGGER 5    /* application trigger object */
 #define BL_OBJ_TYPE_ENV_INTEGER 6    /* environment integer object */
-#define BL_OBJ_TYPE_ENV_DOUBLE 7     /* environment double object */
+#define BL_OBJ_TYPE_ENV_ double 7    /* environment  double object */
 #define BL_OBJ_TYPE_ENV_STRING 8     /* environment string object */
 #define BL_OBJ_TYPE_ENV_DATA 9       /* environment data object */
 #define BL_OBJ_TYPE_LOG_CONTAINER 10 /* container object */
@@ -107,7 +109,7 @@
 #define BL_OBJ_TYPE_LIN_RCV_ERROR2 61   /* LIN receive error object */
 #define BL_OBJ_TYPE_LIN_WAKEUP2 62      /* LIN wakeup event object  - extended */
 #define BL_OBJ_TYPE_LIN_SPIKE_EVENT2 63 /* LIN spike event object - extended */
-#define BL_OBJ_TYPE_LIN_LONG_DOM_SIG 64 /* LIN long dominant signal object */
+#define BL_OBJ_TYPE_LIN_LONG_DOM_SIG 64 /* LIN uint32_t dominant signal object */
 
 #define BL_OBJ_TYPE_APP_TEXT 65 /* text object */
 
@@ -125,7 +127,7 @@
 #define BL_OBJ_TYPE_CAN_ERROR_EXT 73        /* CAN error frame object (extended) */
 #define BL_OBJ_TYPE_CAN_DRIVER_ERROR_EXT 74 /* CAN driver error object (extended) */
 
-#define BL_OBJ_TYPE_LIN_LONG_DOM_SIG2 75 /* LIN long dominant signal object - extended */
+#define BL_OBJ_TYPE_LIN_LONG_DOM_SIG2 75 /* LIN uint32_t dominant signal object - extended */
 
 #define BL_OBJ_TYPE_MOST_150_MESSAGE 76           /* MOST150 Control channel message */
 #define BL_OBJ_TYPE_MOST_150_PKT 77               /* MOST150 Asynchronous channel message */
@@ -234,14 +236,14 @@
 |
 -----------------------------------------------------------------------------*/
 
-typedef struct VBLObjectHeaderBase_t
+struct VBLObjectHeaderBase_t
 {
     uint32_t mSignature;     /* signature (BL_OBJ_SIGNATURE) */
     uint16_t mHeaderSize;    /* sizeof object header */
     uint16_t mHeaderVersion; /* header version (1) */
     uint32_t mObjectSize;    /* object size */
     uint32_t mObjectType;    /* object type (BL_OBJ_TYPE_XXX) */
-} VBLObjectHeaderBase;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -250,14 +252,14 @@ typedef struct VBLObjectHeaderBase_t
 -----------------------------------------------------------------------------*/
 
 
-typedef struct VBLVarObjectHeader_t
+struct VBLVarObjectHeader_t
 {
-    VBLObjectHeaderBase mBase;  /* base header object */
-    uint32_t mObjectFlags;      /* object flags */
-    uint16_t mObjectStaticSize; /* size of the static part of the object */
-    uint16_t mObjectVersion;    /* object specific version */
-    uint64_t mObjectTimeStamp;  /* object timestamp */
-} VBLVarObjectHeader;
+    VBLObjectHeaderBase_t mBase; /* base header object */
+    uint32_t mObjectFlags;       /* object flags */
+    uint16_t mObjectStaticSize;  /* size of the static part of the object */
+    uint16_t mObjectVersion;     /* object specific version */
+    uint64_t mObjectTimeStamp;   /* object timestamp */
+};
 
 
 /*----------------------------------------------------------------------------
@@ -275,25 +277,25 @@ typedef struct VBLVarObjectHeader_t
 |
 -----------------------------------------------------------------------------*/
 
-typedef struct VBLObjectHeader_t
+struct VBLObjectHeader_t
 {
-    VBLObjectHeaderBase mBase; /* base header object */
-    uint32_t mObjectFlags;     /* object flags */
-    uint16_t mClientIndex;     /* client index of send node */
-    uint16_t mObjectVersion;   /* object specific version */
-    uint64_t mObjectTimeStamp; /* object timestamp */
-} VBLObjectHeader;
+    VBLObjectHeaderBase_t mBase; /* base header object */
+    uint32_t mObjectFlags;       /* object flags */
+    uint16_t mClientIndex;       /* client index of send node */
+    uint16_t mObjectVersion;     /* object specific version */
+    uint64_t mObjectTimeStamp;   /* object timestamp */
+};
 
-typedef struct VBLObjectHeader2_t
+struct VBLObjectHeader2_t
 {
-    VBLObjectHeaderBase mBase;   /* base header object */
+    VBLObjectHeaderBase_t mBase; /* base header object */
     uint32_t mObjectFlags;       /* object flags */
     uint8_t mTimeStampStatus;    /* time stamp status */
     uint8_t mReserved1;          /* reserved */
     uint16_t mObjectVersion;     /* object specific version */
     uint64_t mObjectTimeStamp;   /* object timestamp */
     uint64_t mOriginalTimeStamp; /* original object timestamp */
-} VBLObjectHeader2;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -311,15 +313,15 @@ typedef struct VBLObjectHeader2_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLCANMessage_t
+struct VBLCANMessage_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mFlags;          /* CAN dir & rtr */
-    uint8_t mDLC;            /* CAN dlc */
-    uint32_t mID;            /* CAN ID */
-    uint8_t mData[8];        /* CAN data */
-} VBLCANMessage;
+    VBLObjectHeader_t mHeader;    /* object header */
+    uint16_t mChannel;            /* application channel */
+    uint8_t mFlags;               /* CAN dir & rtr */
+    uint8_t mDLC;                 /* CAN dlc */
+    uint32_t mID;                 /* CAN ID */
+    std::array<uint8_t, 8> mData; /* CAN data */
+};
 
 // CAN dir, rtr, wu & nerr encoded into flags
 #define CAN_MSG_DIR(f) (uint8_t) (f & 0x0F)
@@ -338,91 +340,90 @@ typedef struct VBLCANMessage_t
     (uint8_t) (((uint8_t) (edl & 0x01)) | ((uint8_t) (brs & 0x01) << 1) | (uint8_t) (esi & 0x01) << 2)
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLCANErrorFrame_t
+struct VBLCANErrorFrame_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mLength;        /* CAN error frame length */
-} VBLCANErrorFrame;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mLength;          /* CAN error frame length */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLCANErrorFrameExt_t
+struct VBLCANErrorFrameExt_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mLength;        /* CAN error frame length */
-    uint32_t mFlags;         /* extended CAN error frame flags */
-    uint8_t mECC;            /* error control code */
-    uint8_t mPosition;       /* error position */
-    uint8_t mDLC;            /* lower 4 bits: DLC from CAN-Core. Upper 4 bits: reserved */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mLength;          /* CAN error frame length */
+    uint32_t mFlags;           /* extended CAN error frame flags */
+    uint8_t mECC;              /* error control code */
+    uint8_t mPosition;         /* error position */
+    uint8_t mDLC;              /* lower 4 bits: DLC from CAN-Core. Upper 4 bits: reserved */
     uint8_t mReserved1;
     uint32_t mFrameLengthInNS; /* frame length in ns */
     uint32_t mID;              /* frame ID from CAN-Core */
     uint16_t mFlagsExt;        /* extended error flags */
     uint16_t mReserved2;
-    uint8_t mData[8]; /* Payload, only for CAN-Core */
-} VBLCANErrorFrameExt;
+    std::array<uint8_t, 8> mData; /* Payload, only for CAN-Core */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLCANOverloadFrame_t
+struct VBLCANOverloadFrame_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mDummy;         /* pad */
-} VBLCANOverloadFrame;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mDummy;           /* pad */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLCANDriverStatistic_t
+struct VBLCANDriverStatistic_t
 {
-    VBLObjectHeader mHeader;        /* object header */
+    VBLObjectHeader_t mHeader;      /* object header */
     uint16_t mChannel;              /* application channel */
     uint16_t mBusLoad;              /* CAN bus load */
     uint32_t mStandardDataFrames;   /* standard CAN id data frames */
     uint32_t mExtendedDataFrames;   /* extended CAN id data frames */
     uint32_t mStandardRemoteFrames; /* standard CAN id remote frames */
-    uint32_t mExtendedRemoteFrames; /* extented CAN id remote frames */
+    uint32_t mExtendedRemoteFrames; /* extened CAN id remote frames */
     uint32_t mErrorFrames;          /* CAN error frames */
     uint32_t mOverloadFrames;       /* CAN overload frames */
-} VBLCANDriverStatistic;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLCANDriverError_t
+struct VBLCANDriverError_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mTXErrors;       /* # of TX errors */
-    uint8_t mRXErrors;       /* # of RX errors */
-    uint32_t mErrorCode;     /* CAN driver error code */
-} VBLCANDriverError;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint8_t mTXErrors;         /* # of TX errors */
+    uint8_t mRXErrors;         /* # of RX errors */
+    uint32_t mErrorCode;       /* CAN driver error code */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLCANDriverErrorExt_t
+struct VBLCANDriverErrorExt_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mTXErrors;       /* # of TX errors */
-    uint8_t mRXErrors;       /* # of RX errors */
-    uint32_t mErrorCode;     /* CAN driver error code */
-    uint32_t mFlags;         /* flags */
-    uint8_t mState;          /* state register */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint8_t mTXErrors;         /* # of TX errors */
+    uint8_t mRXErrors;         /* # of RX errors */
+    uint32_t mErrorCode;       /* CAN driver error code */
+    uint32_t mFlags;           /* flags */
+    uint8_t mState;            /* state register */
     uint8_t mReserved1;
     uint16_t mReserved2;
     uint32_t mReserved3[4];
-
-} VBLCANDriverErrorExt;
+};
 
 #define BL_HWSYNC_FLAGS_TX 1      /* sync was sent from this channel */
 #define BL_HWSYNC_FLAGS_RX 2      /* external sync received */
 #define BL_HWSYNC_FLAGS_RX_THIS 4 /* sync received but generated from this hardware */
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLCANDriverHwSync_t
+struct VBLCANDriverHwSync_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* channel where sync occured */
-    uint8_t mFlags;          /* BL_HWSYNC_FLAGS_XXX */
-    uint8_t mDummy;          /* pad */
-} VBLCANDriverHwSync;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* channel where sync occured */
+    uint8_t mFlags;            /* BL_HWSYNC_FLAGS_XXX */
+    uint8_t mDummy;            /* pad */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -431,19 +432,19 @@ typedef struct VBLCANDriverHwSync_t
 -----------------------------------------------------------------------------*/
 
 /* HINT: This structure might be extended in future versions! */
-typedef struct VBLCANMessage2_t
+struct VBLCANMessage2_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mFlags;          /* CAN dir & rtr */
-    uint8_t mDLC;            /* CAN dlc */
-    uint32_t mID;            /* CAN ID */
-    uint8_t mData[8];        /* CAN data */
-    uint32_t mFrameLength;   /* message length in ns - without 3 Interframe Space bits and by Rx-message also without 1 End-Of-Frame bit */
-    uint8_t mBitCount;       /* complete message length in bits */
-    uint8_t mReserved1;      /* reserved */
-    uint16_t mReserved2;     /* reserved */
-} VBLCANMessage2;
+    VBLObjectHeader_t mHeader;    /* object header */
+    uint16_t mChannel;            /* application channel */
+    uint8_t mFlags;               /* CAN dir & rtr */
+    uint8_t mDLC;                 /* CAN dlc */
+    uint32_t mID;                 /* CAN ID */
+    std::array<uint8_t, 8> mData; /* CAN data */
+    uint32_t mFrameLength;        /* message length in ns - without 3 Interframe Space bits and by Rx-message also without 1 End-Of-Frame bit */
+    uint8_t mBitCount;            /* complete message length in bits */
+    uint8_t mReserved1;           /* reserved */
+    uint16_t mReserved2;          /* reserved */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -451,20 +452,20 @@ typedef struct VBLCANMessage2_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: This structure might be extended in future versions! */
-typedef struct VBLCANFDMessage_t
+struct VBLCANFDMessage_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mFlags;          /* CAN dir & rtr */
-    uint8_t mDLC;            /* CAN dlc */
-    uint32_t mID;            /* CAN ID */
-    uint32_t mFrameLength;   /* message length in ns - without 3 inter frame space bits and by Rx-message also without 1 End-Of-Frame bit */
-    uint8_t mArbBitCount;    /* bit count of arbitration phase */
-    uint8_t mCANFDFlags;     /* CAN FD flags */
-    uint8_t mValidDataBytes; /* Valid payload length of mData */
-    uint8_t mReserved1;      /* reserved */
-    uint32_t mReserved2;     /* reserved */
-    uint8_t mData[64];       /* CAN FD data */
+    VBLObjectHeader_t mHeader;     /* object header */
+    uint16_t mChannel;             /* application channel */
+    uint8_t mFlags;                /* CAN dir & rtr */
+    uint8_t mDLC;                  /* CAN dlc */
+    uint32_t mID;                  /* CAN ID */
+    uint32_t mFrameLength;         /* message length in ns - without 3 inter frame space bits and by Rx-message also without 1 End-Of-Frame bit */
+    uint8_t mArbBitCount;          /* bit count of arbitration phase */
+    uint8_t mCANFDFlags;           /* CAN FD flags */
+    uint8_t mValidDataBytes;       /* Valid payload length of mData */
+    uint8_t mReserved1;            /* reserved */
+    uint32_t mReserved2;           /* reserved */
+    std::array<uint8_t, 64> mData; /* CAN FD data */
 } VBLCANFDMessage;
 
 /*----------------------------------------------------------------------------
@@ -474,7 +475,7 @@ typedef struct VBLCANFDMessage_t
 -----------------------------------------------------------------------------*/
 
 
-typedef struct VBLCANFDExtFrameData_t
+struct VBLCANFDExtFrameData_t
 {
     uint32_t mBTRExtArb;
     uint32_t mBTRExtData;
@@ -484,9 +485,9 @@ typedef struct VBLCANFDExtFrameData_t
 #define BLHasExtFrameData(b) (((b)->mExtDataOffset != 0) && ((b)->mHeader.mBase.mObjectSize >= ((b)->mExtDataOffset + sizeof(VBLCANFDExtFrameData))))
 #define BLExtFrameDataPtr(b) ((VBLCANFDExtFrameData*) ((byte*) (b) + (b)->mExtDataOffset))
 
-typedef struct VBLCANFDMessage64_t
+struct VBLCANFDMessage64_t
 {
-    VBLObjectHeader mHeader;      /* object header */
+    VBLObjectHeader_t mHeader;    /* object header */
     uint8_t mChannel;             /* application channel */
     uint8_t mDLC;                 /* CAN dlc */
     uint8_t mValidDataBytes;      /* Valid payload length of mData */
@@ -502,18 +503,18 @@ typedef struct VBLCANFDMessage64_t
     uint16_t mBitCount;           /* complete message length in bits */
     uint8_t mDir;
     uint8_t mExtDataOffset;
-    uint32_t mCRC;     /* CRC for CAN */
-    uint8_t mData[64]; /* CAN FD data */
-    VBLCANFDExtFrameData mExtFrameData;
+    uint32_t mCRC;                 /* CRC for CAN */
+    std::array<uint8_t, 64> mData; /* CAN FD data */
+    VBLCANFDExtFrameData_t mExtFrameData;
 } VBLCANFDMessage64;
 
 
-typedef struct VBLCANFDErrorFrame64_t
+struct VBLCANFDErrorFrame64_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint8_t mChannel;        /* application channel */
-    uint8_t mDLC;            /* CAN dlc */
-    uint8_t mValidDataBytes; /* Valid payload length of mData */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint8_t mChannel;          /* application channel */
+    uint8_t mDLC;              /* CAN dlc */
+    uint8_t mValidDataBytes;   /* Valid payload length of mData */
     uint8_t mECC;
     uint16_t mFlags;
     uint16_t mErrorCodeExt;
@@ -530,9 +531,9 @@ typedef struct VBLCANFDErrorFrame64_t
     uint32_t mCRC;
     uint16_t mErrorPosition; /* error position as bit offset */
     uint16_t mReserved2;
-    uint8_t mData[64]; /* CAN FD data */
-    VBLCANFDExtFrameData mExtFrameData;
-} VBLCANFDErrorFrame64;
+    std::array<uint8_t, 64> mData; /* CAN FD data */
+    VBLCANFDExtFrameData_t mExtFrameData;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -540,61 +541,61 @@ typedef struct VBLCANFDErrorFrame64_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINMessage_t
+struct VBLLINMessage_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mID;             /* LIN ID */
-    uint8_t mDLC;            /* LIN DLC */
-    uint8_t mData[8];        /* t.b.d. */
-    uint8_t mFSMId;          /* t.b.d. */
-    uint8_t mFSMState;       /* t.b.d. */
-    uint8_t mHeaderTime;     /* t.b.d. */
-    uint8_t mFullTime;       /* t.b.d. */
-    uint16_t mCRC;           /* t.b.d. */
-    uint8_t mDir;            /* t.b.d. */
-    uint8_t mReserved;       /* t.b.d. */
-} VBLLINMessage;
+    VBLObjectHeader_t mHeader;    /* object header */
+    uint16_t mChannel;            /* application channel */
+    uint8_t mID;                  /* LIN ID */
+    uint8_t mDLC;                 /* LIN DLC */
+    std::array<uint8_t, 8> mData; /* t.b.d. */
+    uint8_t mFSMId;               /* t.b.d. */
+    uint8_t mFSMState;            /* t.b.d. */
+    uint8_t mHeaderTime;          /* t.b.d. */
+    uint8_t mFullTime;            /* t.b.d. */
+    uint16_t mCRC;                /* t.b.d. */
+    uint8_t mDir;                 /* t.b.d. */
+    uint8_t mReserved;            /* t.b.d. */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINCRCError_t
+struct VBLLINCRCError_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mID;             /* LIN ID */
-    uint8_t mDLC;            /* LIN DLC */
-    uint8_t mData[8];        /* t.b.d. */
-    uint8_t mFSMId;          /* t.b.d. */
-    uint8_t mFSMState;       /* t.b.d. */
-    uint8_t mHeaderTime;     /* t.b.d. */
-    uint8_t mFullTime;       /* t.b.d. */
-    uint16_t mCRC;           /* t.b.d. */
-    uint8_t mDir;            /* t.b.d. */
-    uint8_t mReserved;       /* t.b.d. */
-} VBLLINCRCError;
+    VBLObjectHeader_t mHeader;    /* object header */
+    uint16_t mChannel;            /* application channel */
+    uint8_t mID;                  /* LIN ID */
+    uint8_t mDLC;                 /* LIN DLC */
+    std::array<uint8_t, 8> mData; /* t.b.d. */
+    uint8_t mFSMId;               /* t.b.d. */
+    uint8_t mFSMState;            /* t.b.d. */
+    uint8_t mHeaderTime;          /* t.b.d. */
+    uint8_t mFullTime;            /* t.b.d. */
+    uint16_t mCRC;                /* t.b.d. */
+    uint8_t mDir;                 /* t.b.d. */
+    uint8_t mReserved;            /* t.b.d. */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINDLCInfo_t
+struct VBLLINDLCInfo_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mID;             /* LIN ID */
-    uint8_t mDLC;            /* LIN DLC */
-} VBLLINDLCInfo;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint8_t mID;               /* LIN ID */
+    uint8_t mDLC;              /* LIN DLC */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINChecksumInfo_t
+struct VBLLINChecksumInfo_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mID;             /* LIN ID */
-    uint8_t mChecksumModel;  /* LIN checksum model */
-} VBLLINChecksumInfo;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint8_t mID;               /* LIN ID */
+    uint8_t mChecksumModel;    /* LIN checksum model */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINReceiveError_t
+struct VBLLINReceiveError_t
 {
-    VBLObjectHeader mHeader;            /* object header */
+    VBLObjectHeader_t mHeader;          /* object header */
     uint16_t mChannel;                  /* application channel */
     uint8_t mID;                        /* LIN ID */
     uint8_t mDLC;                       /* LIN DLC */
@@ -606,104 +607,104 @@ typedef struct VBLLINReceiveError_t
     uint8_t mOffendingByte;             /* t.b.d. */
     uint8_t mShortError;                /* t.b.d. */
     uint8_t mTimeoutDuringDlcDetection; /* t.b.d. */
-} VBLLINReceiveError;
+};
+
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINSendError_t
+struct VBLLINSendError_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mID;             /* LIN ID */
-    uint8_t mDLC;            /* LIN DLC */
-    uint8_t mFSMId;          /* t.b.d. */
-    uint8_t mFSMState;       /* t.b.d. */
-    uint8_t mHeaderTime;     /* t.b.d. */
-    uint8_t mFullTime;       /* t.b.d. */
-} VBLLINSendError;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint8_t mID;               /* LIN ID */
+    uint8_t mDLC;              /* LIN DLC */
+    uint8_t mFSMId;            /* t.b.d. */
+    uint8_t mFSMState;         /* t.b.d. */
+    uint8_t mHeaderTime;       /* t.b.d. */
+    uint8_t mFullTime;         /* t.b.d. */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINSlaveTimeout_t
+struct VBLLINSlaveTimeout_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mSlaveID;        /* t.b.d. */
-    uint8_t mStateID;        /* t.b.d. */
-    uint32_t mFollowStateID; /* t.b.d. */
-} VBLLINSlaveTimeout;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint8_t mSlaveID;          /* t.b.d. */
+    uint8_t mStateID;          /* t.b.d. */
+    uint32_t mFollowStateID;   /* t.b.d. */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINSchedulerModeChange_t
+struct VBLLINSchedulerModeChange_t
 {
-    VBLObjectHeader mHeader;        /* object header */
+    VBLObjectHeader_t mHeader;      /* object header */
     uint16_t mChannel;              /* application channel */
     uint8_t mOldMode;               /* t.b.d. */
     uint8_t mNewMode;               /* t.b.d. */
     uint8_t mOldSlot;               /* t.b.d. */
     uint8_t mNewSlot;               /* t.b.d. */
     uint8_t mFirstEventAfterWakeUp; /* t.b.d. */
-} VBLLINSchedulerModeChange;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINSyncError_t
+struct VBLLINSyncError_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mDummy;         /* t.b.d */
-    uint16_t mTimeDiff[4];   /* t.b.d */
-} VBLLINSyncError;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mDummy;           /* t.b.d */
+    uint16_t mTimeDiff[4];     /* t.b.d */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINBaudrateEvent_t
+struct VBLLINBaudrateEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mDummy;         /* t.b.d */
-    LONG mBaudrate;          /* t.b.d */
-} VBLLINBaudrateEvent;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mDummy;           /* t.b.d */
+    uint32_t mBaudrate;        /* t.b.d */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINSleepModeEvent_t
+struct VBLLINSleepModeEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mReason;         /* t.b.d */
-    uint8_t mFlags;          /* LIN "was awake", "is awake" & "external" */
-} VBLLINSleepModeEvent;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint8_t mReason;           /* t.b.d */
+    uint8_t mFlags;            /* LIN "was awake", "is awake" & "external" */
+};
 
 #define LIN_SLEEP_WAS_AWAKE 0x01
 #define LIN_SLEEP_IS_AWAKE 0x02
 #define LIN_SLEEP_EXTERNAL 0x04
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINWakeupEvent_t
+struct VBLLINWakeupEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mSignal;         /* t.b.d */
-    uint8_t mExternal;       /* t.b.d */
-} VBLLINWakeupEvent;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint8_t mSignal;           /* t.b.d */
+    uint8_t mExternal;         /* t.b.d */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINSpikeEvent_t
+struct VBLLINSpikeEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    ULONG mWidth;            /* the spike's width */
-
-} VBLLINSpikeEvent;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint32_t mWidth;           /* the spike's width */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINStatisticEvent_t
+struct VBLLINStatisticEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    double mBusLoad;         /* bus load */
-    ULONG mBurstsTotal;      /* bursts total */
-    ULONG mBurstsOverrun;    /* bursts overrun */
-    ULONG mFramesSent;       /* frames sent */
-    ULONG mFramesReceived;   /* frames received */
-    ULONG mFramesUnanswered; /* frames unanswered */
-} VBLLINStatisticEvent;
+    VBLObjectHeader_t mHeader;  /* object header */
+    uint16_t mChannel;          /* application channel */
+    double mBusLoad;            /* bus load */
+    uint32_t mBurstsTotal;      /* bursts total */
+    uint32_t mBurstsOverrun;    /* bursts overrun */
+    uint32_t mFramesSent;       /* frames sent */
+    uint32_t mFramesReceived;   /* frames received */
+    uint32_t mFramesUnanswered; /* frames unanswered */
+};
 
 
 /*----------------------------------------------------------------------------
@@ -712,70 +713,70 @@ typedef struct VBLLINStatisticEvent_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTSpy_t
+struct VBLMOSTSpy_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mDir;            /* t.b.d */
-    uint8_t mDummy1;         /* t.b.d */
-    uint32_t mSourceAdr;     /* t.b.d */
-    uint32_t mDestAdr;       /* t.b.d */
-    uint8_t mMsg[17];        /* t.b.d */
-    uint8_t mDummy2;         /* t.b.d */
-    uint16_t mRTyp;          /* t.b.d */
-    uint8_t mRTypAdr;        /* t.b.d */
-    uint8_t mState;          /* t.b.d */
-    uint8_t mDummy3;         /* t.b.d */
-    uint8_t mAckNack;        /* t.b.d */
-    uint32_t mCRC;           /* t.b.d */
-} VBLMOSTSpy;
+    VBLObjectHeader_t mHeader;    /* object header */
+    uint16_t mChannel;            /* application channel */
+    uint8_t mDir;                 /* t.b.d */
+    uint8_t mDummy1;              /* t.b.d */
+    uint32_t mSourceAdr;          /* t.b.d */
+    uint32_t mDestAdr;            /* t.b.d */
+    std::array<uint8_t, 17> mMsg; /* t.b.d */
+    uint8_t mDummy2;              /* t.b.d */
+    uint16_t mRTyp;               /* t.b.d */
+    uint8_t mRTypAdr;             /* t.b.d */
+    uint8_t mState;               /* t.b.d */
+    uint8_t mDummy3;              /* t.b.d */
+    uint8_t mAckNack;             /* t.b.d */
+    uint32_t mCRC;                /* t.b.d */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTCtrl_t
+struct VBLMOSTCtrl_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mDir;            /* t.b.d */
-    uint8_t mDummy1;         /* t.b.d */
-    uint32_t mSourceAdr;     /* t.b.d */
-    uint32_t mDestAdr;       /* t.b.d */
-    uint8_t mMsg[17];        /* t.b.d */
-    uint8_t mDummy2;         /* t.b.d */
-    uint16_t mRTyp;          /* t.b.d */
-    uint8_t mRTypAdr;        /* t.b.d */
-    uint8_t mState;          /* t.b.d */
-    uint8_t mDummy3H;        /* t.b.d */
-    uint8_t mAckNack;        /* acknowledge bits */
-} VBLMOSTCtrl;
+    VBLObjectHeader_t mHeader;    /* object header */
+    uint16_t mChannel;            /* application channel */
+    uint8_t mDir;                 /* t.b.d */
+    uint8_t mDummy1;              /* t.b.d */
+    uint32_t mSourceAdr;          /* t.b.d */
+    uint32_t mDestAdr;            /* t.b.d */
+    std::array<uint8_t, 17> mMsg; /* t.b.d */
+    uint8_t mDummy2;              /* t.b.d */
+    uint16_t mRTyp;               /* t.b.d */
+    uint8_t mRTypAdr;             /* t.b.d */
+    uint8_t mState;               /* t.b.d */
+    uint8_t mDummy3H;             /* t.b.d */
+    uint8_t mAckNack;             /* acknowledge bits */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTLightLock_t
+struct VBLMOSTLightLock_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    SHORT mState;            /* t.b.d */
-} VBLMOSTLightLock;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    int16_t mState;            /* t.b.d */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTStatistic_t
+struct VBLMOSTStatistic_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mPktCnt;        /* t.b.d */
-    LONG mFrmCnt;            /* t.b.d */
-    LONG mLightCnt;          /* t.b.d */
-    LONG mBufferLevel;       /* t.b.d */
-} VBLMOSTStatistic;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mPktCnt;          /* t.b.d */
+    uint32_t mFrmCnt;          /* t.b.d */
+    uint32_t mLightCnt;        /* t.b.d */
+    uint32_t mBufferLevel;     /* t.b.d */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTPkt_t
+struct VBLMOSTPkt_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mDir;            /* t.b.d */
-    uint8_t mDummy1;         /* t.b.d */
-    uint32_t mSourceAdr;     /* t.b.d */
-    uint32_t mDestAdr;       /* t.b.d */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint8_t mDir;              /* t.b.d */
+    uint8_t mDummy1;           /* t.b.d */
+    uint32_t mSourceAdr;       /* t.b.d */
+    uint32_t mDestAdr;         /* t.b.d */
     uint8_t mArbitration;
     uint8_t mTimeRes;
     uint8_t mQuadsToFollow;
@@ -784,21 +785,21 @@ typedef struct VBLMOSTPkt_t
     uint8_t mTransferType;
     uint8_t mState;
     uint32_t mPktDataLength; /* length of variable data inuint8_ts */
-    BL_LPBYTE mPktData;      /* variable data */
-} VBLMOSTPkt;
+    // BL_LPBYTE mPktData;      /* variable data */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTPkt2_t
+struct VBLMOSTPkt2_t
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to*/
-                              /* */
-                              /* mHeader.mObjectSize = sizeof( VBLMOSTPkt2) + mPktDataLength; */
-                              /* */
-    uint16_t mChannel;        /* application channel */
-    uint8_t mDir;             /* t.b.d */
-    uint8_t mDummy1;          /* t.b.d */
-    uint32_t mSourceAdr;      /* t.b.d */
-    uint32_t mDestAdr;        /* t.b.d */
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to*/
+                                /* */
+                                /* mHeader.mObjectSize = sizeof( VBLMOSTPkt2) + mPktDataLength; */
+                                /* */
+    uint16_t mChannel;          /* application channel */
+    uint8_t mDir;               /* t.b.d */
+    uint8_t mDummy1;            /* t.b.d */
+    uint32_t mSourceAdr;        /* t.b.d */
+    uint32_t mDestAdr;          /* t.b.d */
     uint8_t mArbitration;
     uint8_t mTimeRes;
     uint8_t mQuadsToFollow;
@@ -806,132 +807,132 @@ typedef struct VBLMOSTPkt2_t
     uint8_t mPriority;
     uint8_t mTransferType;
     uint8_t mState;
-    uint32_t mPktDataLength; /* length of variable data inuint8_ts */
-    BL_LPBYTE mPktData;      /* variable data */
-} VBLMOSTPkt2;
+    uint32_t mPktDataLength; /* length of variable data uint8_t */
+    // BL_LPBYTE mPktData;      /* variable data */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTHWMode_t
+struct VBLMOSTHWMode_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
     uint16_t mDummy1;
     uint16_t mHWMode;     /* bypass/master/slave/spy */
     uint16_t mHWModeMask; /* marks the altered bits */
-} VBLMOSTHWMode;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTReg_t
+struct VBLMOSTReg_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
-    uint8_t mSubType;         /* read/write request/result */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
+    uint8_t mSubType;           /* read/write request/result */
     uint8_t mDummy1;
-    uint32_t mHandle;     /* operation handle */
-    uint32_t mOffset;     /* start address */
-    uint16_t mChip;       /* chip id */
-    uint16_t mRegDataLen; /* number ofuint8_ts */
-    uint8_t mRegData[16]; /* datauint8_ts */
-} VBLMOSTReg;
+    uint32_t mHandle;                 /* operation handle */
+    uint32_t mOffset;                 /* start address */
+    uint16_t mChip;                   /* chip id */
+    uint16_t mRegDataLen;             /* number ofuint8_ts */
+    std::array<uint8_t, 16> mRegData; /* datauint8_ts */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTGenReg_t
+struct VBLMOSTGenReg_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
-    uint8_t mSubType;         /* read/write request/result */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
+    uint8_t mSubType;           /* read/write request/result */
     uint8_t mDummy1;
     uint32_t mHandle; /* operation handle */
     uint16_t mRegId;  /* register ID */
     uint16_t mDummy2;
     uint32_t mDummy3;
     uint64_t mRegValue; /* register value */
-} VBLMOSTGenReg;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTNetState_t
+struct VBLMOSTNetState_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
-    uint16_t mStateNew;       /* MOST NetState */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
+    uint16_t mStateNew;         /* MOST NetState */
     uint16_t mStateOld;
     uint16_t mDummy1;
-} VBLMOSTNetState;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTDataLost_t
+struct VBLMOSTDataLost_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
     uint16_t mDummy1;
     uint32_t mInfo; /* info about data loss */
     uint32_t mLostMsgsCtrl;
     uint32_t mLostMsgsAsync;
     uint64_t mLastGoodTimeStampNS;
     uint64_t mNextGoodTimeStampNS;
-} VBLMOSTDataLost;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTTrigger_t
+struct VBLMOSTTrigger_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
     uint16_t mDummy1;
     uint16_t mMode; /* trigger mode */
     uint16_t mHW;   /* HW info */
     uint32_t mPreviousTriggerValue;
     uint32_t mCurrentTriggerValue;
-} VBLMOSTTrigger;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTStatisticEx_t
+struct VBLMOSTStatisticEx_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
     uint16_t mDummy1;
     uint32_t mCodingErrors;
     uint32_t mFrameCounter;
-} VBLMOSTStatisticEx;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTTxLight_t
+struct VBLMOSTTxLight_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
     uint16_t mState;
-} VBLMOSTTxLight;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTAllocTab_t
+struct VBLMOSTAllocTab_t
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to*/
-                              /* */
-                              /* mHeader.mObjectSize = sizeof( VBLMOSTAllocTab) + mLength; */
-                              /* */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to*/
+                                /* */
+                                /* mHeader.mObjectSize = sizeof( VBLMOSTAllocTab) + mLength; */
+                                /* */
+    uint16_t mChannel;          /* application channel */
     uint16_t mLength;
-    BL_LPBYTE mTableData;
-} VBLMOSTAllocTab;
+    // BL_LPBYTE mTableData;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTStress_t
+struct VBLMOSTStress_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
     uint16_t mState;
     uint16_t mMode;
     uint16_t mDummy1;
-} VBLMOSTStress;
+};
 
 /* HINT: This structure might be extended in future versions! */
-typedef struct VBLMOSTEcl_t
+struct VBLMOSTEcl_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
     uint16_t mMode;
     uint16_t mEclState; /* Electrical Control Line level */
     uint16_t mDummy2;
-} VBLMOSTEcl;
+};
 
 
 /*----------------------------------------------------------------------------
@@ -940,12 +941,12 @@ typedef struct VBLMOSTEcl_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOST150Message_t
+struct VBLMOST150Message_t
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to */
-                              /* mHeader.mObjectSize = sizeof(VBLMOST150Message) + mMsgLen; */
-    uint16_t mChannel;        /* application channel */
-    uint8_t mDir;             /* direction: 0: Rx; 1: Tx; 2: TxRequest */
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to */
+                                /* mHeader.mObjectSize = sizeof(VBLMOST150Message) + mMsgLen; */
+    uint16_t mChannel;          /* application channel */
+    uint8_t mDir;               /* direction: 0: Rx; 1: Tx; 2: TxRequest */
     uint8_t mDummy1;
     uint32_t mSourceAdr;   /* source address */
     uint32_t mDestAdr;     /* target address */
@@ -959,16 +960,16 @@ typedef struct VBLMOST150Message_t
     uint8_t mPriority; /* priority of the message */
     uint8_t mPIndex;   /* packet index, increments per message on MOST */
     uint32_t mMsgLen;  /* length of variable data inuint8_ts (51 max) */
-    BL_LPBYTE mMsg;    /* variable data */
-} VBLMOST150Message;
+    // BL_LPBYTE mMsg;    /* variable data */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOST150Pkt_t
+struct VBLMOST150Pkt_t
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to */
-                              /* mHeader.mObjectSize = sizeof(VBLMOST150Pkt) + mPktDataLength; */
-    uint16_t mChannel;        /* application channel */
-    uint8_t mDir;             /* direction: 0: Rx; 1: Tx; 2: TxRequest */
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to */
+                                /* mHeader.mObjectSize = sizeof(VBLMOST150Pkt) + mPktDataLength; */
+    uint16_t mChannel;          /* application channel */
+    uint8_t mDir;               /* direction: 0: Rx; 1: Tx; 2: TxRequest */
     uint8_t mDummy1;
     uint32_t mSourceAdr;   /* source address */
     uint32_t mDestAdr;     /* target address */
@@ -982,16 +983,16 @@ typedef struct VBLMOST150Pkt_t
     uint8_t mPriority;       /* priority of the message */
     uint8_t mPIndex;         /* packet index, increments per message on MOST */
     uint32_t mPktDataLength; /* length of variable data inuint8_ts (1014 max) */
-    BL_LPBYTE mPktData;      /* variable data */
-} VBLMOST150Pkt;
+    // BL_LPBYTE mPktData;      /* variable data */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTEthernetPkt_t
+struct VBLMOSTEthernetPkt_t
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to */
-                              /* mHeader.mObjectSize = sizeof(VBLMOSTEthernetPkt) + mPktDataLength; */
-    uint16_t mChannel;        /* application channel */
-    uint8_t mDir;             /* direction: 0: Rx; 1: Tx; 2: TxRequest */
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to */
+                                /* mHeader.mObjectSize = sizeof(VBLMOSTEthernetPkt) + mPktDataLength; */
+    uint16_t mChannel;          /* application channel */
+    uint8_t mDir;               /* direction: 0: Rx; 1: Tx; 2: TxRequest */
     uint8_t mDummy1;
     uint64_t mSourceMacAdr; /* 48 bit source address */
     uint64_t mDestMacAdr;   /* 48 bit target address */
@@ -1004,15 +1005,37 @@ typedef struct VBLMOSTEthernetPkt_t
     uint8_t mCAck; /* CRC acknowledge from the packet receiver(s) to the packet transmitter */
     uint16_t mDummy3;
     uint32_t mPktDataLength; /* length of variable data inuint8_ts (1506 max) */
-    BL_LPBYTE mPktData;      /* variable data */
-} VBLMOSTEthernetPkt;
+    // BL_LPBYTE mPktData;      /* variable data */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOST150MessageFragment_t /* applied for MOST50 and MOST150 */
+struct VBLMOST150MessageFragment_t /* applied for MOST50 and MOST150 */
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to */
-                              /* mHeader.mObjectSize = sizeof(VBLMOST150MessageFragment) + mFirstDataLen; */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to */
+                                /* mHeader.mObjectSize = sizeof(VBLMOST150MessageFragment) + mFirstDataLen; */
+    uint16_t mChannel;          /* application channel */
+    uint8_t mDummy1;
+    uint8_t mAckNack;           /* acknowledge code */
+    uint32_t mValidMask;        /* bitfield indicating which members have valid data */
+    uint32_t mSourceAdr;        /* source address */
+    uint32_t mDestAdr;          /* target address */
+    uint8_t mPAck;              /* a preemptive acknowledge code */
+    uint8_t mCAck;              /* CRC acknowledge from the packet receiver(s) to the packet transmitter */
+    uint8_t mPriority;          /* priority of the message */
+    uint8_t mPIndex;            /* packet index, increments per message on MOST */
+    uint32_t mCRC;              /* Cyclic Redundancy Check */
+    uint32_t mDataLen;          /* number of transmitted user datauint8_ts */
+    uint32_t mDataLenAnnounced; /* announced user data length at the start of the transmission */
+    uint32_t mFirstDataLen;     /* number  in mFirstData */
+    // BL_LPBYTE mFirstData;       /* variable data */
+};
+
+/* HINT: Extension of this structure is not allowed! */
+struct VBLMOST150PktFragment_t /* applied for MOST50 and MOST150 */
+{
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to */
+                                /* mHeader.mObjectSize = sizeof(VBLMOST150PktFragment) + mFirstDataLen; */
+    uint16_t mChannel;          /* application channel */
     uint8_t mDummy1;
     uint8_t mAckNack;           /* acknowledge code */
     uint32_t mValidMask;        /* bitfield indicating which members have valid data */
@@ -1026,37 +1049,15 @@ typedef struct VBLMOST150MessageFragment_t /* applied for MOST50 and MOST150 */
     uint32_t mDataLen;          /* number of transmitted user datauint8_ts */
     uint32_t mDataLenAnnounced; /* announced user data length at the start of the transmission */
     uint32_t mFirstDataLen;     /* number ofuint8_ts in mFirstData */
-    BL_LPBYTE mFirstData;       /* variable data */
-} VBLMOST150MessageFragment;
+    // BL_LPBYTE mFirstData;       /* variable data */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOST150PktFragment_t /* applied for MOST50 and MOST150 */
+struct VBLMOSTEthernetPktFragment_t
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to */
-                              /* mHeader.mObjectSize = sizeof(VBLMOST150PktFragment) + mFirstDataLen; */
-    uint16_t mChannel;        /* application channel */
-    uint8_t mDummy1;
-    uint8_t mAckNack;           /* acknowledge code */
-    uint32_t mValidMask;        /* bitfield indicating which members have valid data */
-    uint32_t mSourceAdr;        /* source address */
-    uint32_t mDestAdr;          /* target address */
-    uint8_t mPAck;              /* a preemptive acknowledge code */
-    uint8_t mCAck;              /* CRC acknowledge from the packet receiver(s) to the packet transmitter */
-    uint8_t mPriority;          /* priority of the message */
-    uint8_t mPIndex;            /* packet index, increments per message on MOST */
-    uint32_t mCRC;              /* Cyclic Redundancy Check */
-    uint32_t mDataLen;          /* number of transmitted user datauint8_ts */
-    uint32_t mDataLenAnnounced; /* announced user data length at the start of the transmission */
-    uint32_t mFirstDataLen;     /* number ofuint8_ts in mFirstData */
-    BL_LPBYTE mFirstData;       /* variable data */
-} VBLMOST150PktFragment;
-
-/* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTEthernetPktFragment_t
-{
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to */
-                              /* mHeader.mObjectSize = sizeof(VBLMOSTEthernetPktFragment) + mFirstDataLen; */
-    uint16_t mChannel;        /* application channel */
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to */
+                                /* mHeader.mObjectSize = sizeof(VBLMOSTEthernetPktFragment) + mFirstDataLen; */
+    uint16_t mChannel;          /* application channel */
     uint8_t mDummy1;
     uint8_t mAckNack;       /* acknowledge code */
     uint32_t mValidMask;    /* bitfield indicating which members have valid data */
@@ -1069,28 +1070,28 @@ typedef struct VBLMOSTEthernetPktFragment_t
     uint32_t mDataLen;          /* number of transmitted user datauint8_ts */
     uint32_t mDataLenAnnounced; /* announced user data length at the start of the transmission */
     uint32_t mFirstDataLen;     /* number ofuint8_ts in mFirstData */
-    BL_LPBYTE mFirstData;       /* variable data */
-} VBLMOSTEthernetPktFragment;
+    // BL_LPBYTE mFirstData;       /* variable data */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOSTSystemEvent_t
+struct VBLMOSTSystemEvent_t
 {
-    VBLObjectHeader2 mHeader; /* object header */
-    uint16_t mChannel;        /* application channel */
-    uint16_t mId;             /* identifier of transported data */
-    uint32_t mValue;          /* current value */
-    uint32_t mValueOld;       /* previous value */
-} VBLMOSTSystemEvent;
+    VBLObjectHeader2_t mHeader; /* object header */
+    uint16_t mChannel;          /* application channel */
+    uint16_t mId;               /* identifier of transported data */
+    uint32_t mValue;            /* current value */
+    uint32_t mValueOld;         /* previous value */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOST150AllocTab_t /* applied for MOST50 and MOST150 */
+struct VBLMOST150AllocTab_t /* applied for MOST50 and MOST150 */
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size too */
-    uint16_t mChannel;        /* application channel */
-    uint16_t mEventModeFlags; /* determines the data layout */
-    uint16_t mFreeBytes;      /* number of freeuint8_ts after the operation */
-    uint16_t mLength;         /* number ofuint8_ts in mTableData*/
-    BL_LPBYTE mTableData;
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size too */
+    uint16_t mChannel;          /* application channel */
+    uint16_t mEventModeFlags;   /* determines the data layout */
+    uint16_t mFreeBytes;        /* number of freeuint8_ts after the operation */
+    uint16_t mLength;           /* number ofuint8_ts in mTableData*/
+    // BL_LPBYTE mTableData;
     /*
       Data layout:
       if((mEventModeFlags & 0x0001) == 0)
@@ -1104,15 +1105,15 @@ typedef struct VBLMOST150AllocTab_t /* applied for MOST50 and MOST150 */
       WWWW: label width
       <channels>: list of 16-bit channel numbers (size = label width)
     */
-} VBLMOST150AllocTab;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOST50Message_t
+struct VBLMOST50Message_t
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to */
-                              /* mHeader.mObjectSize = sizeof(VBLMOST50Message) + mMsgLen; */
-    uint16_t mChannel;        /* application channel */
-    uint8_t mDir;             /* direction: 0: Rx; 1: Tx; 2: TxRequest */
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to */
+                                /* mHeader.mObjectSize = sizeof(VBLMOST50Message) + mMsgLen; */
+    uint16_t mChannel;          /* application channel */
+    uint8_t mDir;               /* direction: 0: Rx; 1: Tx; 2: TxRequest */
     uint8_t mDummy1;
     uint32_t mSourceAdr;   /* source address */
     uint32_t mDestAdr;     /* target address */
@@ -1126,16 +1127,16 @@ typedef struct VBLMOST50Message_t
     uint8_t mPriority; /* priority of the message */
     uint8_t mDummy5;   /* reserved */
     uint32_t mMsgLen;  /* length of variable data inuint8_ts (17 max) */
-    BL_LPBYTE mMsg;    /* variable data */
-} VBLMOST50Message;
+    // BL_LPBYTE mMsg;    /* variable data */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLMOST50Pkt_t
+struct VBLMOST50Pkt_t
 {
-    VBLObjectHeader2 mHeader; /* object header - NOTE! set the object size to */
-                              /* mHeader.mObjectSize = sizeof(VBLMOST50Pkt) + mPktDataLength; */
-    uint16_t mChannel;        /* application channel */
-    uint8_t mDir;             /* direction: 0: Rx; 1: Tx; 2: TxRequest */
+    VBLObjectHeader2_t mHeader; /* object header - NOTE! set the object size to */
+                                /* mHeader.mObjectSize = sizeof(VBLMOST50Pkt) + mPktDataLength; */
+    uint16_t mChannel;          /* application channel */
+    uint8_t mDir;               /* direction: 0: Rx; 1: Tx; 2: TxRequest */
     uint8_t mDummy1;
     uint32_t mSourceAdr;   /* source address */
     uint32_t mDestAdr;     /* target address */
@@ -1149,8 +1150,8 @@ typedef struct VBLMOST50Pkt_t
     uint8_t mPriority;       /* priority of the message */
     uint8_t mDummy5;         /* reserved */
     uint32_t mPktDataLength; /* length of variable data inuint8_ts (1014 max) */
-    BL_LPBYTE mPktData;      /* variable data */
-} VBLMOST50Pkt;
+    // BL_LPBYTE mPktData;      /* variable data */
+};
 
 
 /*----------------------------------------------------------------------------
@@ -1159,214 +1160,214 @@ typedef struct VBLMOST50Pkt_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINBusEvent_t
+struct VBLLINBusEvent_t
 {
-    uint64_t mSOF;           /* Start Of Frame timestamp */
-    uint32_t mEventBaudrate; /* Baudrate of the event in bit/sec */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mReserved[2];    /* 4-byte alignment */
-
-} VBLLINBusEvent;
-
-/* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINSynchFieldEvent_t
-{
-    VBLLINBusEvent mLinBusEvent; /* LIN object header */
-    uint64_t mSynchBreakLength;  /* Sync Break Length in ns */
-    uint64_t mSynchDelLength;    /* Sync Delimiter Length in ns */
-} VBLLINSynchFieldEvent;
+    uint64_t mSOF;                    /* Start Of Frame timestamp */
+    uint32_t mEventBaudrate;          /* Baudrate of the event in bit/sec */
+    uint16_t mChannel;                /* application channel */
+    std::array<uint8_t, 2> mReserved; /* 4-byte alignment */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINMessageDescriptor_t
+struct VBLLINSynchFieldEvent_t
 {
-    VBLLINSynchFieldEvent mLinSynchFieldEvent; /* LIN object header */
-    uint16_t mSupplierID;                      /* LIN Sub-Identifier - Supplier ID */
-    uint16_t mMessageID;                       /* LIN Sub-Identifier - Message ID (16 bits) */
-    uint8_t mNAD;                              /* LIN Sub-Identifier - NAD */
-    uint8_t mID;                               /* LIN ID */
-    uint8_t mDLC;                              /* LIN DLC */
-    uint8_t mChecksumModel;                    /* LIN checksum model */
-} VBLLINMessageDescriptor;
+    VBLLINBusEvent_t mLinBusEvent; /* LIN object header */
+    uint64_t mSynchBreakLength;    /* Sync Break Length in ns */
+    uint64_t mSynchDelLength;      /* Sync Delimiter Length in ns */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINDatabyteTimestampEvent_t
+struct VBLLINMessageDescriptor_t
 {
-    VBLLINMessageDescriptor mLinMsgDescrEvent; /* object header */
-    uint64_t mDatabyteTimestamps[9];           /* Databyte timestamps, where d[0] = EndOfHeader, d[1]=EndOfDataByte1, ..., d[8]=EndOfDataByte8 */
-} VBLLINDatabyteTimestampEvent;
-
-/* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINMessage2_t
-{
-    VBLObjectHeader mHeader;                         /* object header */
-    VBLLINDatabyteTimestampEvent mLinTimestampEvent; /* LIN object header */
-    uint8_t mData[8];                                /* datauint8_ts. */
-    uint16_t mCRC;                                   /* checksumuint8_t */
-    uint8_t mDir;                                    /* direction */
-    uint8_t mSimulated;                              /* simulated frame */
-    uint8_t mIsETF;                                  /* Event-triggered frame */
-    uint8_t mETFAssocIndex;                          /* Unconditional frame associated with ETF - serial index */
-    uint8_t mETFAssocETFId;                          /* Unconditional frame associated with ETF - id of ETF */
-    uint8_t mFSMId;                                  /* t.b.d. */
-    uint8_t mFSMState;                               /* t.b.d. */
-    uint8_t mReserved[3];                            /* 4-byte alignment */
-    uint32_t mRespBaudrate;                          /* Response baudrate of the event in bit/sec */
-    DOUBLE mExactHeaderBaudrate;                     /* Exact baudrate of the header in bit/sec */
-    uint32_t mEarlyStopbitOffset;                    /* Early stop bit offset for UART timestamps in ns */
-    uint32_t mEarlyStopbitOffsetResponse;            /* Early stop bit offset in frame response for UART timestamps in ns */
-} VBLLINMessage2;
-
-/* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINSendError2_t
-{
-    VBLObjectHeader mHeader;                   /* object header */
-    VBLLINMessageDescriptor mLinMsgDescrEvent; /* LIN object header */
-    uint64_t mEOH;                             /* EndOfHeader timestamp */
-    uint8_t mIsETF;                            /* Event-triggered frame */
-    uint8_t mFSMId;                            /* t.b.d. */
-    uint8_t mFSMState;                         /* t.b.d. */
-    uint8_t mReserved;                         /* 4-byte alignment */
-    uint8_t mReserved2[4];                     /* 4-byte alignment, reserved since BLF 3.9.3.0, BLF files from older versions may have junk data here */
-    DOUBLE mExactHeaderBaudrate;               /* Exact baudrate of the header in bit/sec */
-    uint32_t mEarlyStopbitOffset;              /* Early stop bit offset for UART timestamps in ns */
-} VBLLINSendError2;
-
-/* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINSyncError2_t
-{
-    VBLObjectHeader mHeader;                   /* object header */
-    VBLLINSynchFieldEvent mLinSynchFieldEvent; /* LIN object header */
-    uint16_t mTimeDiff[4];                     /* t.b.d */
-} VBLLINSyncError2;
-
-/* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINCRCError2_t
-{
-    VBLObjectHeader mHeader;                         /* object header */
-    VBLLINDatabyteTimestampEvent mLinTimestampEvent; /* LIN object header */
-    uint8_t mData[8];                                /* datauint8_ts. */
-    uint16_t mCRC;                                   /* checksumuint8_t */
-    uint8_t mDir;                                    /* direction */
-    uint8_t mFSMId;                                  /* t.b.d. */
-    uint8_t mFSMState;                               /* t.b.d. */
-    uint8_t mSimulated;                              /* simulated frame */
-    uint8_t mReserved[2];                            /* 4-byte alignment */
-    uint32_t mRespBaudrate;                          /* Response baudrate of the event in bit/sec */
-    uint8_t mReserved2[4];                           /* 4-byte alignment, reserved since BLF 3.9.3.0, BLF files from older versions may have junk data here */
-    DOUBLE mExactHeaderBaudrate;                     /* Exact baudrate of the header in bit/sec */
-    uint32_t mEarlyStopbitOffset;                    /* Early stop bit offset for UART timestamps in ns */
-    uint32_t mEarlyStopbitOffsetResponse;            /* Early stop bit offset in frame response for UART timestamps in ns */
-} VBLLINCRCError2;
-
-/* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINReceiveError2_t
-{
-    VBLObjectHeader mHeader;                         /* object header */
-    VBLLINDatabyteTimestampEvent mLinTimestampEvent; /* LIN object header */
-    uint8_t mData[8];                                /* datauint8_ts. */
-    uint8_t mFSMId;                                  /* t.b.d. */
-    uint8_t mFSMState;                               /* t.b.d. */
-    uint8_t mStateReason;                            /* t.b.d. */
-    uint8_t mOffendingByte;                          /* t.b.d. */
-    uint8_t mShortError;                             /* t.b.d. */
-    uint8_t mTimeoutDuringDlcDetection;              /* t.b.d. */
-    uint8_t mIsETF;                                  /* ETF collision flag */
-    uint8_t mHasDatabytes;                           /* t.b.d. */
-    uint32_t mRespBaudrate;                          /* Response baudrate of the event in bit/sec */
-    uint8_t mReserved[4];                            /* 4-byte alignment, reserved since BLF 3.9.3.0, BLF files from older versions may have junk data here */
-    DOUBLE mExactHeaderBaudrate;                     /* Exact baudrate of the header in bit/sec */
-    uint32_t mEarlyStopbitOffset;                    /* Early stop bit offset for UART timestamps in ns */
-    uint32_t mEarlyStopbitOffsetResponse;            /* Early stop bit offset in frame response for UART timestamps in ns */
-} VBLLINReceiveError2;
-
-/* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINWakeupEvent2_t
-{
-    VBLObjectHeader mHeader;     /* object header */
-    VBLLINBusEvent mLinBusEvent; /* LIN object header */
-    uint8_t mLengthInfo;         /* t.b.d */
-    uint8_t mSignal;             /* t.b.d */
-    uint8_t mExternal;           /* t.b.d */
-    uint8_t mReserved;           /* 4-byte alignment */
-} VBLLINWakeupEvent2;
-
-/* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINSpikeEvent2_t
-{
-    VBLObjectHeader mHeader;     /* object header */
-    VBLLINBusEvent mLinBusEvent; /* LIN object header */
-    ULONG mWidth;                /* the spike's width in microseconds */
-    uint8_t mInternal;           /* t.b.d */
-    uint8_t mReserved[3];        /* 4-byte alignment */
-} VBLLINSpikeEvent2;
+    VBLLINSynchFieldEvent_t mLinSynchFieldEvent; /* LIN object header */
+    uint16_t mSupplierID;                        /* LIN Sub-Identifier - Supplier ID */
+    uint16_t mMessageID;                         /* LIN Sub-Identifier - Message ID (16 bits) */
+    uint8_t mNAD;                                /* LIN Sub-Identifier - NAD */
+    uint8_t mID;                                 /* LIN ID */
+    uint8_t mDLC;                                /* LIN DLC */
+    uint8_t mChecksumModel;                      /* LIN checksum model */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLLINLongDomSignalEvent_t
+struct VBLLINDatabyteTimestampEvent_t
 {
-    VBLObjectHeader mHeader;     /* object header */
-    VBLLINBusEvent mLinBusEvent; /* LIN object header */
-    uint8_t mType;               /* t.b.d */
-    uint8_t mReserved[3];        /* 4-byte alignment */
-} VBLLINLongDomSignalEvent;
+    VBLLINMessageDescriptor_t mLinMsgDescrEvent; /* object header */
+    std::array<uint64_t, 9> mDatabyteTimestamps; /* Databyte timestamps, where d[0] = EndOfHeader, d[1]=EndOfDataByte1, ..., d[8]=EndOfDataByte8 */
+};
 
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINLongDomSignalEvent2_t
+struct VBLLINMessage2_t
 {
-    VBLObjectHeader mHeader;     /* object header */
-    VBLLINBusEvent mLinBusEvent; /* LIN object header */
-    uint8_t mType;               /* t.b.d */
-    uint8_t mReserved[7];        /* 4-byte alignment */
+    VBLObjectHeader_t mHeader;                         /* object header */
+    VBLLINDatabyteTimestampEvent_t mLinTimestampEvent; /* LIN object header */
+    std::array<uint8_t, 8> mData;                      /* datauint8_ts. */
+    uint16_t mCRC;                                     /* checksumuint8_t */
+    uint8_t mDir;                                      /* direction */
+    uint8_t mSimulated;                                /* simulated frame */
+    uint8_t mIsETF;                                    /* Event-triggered frame */
+    uint8_t mETFAssocIndex;                            /* Unconditional frame associated with ETF - serial index */
+    uint8_t mETFAssocETFId;                            /* Unconditional frame associated with ETF - id of ETF */
+    uint8_t mFSMId;                                    /* t.b.d. */
+    uint8_t mFSMState;                                 /* t.b.d. */
+    std::array<uint8_t, 3> mReserved;                  /* 4-byte alignment */
+    uint32_t mRespBaudrate;                            /* Response baudrate of the event in bit/sec */
+    double mExactHeaderBaudrate;                       /* Exact baudrate of the header in bit/sec */
+    uint32_t mEarlyStopbitOffset;                      /* Early stop bit offset for UART timestamps in ns */
+    uint32_t mEarlyStopbitOffsetResponse;              /* Early stop bit offset in frame response for UART timestamps in ns */
+};
+
+/* HINT: this struct might be extended in future versions! */
+struct VBLLINSendError2_t
+{
+    VBLObjectHeader_t mHeader;                   /* object header */
+    VBLLINMessageDescriptor_t mLinMsgDescrEvent; /* LIN object header */
+    uint64_t mEOH;                               /* EndOfHeader timestamp */
+    uint8_t mIsETF;                              /* Event-triggered frame */
+    uint8_t mFSMId;                              /* t.b.d. */
+    uint8_t mFSMState;                           /* t.b.d. */
+    uint8_t mReserved;                           /* 4-byte alignment */
+    std::array<uint8_t, 4> mReserved2;           /* 4-byte alignment, reserved since BLF 3.9.3.0, BLF files from older versions may have junk data here */
+    double mExactHeaderBaudrate;                 /* Exact baudrate of the header in bit/sec */
+    uint32_t mEarlyStopbitOffset;                /* Early stop bit offset for UART timestamps in ns */
+};
+
+/* HINT: this struct might be extended in future versions! */
+struct VBLLINSyncError2_t
+{
+    VBLObjectHeader_t mHeader;                   /* object header */
+    VBLLINSynchFieldEvent_t mLinSynchFieldEvent; /* LIN object header */
+    std::array<uint8_t, 4> mTimeDiff;            /* t.b.d */
+};
+
+
+/* HINT: this struct might be extended in future versions! */
+struct VBLLINCRCError2_t
+{
+    VBLObjectHeader_t mHeader;                         /* object header */
+    VBLLINDatabyteTimestampEvent_t mLinTimestampEvent; /* LIN object header */
+    std::array<uint8_t, 8> mData;                      /* datauint8_ts. */
+    uint16_t mCRC;                                     /* checksumuint8_t */
+    uint8_t mDir;                                      /* direction */
+    uint8_t mFSMId;                                    /* t.b.d. */
+    uint8_t mFSMState;                                 /* t.b.d. */
+    uint8_t mSimulated;                                /* simulated frame */
+    std::array<uint8_t, 2> mReserved;                  /* 4-byte alignment */
+    uint32_t mRespBaudrate;                            /* Response baudrate of the event in bit/sec */
+    std::array<uint8_t, 4> mReserved2;                 /* 4-byte alignment, reserved since BLF 3.9.3.0, BLF files from older versions may have junk data here */
+    double mExactHeaderBaudrate;                       /* Exact baudrate of the header in bit/sec */
+    uint32_t mEarlyStopbitOffset;                      /* Early stop bit offset for UART timestamps in ns */
+    uint32_t mEarlyStopbitOffsetResponse;              /* Early stop bit offset in frame response for UART timestamps in ns */
+};
+
+/* HINT: this struct might be extended in future versions! */
+struct VBLLINReceiveError2_t
+{
+    VBLObjectHeader_t mHeader;                         /* object header */
+    VBLLINDatabyteTimestampEvent_t mLinTimestampEvent; /* LIN object header */
+    std::array<uint8_t, 8> mData;                      /* datauint8_ts. */
+    uint8_t mFSMId;                                    /* t.b.d. */
+    uint8_t mFSMState;                                 /* t.b.d. */
+    uint8_t mStateReason;                              /* t.b.d. */
+    uint8_t mOffendingByte;                            /* t.b.d. */
+    uint8_t mShortError;                               /* t.b.d. */
+    uint8_t mTimeoutDuringDlcDetection;                /* t.b.d. */
+    uint8_t mIsETF;                                    /* ETF collision flag */
+    uint8_t mHasDatabytes;                             /* t.b.d. */
+    uint32_t mRespBaudrate;                            /* Response baudrate of the event in bit/sec */
+    std::array<uint8_t, 4> mReserved;                  /* 4-byte alignment, reserved since BLF 3.9.3.0, BLF files from older versions may have junk data here */
+    double mExactHeaderBaudrate;                       /* Exact baudrate of the header in bit/sec */
+    uint32_t mEarlyStopbitOffset;                      /* Early stop bit offset for UART timestamps in ns */
+    uint32_t mEarlyStopbitOffsetResponse;              /* Early stop bit offset in frame response for UART timestamps in ns */
+};
+
+/* HINT: this struct might be extended in future versions! */
+struct VBLLINWakeupEvent2_t
+{
+    VBLObjectHeader_t mHeader;     /* object header */
+    VBLLINBusEvent_t mLinBusEvent; /* LIN object header */
+    uint8_t mLengthInfo;           /* t.b.d */
+    uint8_t mSignal;               /* t.b.d */
+    uint8_t mExternal;             /* t.b.d */
+    uint8_t mReserved;             /* 4-byte alignment */
+};
+
+/* HINT: this struct might be extended in future versions! */
+struct VBLLINSpikeEvent2_t
+{
+    VBLObjectHeader_t mHeader;        /* object header */
+    VBLLINBusEvent_t mLinBusEvent;    /* LIN object header */
+    uint32_t mWidth;                  /* the spike's width in microseconds */
+    uint8_t mInternal;                /* t.b.d */
+    std::array<uint8_t, 3> mReserved; /* 4-byte alignment */
+};
+
+/* HINT: Extension of this structure is not allowed! */
+struct VBLLINLongDomSignalEvent_t
+{
+    VBLObjectHeader_t mHeader;        /* object header */
+    VBLLINBusEvent_t mLinBusEvent;    /* LIN object header */
+    uint8_t mType;                    /* t.b.d */
+    std::array<uint8_t, 3> mReserved; /* 4-byte alignment */
+};
+
+/* HINT: this struct might be extended in future versions! */
+struct VBLLINLongDomSignalEvent2_t
+{
+    VBLObjectHeader_t mHeader;        /* object header */
+    VBLLINBusEvent_t mLinBusEvent;    /* LIN object header */
+    uint8_t mType;                    /* t.b.d */
+    std::array<uint8_t, 7> mReserved; /* 4-byte alignment */
     uint64_t mLength;
-} VBLLINLongDomSignalEvent2;
+};
 
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINUnexpectedWakeup_t
+struct VBLLINUnexpectedWakeup_t
 {
-    VBLObjectHeader mHeader;     /* object header */
-    VBLLINBusEvent mLinBusEvent; /* LIN object header */
-    uint64_t mWidth;             /* width of the unexpected wakeup in nanoseconds (valid for LIN 2.x) */
-    uint8_t mSignal;             /*uint8_t signal of the unexpected wakeup (valid for LIN 1.x) */
-    uint8_t mReserved[7];        /* 8-byte alignment */
-} VBLLINUnexpectedWakeup;
+    VBLObjectHeader_t mHeader;        /* object header */
+    VBLLINBusEvent_t mLinBusEvent;    /* LIN object header */
+    uint64_t mWidth;                  /* width of the unexpected wakeup in nanoseconds (valid for LIN 2.x) */
+    uint8_t mSignal;                  /*uint8_t signal of the unexpected wakeup (valid for LIN 1.x) */
+    std::array<uint8_t, 7> mReserved; /* 8-byte alignment */
+};
 
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINShortOrSlowResponse_t
+struct VBLLINShortOrSlowResponse_t
 {
-    VBLObjectHeader mHeader;                         /* object header */
-    VBLLINDatabyteTimestampEvent mLinTimestampEvent; /* LIN object header */
-    ULONG mNumberOfRespBytes;                        /* number of valid responseuint8_ts */
-    uint8_t mRespBytes[9];                           /* the responseuint8_ts (can include the checksum) */
-    uint8_t mSlowResponse;                           /* non-zero, if the response was too slow */
-    uint8_t mInterruptedByBreak;                     /* non-zero, if the response was interrupted by a sync break */
-    uint8_t mReserved[1];                            /* 8-byte alignment */
-} VBLLINShortOrSlowResponse;
+    VBLObjectHeader_t mHeader;                         /* object header */
+    VBLLINDatabyteTimestampEvent_t mLinTimestampEvent; /* LIN object header */
+    uint32_t mNumberOfRespBytes;                       /* number of valid responseuint8_ts */
+    std::array<uint8_t, 9> mRespBytes;                 /* the responseuint8_ts (can include the checksum) */
+    uint8_t mSlowResponse;                             /* non-zero, if the response was too slow */
+    uint8_t mInterruptedByBreak;                       /* non-zero, if the response was interrupted by a sync break */
+    uint8_t mReserved;                                 /* 8-byte alignment */
+};
 
-typedef struct VBLLINShortOrSlowResponse2_t
+struct VBLLINShortOrSlowResponse2_t
 {
-    VBLObjectHeader mHeader;                         /* object header */
-    VBLLINDatabyteTimestampEvent mLinTimestampEvent; /* LIN object header */
-    ULONG mNumberOfRespBytes;                        /* number of valid responseuint8_ts */
-    uint8_t mRespBytes[9];                           /* the responseuint8_ts (can include the checksum) */
-    uint8_t mSlowResponse;                           /* non-zero, if the response was too slow */
-    uint8_t mInterruptedByBreak;                     /* non-zero, if the response was interrupted by a sync break */
-    uint8_t mReserved[1];                            /* 8-byte alignment */
-    DOUBLE mExactHeaderBaudrate;                     /* Exact baudrate of the header in bit/sec */
-    uint32_t mEarlyStopbitOffset;                    /* Early stop bit offset for UART timestamps in ns */
-} VBLLINShortOrSlowResponse2;
+    VBLObjectHeader_t mHeader;                         /* object header */
+    VBLLINDatabyteTimestampEvent_t mLinTimestampEvent; /* LIN object header */
+    uint32_t mNumberOfRespBytes;                       /* number of valid responseuint8_ts */
+    std::array<uint8_t, 9> mRespBytes;                 /* the responseuint8_ts (can include the checksum) */
+    uint8_t mSlowResponse;                             /* non-zero, if the response was too slow */
+    uint8_t mInterruptedByBreak;                       /* non-zero, if the response was interrupted by a sync break */
+    uint8_t mReserved;                                 /* 8-byte alignment */
+    double mExactHeaderBaudrate;                       /* Exact baudrate of the header in bit/sec */
+    uint32_t mEarlyStopbitOffset;                      /* Early stop bit offset for UART timestamps in ns */
+};
 
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLLINDisturbanceEvent_t
+struct VBLLINDisturbanceEvent_t
 {
-    VBLObjectHeader mHeader;                 /* object header */
-    uint16_t mChannel;                       /* application channel */
-    uint8_t mID;                             /* LIN ID of disturbed response */
-    uint8_t mDisturbingFrameID;              /* LIN ID of disturbing header */
-    ULONG mDisturbanceType;                  /* type of disturbance (dominant, recessive, header, bitstream, variable bitstream) */
-    ULONG mByteIndex;                        /* index of theuint8_t that was disturbed */
-    ULONG mBitIndex;                         /* index of the bit that was disturbed */
-    ULONG mBitOffsetInSixteenthBits;         /* offset in 1/16th bits into the disturbed bit */
-    ULONG mDisturbanceLengthInSixteenthBits; /* length of the disturbance in units of 1/16th bit */
-} VBLLINDisturbanceEvent;
+    VBLObjectHeader_t mHeader;                  /* object header */
+    uint16_t mChannel;                          /* application channel */
+    uint8_t mID;                                /* LIN ID of disturbed response */
+    uint8_t mDisturbingFrameID;                 /* LIN ID of disturbing header */
+    uint32_t mDisturbanceType;                  /* type of disturbance (dominant, recessive, header, bitstream, variable bitstream) */
+    uint32_t mByteIndex;                        /* index of theuint8_t that was disturbed */
+    uint32_t mBitIndex;                         /* index of the bit that was disturbed */
+    uint32_t mBitOffsetInSixteenthBits;         /* offset in 1/16th bits into the disturbed bit */
+    uint32_t mDisturbanceLengthInSixteenthBits; /* length of the disturbance in units of 1/16th bit */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1374,55 +1375,56 @@ typedef struct VBLLINDisturbanceEvent_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYData_t
+struct VBLFLEXRAYData_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mMUX;            /* t.b.d */
-    uint8_t mLen;            /* t.b.d */
-    uint16_t mMessageID;     /* t.b.d */
-    uint16_t mCRC;           /* t.b.d */
-    uint8_t mDir;            /* t.b.d */
-    uint8_t mDummy1;         /* t.b.d */
-    uint16_t mDummy2;        /* t.b.d */
-    uint8_t mDataBytes[12];  /* t.b.d */
-} VBLFLEXRAYData;
+    VBLObjectHeader_t mHeader;          /* object header */
+    uint16_t mChannel;                  /* application channel */
+    uint8_t mMUX;                       /* t.b.d */
+    uint8_t mLen;                       /* t.b.d */
+    uint16_t mMessageID;                /* t.b.d */
+    uint16_t mCRC;                      /* t.b.d */
+    uint8_t mDir;                       /* t.b.d */
+    uint8_t mDummy1;                    /* t.b.d */
+    uint16_t mDummy2;                   /* t.b.d */
+    std::array<uint8_t, 12> mDataBytes; /* t.b.d */
+};
+
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYSync_t
+struct VBLFLEXRAYSync_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mMUX;            /* t.b.d */
-    uint8_t mLen;            /* t.b.d */
-    uint16_t mMessageID;     /* t.b.d */
-    uint16_t mCRC;           /* t.b.d */
-    uint8_t mDir;            /* t.b.d */
-    uint8_t mDummy1;         /* t.b.d */
-    uint16_t mDummy2;        /* t.b.d */
-    uint8_t mDataBytes[11];  /* t.b.d */
-    uint8_t mCycle;          /* t.b.d */
-} VBLFLEXRAYSync;
+    VBLObjectHeader_t mHeader;          /* object header */
+    uint16_t mChannel;                  /* application channel */
+    uint8_t mMUX;                       /* t.b.d */
+    uint8_t mLen;                       /* t.b.d */
+    uint16_t mMessageID;                /* t.b.d */
+    uint16_t mCRC;                      /* t.b.d */
+    uint8_t mDir;                       /* t.b.d */
+    uint8_t mDummy1;                    /* t.b.d */
+    uint16_t mDummy2;                   /* t.b.d */
+    std::array<uint8_t, 11> mDataBytes; /* t.b.d */
+    uint8_t mCycle;                     /* t.b.d */
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYV6StartCycleEvent_t
+struct VBLFLEXRAYV6StartCycleEvent_t
 {
-    VBLObjectHeader mHeader;    /* object header */
-    uint16_t mChannel;          /* application channel */
-    uint8_t mDir;               /* dir flag (tx, rx) */
-    uint8_t mLowTime;           /* additional time field in simulation */
-    uint32_t mFPGATick;         /* timestamp generated from xModule */
-    uint32_t mFPGATickOverflow; /* overflow counter of the timestamp */
-    uint32_t mClientIndex;      /* clientindex of send node */
-    uint32_t mClusterTime;      /* relatvie clustertime, from 0 to cyclelength*/
-    uint8_t mDataBytes[2];      /* array of databytes*/
+    VBLObjectHeader_t mHeader;         /* object header */
+    uint16_t mChannel;                 /* application channel */
+    uint8_t mDir;                      /* dir flag (tx, rx) */
+    uint8_t mLowTime;                  /* additional time field in simulation */
+    uint32_t mFPGATick;                /* timestamp generated from xModule */
+    uint32_t mFPGATickOverflow;        /* overflow counter of the timestamp */
+    uint32_t mClientIndex;             /* clientindex of send node */
+    uint32_t mClusterTime;             /* relatvie clustertime, from 0 to cyclelength*/
+    std::array<uint8_t, 2> mDataBytes; /* array of databytes*/
     uint16_t mReserved;
-} VBLFLEXRAYV6StartCycleEvent;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYV6Message_t
+struct VBLFLEXRAYV6Message_t
 {
-    VBLObjectHeader mHeader;    /* object header */
+    VBLObjectHeader_t mHeader;  /* object header */
     uint16_t mChannel;          /* application channel */
     uint8_t mDir;               /* dir flag (tx, rx) */
     uint8_t mLowTime;           /* additional time field in simulation */
@@ -1438,125 +1440,125 @@ typedef struct VBLFLEXRAYV6Message_t
     uint8_t mHeaderBitMask;     /* Bit0 = NMBit, Bit1 = SyncBit, Bit2 = Reserved */
     uint8_t mReserved1;
     uint16_t mReserved2;
-    uint8_t mDataBytes[64]; /* array of databytes*/
-} VBLFLEXRAYV6Message;
+    std::array <uint8_t,64> mDataBytes; /* array of databytes*/
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYStatusEvent_t
+struct VBLFLEXRAYStatusEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mVersion;       /* object version */
-    uint16_t mStatusType;    /* type of status event */
-    uint16_t mInfoMask1;     /* additional info 1 */
-    uint16_t mInfoMask2;     /* additional info 2 */
-    uint16_t mInfoMask3;     /* additional info 3 */
-    uint16_t mReserved[16];
-} VBLFLEXRAYStatusEvent;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mVersion;         /* object version */
+    uint16_t mStatusType;      /* type of status event */
+    uint16_t mInfoMask1;       /* additional info 1 */
+    uint16_t mInfoMask2;       /* additional info 2 */
+    uint16_t mInfoMask3;       /* additional info 3 */
+    std::array<uint16_t, 16> mReserved;
+};
 
 // New FlexRay events
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYVFrReceiveMsgEx_t
+struct VBLFLEXRAYVFrReceiveMsgEx_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mVersion;       /* version of data struct */
-    uint16_t mChannelMask;   /* channel mask */
-    uint16_t mDir;           /* dir flag (tx, rx) */
-    uint32_t mClientIndex;   /* clientindex of send node */
-    uint32_t mClusterNo;     /* number of cluster */
-    uint16_t mFrameId;       /* slot identifier,uint16_t  */
-    uint16_t mHeaderCRC1;    /* header crc channel 1  */
-    uint16_t mHeaderCRC2;    /* header crc channel 2  */
-    uint16_t mByteCount;     /*uint8_t count (not payload) of frame from CC receive buffer */
-    uint16_t mDataCount;     /* length of the data array (stretchy struct) */
-    uint16_t mCycle;         /* current cycle,uint8_t  */
-    uint32_t mTag;           /* type of cc */
-    uint32_t mData;          /* register flags */
-    uint32_t mFrameFlags;    /* frame flags */
-    uint32_t mAppParameter;  /* TxRq, TxAck flags */
-    uint32_t mFrameCRC;      /* frame crc */
-    uint32_t mFrameLengthNS; /* length of frame in ns */
-    uint16_t mFrameId1;      /* for internal use */
-    uint16_t mPDUOffset;     /* payload offset (position in a frame) */
-    uint16_t mBlfLogMask;    /* only valid for frames. Every stands for one PDU. If set, the PDU must be extracted out of the frame. The bit order is the PDU order in the frame starting with the PDU with the smallest offset */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mVersion;         /* version of data struct */
+    uint16_t mChannelMask;     /* channel mask */
+    uint16_t mDir;             /* dir flag (tx, rx) */
+    uint32_t mClientIndex;     /* clientindex of send node */
+    uint32_t mClusterNo;       /* number of cluster */
+    uint16_t mFrameId;         /* slot identifier,uint16_t  */
+    uint16_t mHeaderCRC1;      /* header crc channel 1  */
+    uint16_t mHeaderCRC2;      /* header crc channel 2  */
+    uint16_t mByteCount;       /*uint8_t count (not payload) of frame from CC receive buffer */
+    uint16_t mDataCount;       /* length of the data array (stretchy struct) */
+    uint16_t mCycle;           /* current cycle,uint8_t  */
+    uint32_t mTag;             /* type of cc */
+    uint32_t mData;            /* register flags */
+    uint32_t mFrameFlags;      /* frame flags */
+    uint32_t mAppParameter;    /* TxRq, TxAck flags */
+    uint32_t mFrameCRC;        /* frame crc */
+    uint32_t mFrameLengthNS;   /* length of frame in ns */
+    uint16_t mFrameId1;        /* for internal use */
+    uint16_t mPDUOffset;       /* payload offset (position in a frame) */
+    uint16_t mBlfLogMask;      /* only valid for frames. Every stands for one PDU. If set, the PDU must be extracted out of the frame. The bit order is the PDU order in the frame starting with the PDU with the smallest offset */
     uint16_t mReservedW;
-    uint32_t mReserved[6];   /* reserved */
-    uint8_t mDataBytes[254]; /* array of databytes*/
-} VBLFLEXRAYVFrReceiveMsgEx;
+    std::array<uint32_t, 6> mReserved;   /* reserved */
+    std::array<uint8_t, 254> mDataBytes; /* array of databytes*/
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYVFrReceiveMsg_t
+struct VBLFLEXRAYVFrReceiveMsg_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mVersion;       /* version of data struct */
-    uint16_t mChannelMask;   /* channel mask */
-    uint8_t mDir;            /* dir flag (tx, rx) */
-    uint32_t mClientIndex;   /* clientindex of send node */
-    uint32_t mClusterNo;     /* number of cluster */
-    uint16_t mFrameId;       /* slot identifier,uint16_t  */
-    uint16_t mHeaderCRC1;    /* header crc channel 1  */
-    uint16_t mHeaderCRC2;    /* header crc channel 2  */
-    uint16_t mByteCount;     /*uint8_t count (not payload) of frame from CC receive buffer */
-    uint16_t mDataCount;     /* length of the data array (stretchy struct) */
-    uint8_t mCycle;          /* current cycle,uint8_t  */
-    uint32_t mTag;           /* type of cc */
-    uint32_t mData;          /* register flags */
-    uint32_t mFrameFlags;    /* frame flags */
-    uint32_t mAppParameter;  /* TxRq, TxAck flags */
-    uint8_t mDataBytes[254]; /* array of databytes*/
-} VBLFLEXRAYVFrReceiveMsg;
+    VBLObjectHeader_t mHeader;           /* object header */
+    uint16_t mChannel;                   /* application channel */
+    uint16_t mVersion;                   /* version of data struct */
+    uint16_t mChannelMask;               /* channel mask */
+    uint8_t mDir;                        /* dir flag (tx, rx) */
+    uint32_t mClientIndex;               /* clientindex of send node */
+    uint32_t mClusterNo;                 /* number of cluster */
+    uint16_t mFrameId;                   /* slot identifier,uint16_t  */
+    uint16_t mHeaderCRC1;                /* header crc channel 1  */
+    uint16_t mHeaderCRC2;                /* header crc channel 2  */
+    uint16_t mByteCount;                 /*uint8_t count (not payload) of frame from CC receive buffer */
+    uint16_t mDataCount;                 /* length of the data array (stretchy struct) */
+    uint8_t mCycle;                      /* current cycle,uint8_t  */
+    uint32_t mTag;                       /* type of cc */
+    uint32_t mData;                      /* register flags */
+    uint32_t mFrameFlags;                /* frame flags */
+    uint32_t mAppParameter;              /* TxRq, TxAck flags */
+    std::array<uint8_t, 254> mDataBytes; /* array of databytes*/
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYVFrStartCycle_t
+struct VBLFLEXRAYVFrStartCycle_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mVersion;       /* version of data struct */
-    uint16_t mChannelMask;   /* channel mask */
-    uint8_t mDir;            /* dir flag (tx, rx) */
-    uint8_t mCycle;          /* current cycle,  uint8_t  */
-    uint32_t mClientIndex;   /* clientindex of send node */
-    uint32_t mClusterNo;     /* number of cluster */
-    uint16_t mNmSize;        /* size of NM Vector */
-    uint8_t mDataBytes[12];  /* array of databytes (NM vector max. length)*/
-    uint32_t mTag;           /* type of cc */
-    uint32_t mData[5];       /* register flags */
+    VBLObjectHeader_t mHeader;          /* object header */
+    uint16_t mChannel;                  /* application channel */
+    uint16_t mVersion;                  /* version of data struct */
+    uint16_t mChannelMask;              /* channel mask */
+    uint8_t mDir;                       /* dir flag (tx, rx) */
+    uint8_t mCycle;                     /* current cycle,  uint8_t  */
+    uint32_t mClientIndex;              /* clientindex of send node */
+    uint32_t mClusterNo;                /* number of cluster */
+    uint16_t mNmSize;                   /* size of NM Vector */
+    std::array<uint8_t, 12> mDataBytes; /* array of databytes (NM vector max. length)*/
+    uint32_t mTag;                      /* type of cc */
+    std::array<uint32_t, 5> mData;      /* register flags */
     uint16_t mReserved;
-} VBLFLEXRAYVFrStartCycle;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYVFrStatus_t
+struct VBLFLEXRAYVFrStatus_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mVersion;       /* object version */
-    uint16_t mChannelMask;   /* channel mask */
-    uint8_t mCycle;          /* current cycle,  uint8_t */
-    uint32_t mClientIndex;   /* clientindex of send node */
-    uint32_t mClusterNo;     /* number of cluster */
-    uint32_t mWus;           /* wakeup status */
-    uint32_t mCcSyncState;   /* sync state of cc */
-    uint32_t mTag;           /* type of cc */
-    uint32_t mData[2];       /* register flags */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mVersion;         /* object version */
+    uint16_t mChannelMask;     /* channel mask */
+    uint8_t mCycle;            /* current cycle,  uint8_t */
+    uint32_t mClientIndex;     /* clientindex of send node */
+    uint32_t mClusterNo;       /* number of cluster */
+    uint32_t mWus;             /* wakeup status */
+    uint32_t mCcSyncState;     /* sync state of cc */
+    uint32_t mTag;             /* type of cc */
+    uint32_t mData[2];         /* register flags */
     uint16_t mReserved[16];
-} VBLFLEXRAYVFrStatus;
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLFLEXRAYVFrError_t
+struct VBLFLEXRAYVFrError_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mVersion;       /* object version */
-    uint16_t mChannelMask;   /* channel mask */
-    uint8_t mCycle;          /* current cycle,uint8_t */
-    uint32_t mClientIndex;   /* clientindex of send node */
-    uint32_t mClusterNo;     /* number of cluster */
-    uint32_t mTag;           /* type of cc */
-    uint32_t mData[4];       /* register flags */
+    VBLObjectHeader_t mHeader;     /* object header */
+    uint16_t mChannel;             /* application channel */
+    uint16_t mVersion;             /* object version */
+    uint16_t mChannelMask;         /* channel mask */
+    uint8_t mCycle;                /* current cycle,uint8_t */
+    uint32_t mClientIndex;         /* clientindex of send node */
+    uint32_t mClusterNo;           /* number of cluster */
+    uint32_t mTag;                 /* type of cc */
+    std::array<uint32_t, 4> mData; /* register flags */
     uint16_t mReserved;
-} VBLFLEXRAYVFrError;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1564,14 +1566,14 @@ typedef struct VBLFLEXRAYVFrError_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLJ1708Message_t
+struct VBLJ1708Message_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint8_t mDir;            /* direction */
-    uint16_t mError;         /* error code */
-    uint8_t mSize;           /* data size */
-    uint8_t mData[255];      /* data */
+    VBLObjectHeader_t mHeader;      /* object header */
+    uint16_t mChannel;              /* application channel */
+    uint8_t mDir;                   /* direction */
+    uint16_t mError;                /* error code */
+    uint8_t mSize;                  /* data size */
+    std::array<uint8_t, 255> mData; /* data */
 } VBLJ1708Message;
 
 /*----------------------------------------------------------------------------
@@ -1580,16 +1582,16 @@ typedef struct VBLJ1708Message_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLEnvironmentVariable_t
+struct VBLEnvironmentVariable_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size to*/
-                             /* */
-                             /* mHeader.mObjectSize = sizeof( VBLEnvironmentVariable) + mNameLength + mDataLength; */
-                             /* */
-    uint32_t mNameLength;    /* length of variable name inuint8_ts */
-    uint32_t mDataLength;    /* length of variable data inuint8_ts */
-    BL_LPSTR mName;          /* variable name in MBCS */
-    BL_LPBYTE mData;         /* variable data */
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
+                               /* */
+                               /* mHeader.mObjectSize = sizeof( VBLEnvironmentVariable) + mNameLength + mDataLength; */
+                               /* */
+    uint32_t mNameLength;      /* length of variable name inuint8_ts */
+    uint32_t mDataLength;      /* length of variable data inuint8_ts */
+    // BL_LPSTR mName;          /* variable name in MBCS */
+    // BL_LPBYTE mData;         /* variable data */
 } VBLEnvironmentVariable;
 
 /*----------------------------------------------------------------------------
@@ -1598,29 +1600,29 @@ typedef struct VBLEnvironmentVariable_t
 |
 -----------------------------------------------------------------------------*/
 
-#define BL_SYSVAR_TYPE_DOUBLE 1
+#define BL_SYSVAR_TYPE_ double 1
 #define BL_SYSVAR_TYPE_LONG 2
 #define BL_SYSVAR_TYPE_STRING 3
-#define BL_SYSVAR_TYPE_DOUBLEARRAY 4
+#define BL_SYSVAR_TYPE_ doubleARRAY 4
 #define BL_SYSVAR_TYPE_LONGARRAY 5
 #define BL_SYSVAR_TYPE_LONGLONG 6
 #define BL_SYSVAR_TYPE_BYTEARRAY 7
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLSystemVariable_t
+struct VBLSystemVariable_t
 {
-    VBLObjectHeader mHeader;  /* object header - NOTE! set the object size to*/
-                              /* */
-                              /* mHeader.mObjectSize = sizeof( VBLSystemVariable) + mNameLength + mDataLength; */
-                              /* */
-    uint32_t mType;           /* type of system variable (see BL_SYSVAR_TYPE_xxx) */
-    uint32_t mRepresentation; /* signed, later perhaps also string codepage */
-    uint32_t mReserved[2];
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
+                               /* */
+                               /* mHeader.mObjectSize = sizeof( VBLSystemVariable) + mNameLength + mDataLength; */
+                               /* */
+    uint32_t mType;            /* type of system variable (see BL_SYSVAR_TYPE_xxx) */
+    uint32_t mRepresentation;  /* signed, later perhaps also string codepage */
+    std::array<uint32_t, 2> mReserved;
     uint32_t mNameLength; /* length of variable name inuint8_ts */
     uint32_t mDataLength; /* length of variable data inuint8_ts */
-    BL_LPSTR mName;       /* variable name in MBCS */
-    BL_LPBYTE mData;      /* variable data */
-} VBLSystemVariable;
+    // BL_LPSTR mName;       /* variable name in MBCS */
+    // BL_LPBYTE mData;      /* variable data */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1628,18 +1630,18 @@ typedef struct VBLSystemVariable_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLGPSEvent_t
+struct VBLGPSEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint32_t mFlags;         /* t.b.d. */
-    uint16_t mChannel;       /* channel of event */
-    uint16_t mReserved;      /* t.b.d. */
-    DOUBLE mLatitude;        /* t.b.d. */
-    DOUBLE mLongitude;       /* t.b.d. */
-    DOUBLE mAltitude;        /* t.b.d. */
-    DOUBLE mSpeed;           /* t.b.d. */
-    DOUBLE mCourse;          /* t.b.d. */
-} VBLGPSEvent;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint32_t mFlags;           /* t.b.d. */
+    uint16_t mChannel;         /* channel of event */
+    uint16_t mReserved;        /* t.b.d. */
+    double mLatitude;          /* t.b.d. */
+    double mLongitude;         /* t.b.d. */
+    double mAltitude;          /* t.b.d. */
+    double mSpeed;             /* t.b.d. */
+    double mCourse;            /* t.b.d. */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1653,40 +1655,40 @@ typedef struct VBLGPSEvent_t
 #define BL_SERIAL_TYPE_COMPACT_BYTES 0x000000008 /* optimization for logging a fewuint8_ts without additional timestamps */
 
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLGeneralSerialEvent_t
+struct VBLGeneralSerialEvent_t
 {
     uint32_t mDataLength;       /* length of variable data inuint8_ts */
     uint32_t mTimeStampsLength; /* length of variable timestamps inuint8_ts */
-    BL_LPBYTE mData;            /* variable data */
-    BL_PLONGLONG mTimeStamps;   /* variable timestamps (optional) */
-} VBLGeneralSerialEvent;
+    // BL_LPBYTE mData;            /* variable data */
+    // BL_PLONGLONG mTimeStamps;   /* variable timestamps (optional) */
+};
 
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLSingleByteSerialEvent_t
+struct VBLSingleByteSerialEvent_t
 {
     uint8_t mByte;
-} VBLSingleByteSerialEvent;
+};
 
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLCompactSerialEvent_t
+struct VBLCompactSerialEvent_t
 {
     uint8_t mCompactLength;
     uint8_t mCompactData[15];
-} VBLCompactSerialEvent;
+};
 
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLSerialEvent_t
+struct VBLSerialEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint32_t mFlags;         /* see above */
-    uint32_t mPort;          /* channel of event */
-    uint32_t mBaudrate;      /* baudrate at which this event was transmitted (optional) */
-    uint32_t mReserved;      /* t.b.d. */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint32_t mFlags;           /* see above */
+    uint32_t mPort;            /* channel of event */
+    uint32_t mBaudrate;        /* baudrate at which this event was transmitted (optional) */
+    uint32_t mReserved;        /* t.b.d. */
     union
     {
-        VBLGeneralSerialEvent mGeneral;
-        VBLSingleByteSerialEvent mSingleByte;
-        VBLCompactSerialEvent mCompact;
+        VBLGeneralSerialEvent_t mGeneral;
+        VBLSingleByteSerialEvent_t mSingleByte;
+        VBLCompactSerialEvent_t mCompact;
     };
 } VBLSerialEvent;
 
@@ -1694,14 +1696,14 @@ typedef struct VBLSerialEvent_t
 #define BL_KLINE_TYPE_TOECU 0x8000 /* If set in mType, direction is tester -> ECU */
 #define BL_KLINE_TYPE_MASK 0x7FFF  /* Use this mask to filter out the type from mType */
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLKLineStatusEvent_t
+struct VBLKLineStatusEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mType;          /* BusSystemFacility::VKLineStatusEventType */
-    uint16_t mDataLen;       /* number of *bytes* used in mData */
-    uint32_t mPort;          /* channel of event */
-    uint32_t mReserved;      /* t.b.d. */
-    UINT64 mData[3];         /* the actual data, but only mDataLenuint8_tS are used! */
+    VBLObjectHeader_t mHeader;     /* object header */
+    uint16_t mType;                /* BusSystemFacility::VKLineStatusEventType */
+    uint16_t mDataLen;             /* number of *bytes* used in mData */
+    uint32_t mPort;                /* channel of event */
+    uint32_t mReserved;            /* t.b.d. */
+    std::array<uint64_t, 3> mData; /* the actual data, but only mDataLenuint8_tS are used! */
 } VBLKLineStatusEvent;
 
 /*----------------------------------------------------------------------------
@@ -1710,19 +1712,19 @@ typedef struct VBLKLineStatusEvent_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLEthernetFrame_t
+struct VBLEthernetFrame_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size to*/
-                             /* mHeader.mObjectSize = sizeof( VBLEthernetFrame) + mPayLoadLength; */
-    uint8_t mSourceAddress[6];
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
+                               /* mHeader.mObjectSize = sizeof( VBLEthernetFrame) + mPayLoadLength; */
+    std::array<uint8_t, 6> mSourceAddress;
     uint16_t mChannel;
-    uint8_t mDestinationAddress[6];
+    std::array<uint8_t, 6> mDestinationAddress;
     uint16_t mDir; /* Direction flag: 0=Rx, 1=Tx, 2=TxRq */
     uint16_t mType;
     uint16_t mTPID;
     uint16_t mTCI;
     uint16_t mPayLoadLength; /* Number of valid mPayLoaduint8_ts */
-    BL_LPBYTE mPayLoad;      /* Max 1582 (1600 packet length - 18 header) datauint8_ts per frame  */
+    // BL_LPBYTE mPayLoad;      /* Max 1582 (1600 packet length - 18 header) datauint8_ts per frame  */
 } VBLEthernetFrame;
 
 /*----------------------------------------------------------------------------
@@ -1730,12 +1732,12 @@ typedef struct VBLEthernetFrame_t
 | Ethernet frame2 object
 |
 -----------------------------------------------------------------------------*/
-typedef struct VBLEthernetFrameEx_t
+struct VBLEthernetFrameEx_t
 {
-    VBLObjectHeader mHeader;   /* object header - NOTE! set the object size to*/
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
                                /* mHeader.mObjectSize = sizeof( VBLEthernetFrame) + mPayLoadLength; */
-    uint16_t mStructLength;    /* Length of this structure, without sizeof(VBLObjectHeader), without mStructLength member and without mFrameData member */
-                               /* mStructLength = sizeof(VBLEthernetFrameEx) - sizeof(VBLObjectHeader) - sizeof(mStructLength) - sizeof(mFrameData) */
+    uint16_t mStructLength;    /* Length of this structure, without sizeof(VBLObjectHeader_t), without mStructLength member and without mFrameData member */
+                               /* mStructLength = sizeof(VBLEthernetFrameEx) - sizeof(VBLObjectHeader_t) - sizeof(mStructLength) - sizeof(mFrameData) */
     uint16_t mFlags;           /* flags, which indicates the valid fields: */
                                /*   Bit 0 - reserved */
                                /*   Bit 1 - mHardwareChannel valid */
@@ -1744,13 +1746,13 @@ typedef struct VBLEthernetFrameEx_t
                                /*   Bit 4 - mFrameHandle valid */
     uint16_t mChannel;         /* application channel, i.e. Eth 1 */
     uint16_t mHardwareChannel; /* HW channel */
-    UINT64 mFrameDuration;     /* Transmission duration in [ns] */
+    uint64_t mFrameDuration;   /* Transmission duration in [ns] */
     uint32_t mFrameChecksum;   /* Ethernet checksum */
     uint16_t mDir;             /* Direction flag: 0=Rx, 1=Tx, 2=TxRq */
     uint16_t mFrameLength;     /* Number of valid mFrameDatauint8_ts */
     uint32_t mFrameHandle;     /* Handle which refer the corresponding VBLEthernetFrameForwarded event */
     uint32_t mReserved;
-    BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
+    // BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
 } VBLEthernetFrameEx;
 
 /*----------------------------------------------------------------------------
@@ -1758,12 +1760,12 @@ typedef struct VBLEthernetFrameEx_t
 | Ethernet frame forwarded object
 |
 -----------------------------------------------------------------------------*/
-typedef struct VBLEthernetFrameForwarded_t
+struct VBLEthernetFrameForwarded_t
 {
-    VBLObjectHeader mHeader;   /* object header - NOTE! set the object size to*/
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
                                /* mHeader.mObjectSize = sizeof( VBLEthernetFrame) + mPayLoadLength; */
-    uint16_t mStructLength;    /* Length of this structure, without sizeof(VBLObjectHeader), without mStructLength member and without mFrameData member */
-                               /* mStructLength = sizeof(VBLEthernetFrameForwarded) - sizeof(VBLObjectHeader) - sizeof(mStructLength) - sizeof(mFrameData) */
+    uint16_t mStructLength;    /* Length of this structure, without sizeof(VBLObjectHeader_t), without mStructLength member and without mFrameData member */
+                               /* mStructLength = sizeof(VBLEthernetFrameForwarded) - sizeof(VBLObjectHeader_t) - sizeof(mStructLength) - sizeof(mFrameData) */
     uint16_t mFlags;           /* flags, which indicates the valid fields: */
                                /*   Bit 0 - reserved */
                                /*   Bit 1 - mHardwareChannel valid */
@@ -1772,13 +1774,13 @@ typedef struct VBLEthernetFrameForwarded_t
                                /*   Bit 4 - mFrameHandle valid */
     uint16_t mChannel;         /* application channel, i.e. Eth 1 */
     uint16_t mHardwareChannel; /* HW channel */
-    UINT64 mFrameDuration;     /* Transmission duration in [ns] */
+    uint64_t mFrameDuration;   /* Transmission duration in [ns] */
     uint32_t mFrameChecksum;   /* Ethernet checksum */
     uint16_t mDir;             /* Direction flag: 0=Rx, 1=Tx, 2=TxRq */
     uint16_t mFrameLength;     /* Number of valid mFrameDatauint8_ts */
     uint32_t mFrameHandle;     /* Handle which refer the corresponding VBLEthernetFrameForwarded event */
     uint32_t mReserved;
-    BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
+    // BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
 } VBLEthernetFrameForwarded;
 
 /*----------------------------------------------------------------------------
@@ -1787,12 +1789,12 @@ typedef struct VBLEthernetFrameForwarded_t
 |
 -----------------------------------------------------------------------------*/
 
-typedef struct VBLEthernetRxError_t
+struct VBLEthernetRxError_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size to*/
-                             /* mHeader.mObjectSize = offsetof(VBLEthernetRxError, mFrameData) + event.mFrameDataLength */
-    uint16_t mStructLength;  /* Length of this structure, without sizeof(VBLObjectHeader) and without raw data length */
-                             /* mStructLength = sizeof(VBLEthernetRxError) - sizeof(VBLObjectHeader) - sizeof(uint32_t) */
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
+                               /* mHeader.mObjectSize = offsetof(VBLEthernetRxError, mFrameData) + event.mFrameDataLength */
+    uint16_t mStructLength;    /* Length of this structure, without sizeof(VBLObjectHeader_t) and without raw data length */
+                               /* mStructLength = sizeof(VBLEthernetRxError) - sizeof(VBLObjectHeader_t) - sizeof(uint32_t) */
     uint16_t mChannel;
     uint16_t mDir;             /* Direction flag: 0=Rx, 1=Tx, 2=TxRq */
     uint16_t mHardwareChannel; /* HW channel. 0 = invalid. */
@@ -1800,7 +1802,7 @@ typedef struct VBLEthernetRxError_t
     uint16_t mFrameDataLength; /* Number of valid raw ethernet datauint8_ts, starting with Target MAC ID */
     uint16_t mReserved2;       /* Gap */
     uint32_t mError;
-    BL_LPBYTE mFrameData; /* Max 1600 datauint8_ts per frame  */
+    // BL_LPBYTE mFrameData; /* Max 1600 datauint8_ts per frame  */
 } VBLEthernetRxError;
 
 /*----------------------------------------------------------------------------
@@ -1809,12 +1811,12 @@ typedef struct VBLEthernetRxError_t
 |
 -----------------------------------------------------------------------------*/
 
-typedef struct VBLEthernetErrorEx_t
+struct VBLEthernetErrorEx_t
 {
-    VBLObjectHeader mHeader;   /* object header - NOTE! set the object size to*/
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
                                /* mHeader.mObjectSize = offsetof(VBLEthernetRxError, mFrameData) + event.mFrameDataLength */
-    uint16_t mStructLength;    /* Length of this structure, without sizeof(VBLObjectHeader), without mStructLength member and without mFrameData member */
-                               /* mStructLength = sizeof(VBLEthernetErrorEx) - sizeof(VBLObjectHeader) - sizeof(mStructLength) - sizeof(mFrameData) */
+    uint16_t mStructLength;    /* Length of this structure, without sizeof(VBLObjectHeader_t), without mStructLength member and without mFrameData member */
+                               /* mStructLength = sizeof(VBLEthernetErrorEx) - sizeof(VBLObjectHeader_t) - sizeof(mStructLength) - sizeof(mFrameData) */
     uint16_t mFlags;           /* flags, which indicates the valid fields: */
                                /*   Bit 0 - reserved */
                                /*   Bit 1 - mHardwareChannel valid */
@@ -1823,14 +1825,14 @@ typedef struct VBLEthernetErrorEx_t
                                /*   Bit 4 - mFrameHandle valid */
     uint16_t mChannel;         /* application channel, i.e. Eth 1 */
     uint16_t mHardwareChannel; /* HW channel */
-    UINT64 mFrameDuration;     /* Transmission duration in [ns] */
+    uint64_t mFrameDuration;   /* Transmission duration in [ns] */
     uint32_t mFrameChecksum;   /* Ethernet checksum */
     uint16_t mDir;             /* Direction flag: 0=Rx, 1=Tx, 2=TxRq */
     uint16_t mFrameLength;     /* Number of valid mFrameDatauint8_ts */
     uint32_t mFrameHandle;     /* Handle which refer the corresponding VBLEthernetErrorEx event */
     uint32_t mError;
-    BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
-} VBLEthernetErrorEx;
+    // BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1838,12 +1840,12 @@ typedef struct VBLEthernetErrorEx_t
 |
 -----------------------------------------------------------------------------*/
 
-typedef struct VBLEthernetErrorForwarded_t
+struct VBLEthernetErrorForwarded_t
 {
-    VBLObjectHeader mHeader;   /* object header - NOTE! set the object size to*/
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
                                /* mHeader.mObjectSize = offsetof(VBLEthernetRxError, mFrameData) + event.mFrameDataLength */
-    uint16_t mStructLength;    /* Length of this structure, without sizeof(VBLObjectHeader), without mStructLength member and without mFrameData member */
-                               /* mStructLength = sizeof(VBLEthernetErrorForwarded) - sizeof(VBLObjectHeader) - sizeof(mStructLength) - sizeof(mFrameData) */
+    uint16_t mStructLength;    /* Length of this structure, without sizeof(VBLObjectHeader_t), without mStructLength member and without mFrameData member */
+                               /* mStructLength = sizeof(VBLEthernetErrorForwarded) - sizeof(VBLObjectHeader_t) - sizeof(mStructLength) - sizeof(mFrameData) */
     uint16_t mFlags;           /* flags, which indicates the valid fields: */
                                /*   Bit 0 - reserved */
                                /*   Bit 1 - mHardwareChannel valid */
@@ -1852,14 +1854,14 @@ typedef struct VBLEthernetErrorForwarded_t
                                /*   Bit 4 - mFrameHandle valid */
     uint16_t mChannel;         /* application channel, i.e. Eth 1 */
     uint16_t mHardwareChannel; /* HW channel */
-    UINT64 mFrameDuration;     /* Transmission duration in [ns] */
+    uint64_t mFrameDuration;   /* Transmission duration in [ns] */
     uint32_t mFrameChecksum;   /* Ethernet checksum */
     uint16_t mDir;             /* Direction flag: 0=Rx, 1=Tx, 2=TxRq */
     uint16_t mFrameLength;     /* Number of valid mFrameDatauint8_ts */
     uint32_t mFrameHandle;     /* Handle which refer the corresponding VBLEthernetErrorForwarded event */
     uint32_t mError;
-    BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
-} VBLEthernetErrorForwarded;
+    // BL_LPBYTE mFrameData; /* Max 1612 datauint8_ts per frame. Contains Ethernet header + Ethernet payload  */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1867,9 +1869,9 @@ typedef struct VBLEthernetErrorForwarded_t
 |
 -----------------------------------------------------------------------------*/
 
-typedef struct VBLEthernetStatus_t
+struct VBLEthernetStatus_t
 {
-    VBLObjectHeader mHeader; /* object header */
+    VBLObjectHeader_t mHeader; /* object header */
     uint16_t mChannel;
     uint16_t mFlags;      /* Valid fields: */
                           /* Bit 0 - Link Status */
@@ -1910,7 +1912,7 @@ typedef struct VBLEthernetStatus_t
                           /* 3 - BR 4-pair */
     uint8_t mHardwareChannel;
     uint32_t mBitrate; /* Bitrate in [kbit/sec] */
-} VBLEthernetStatus;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1918,20 +1920,20 @@ typedef struct VBLEthernetStatus_t
 |
 -----------------------------------------------------------------------------*/
 
-typedef struct VBLEthernetStatistic_t
+struct VBLEthernetStatistic_t
 {
-    VBLObjectHeader mHeader; /* object header */
+    VBLObjectHeader_t mHeader; /* object header */
     uint16_t mChannel;
-    UINT64 mRcvOk_HW;
-    UINT64 mXmitOk_HW;
-    UINT64 mRcvError_HW;
-    UINT64 mXmitError_HW;
-    UINT64 mRcvBytes_HW;
-    UINT64 mXmitBytes_HW;
-    UINT64 mRcvNoBuffer_HW;
-    SHORT mSQI;
+    uint64_t mRcvOk_HW;
+    uint64_t mXmitOk_HW;
+    uint64_t mRcvError_HW;
+    uint64_t mXmitError_HW;
+    uint64_t mRcvBytes_HW;
+    uint64_t mXmitBytes_HW;
+    uint64_t mRcvNoBuffer_HW;
+    int16_t mSQI;
     uint16_t mHardwareChannel;
-} VBLEthernetStatistic;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1939,33 +1941,33 @@ typedef struct VBLEthernetStatistic_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLWlanFrame_t
+struct VBLWlanFrame_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size to*/
-                             /* mHeader.mObjectSize = sizeof( VBLWlanFrame_t) + mFrameLength; */
-    uint16_t mChannel;       /* application channel 1..n */
-    uint16_t mFlags;         /* Bit0=Genuine MAC-Header, Bit1=Correct Frame Control Format */
-    uint8_t mDir;            /* Direction flag: 0=Rx, 1=Tx, 2=TxRq */
-    uint8_t mRadioChannel;   /* channel number of the radio frequencey */
-    SHORT mSignalStrength;   /* signal strength in [dbm] */
-    uint16_t mSignalQuality; /* signal quality in [dbm] */
-    uint16_t mFrameLength;   /* Number ofuint8_ts (header + payload) */
-    BL_LPBYTE mFrameData;    /* Max. 2342 datauint8_ts per frame  */
-} VBLWlanFrame;
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
+                               /* mHeader.mObjectSize = sizeof( VBLWlanFrame_t) + mFrameLength; */
+    uint16_t mChannel;         /* application channel 1..n */
+    uint16_t mFlags;           /* Bit0=Genuine MAC-Header, Bit1=Correct Frame Control Format */
+    uint8_t mDir;              /* Direction flag: 0=Rx, 1=Tx, 2=TxRq */
+    uint8_t mRadioChannel;     /* channel number of the radio frequencey */
+    int16_t mSignalStrength;   /* signal strength in [dbm] */
+    uint16_t mSignalQuality;   /* signal quality in [dbm] */
+    uint16_t mFrameLength;     /* Number ofuint8_ts (header + payload) */
+    // BL_LPBYTE mFrameData;    /* Max. 2342 datauint8_ts per frame  */
+};
 
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLWlanStatistic_t
+struct VBLWlanStatistic_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mFlags;         /* Bit0=Valid Rx/Tx Counter, Bit1=Valid Error Counter */
-    ULONG mRxPacketCount;
-    ULONG mRxByteCount;
-    ULONG mTxPacketCount;
-    ULONG mTxByteCount;
-    ULONG mCollisionCount;
-    ULONG mErrorCount;
-} VBLWlanStatistic;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mFlags;           /* Bit0=Valid Rx/Tx Counter, Bit1=Valid Error Counter */
+    uint32_t mRxPacketCount;
+    uint32_t mRxByteCount;
+    uint32_t mTxPacketCount;
+    uint32_t mTxByteCount;
+    uint32_t mCollisionCount;
+    uint32_t mErrorCount;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1973,10 +1975,10 @@ typedef struct VBLWlanStatistic_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLAfdxFrame_t
+struct VBLAfdxFrame_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size to*/
-                             /* mHeader.mObjectSize = sizeof( VBLEthernetFrame) + mPayLoadLength; */
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
+                               /* mHeader.mObjectSize = sizeof( VBLEthernetFrame) + mPayLoadLength; */
     uint8_t mSourceAddress[6];
     uint16_t mChannel;
     uint8_t mDestinationAddress[6];
@@ -1986,10 +1988,10 @@ typedef struct VBLAfdxFrame_t
     uint16_t mTCI;
     uint8_t mEthChannel;
     uint16_t mAfdxFlags;
-    ULONG mBAGusec;
+    uint32_t mBAGusec;
     uint16_t mPayLoadLength; /* Number of valid mPayLoaduint8_ts */
-    BL_LPBYTE mPayLoad;      /* Max 1582 (1600 packet length - 18 header) datauint8_ts per frame  */
-} VBLAfdxFrame;
+    // BL_LPBYTE mPayLoad;      /* Max 1582 (1600 packet length - 18 header) datauint8_ts per frame  */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -1997,32 +1999,32 @@ typedef struct VBLAfdxFrame_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLAfdxStatistic_t
+struct VBLAfdxStatistic_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mFlags;         /* Bit 0 - channel is configured */
-                             /* Bit 1 - HW related counters valid */
-                             /* Bit 2 - CANwin related counters are valid */
-                             /* Bit 3 - link-related info is valid */
-                             /* Bit 4 - invalid packet counter is valid */
-                             /* Bit 5 - lost packet counter is valid */
-                             /* Bit 6 - dropped packet counter is valid */
-                             /* Bit 7 -uint8_t counters are based on CANwin packets, not HW */
-    ULONG mRxPacketCount;
-    ULONG mRxByteCount;
-    ULONG mTxPacketCount;
-    ULONG mTxByteCount;
-    ULONG mCollisionCount;
-    ULONG mErrorCount;
-    ULONG mStatDroppedRedundantPacketCount;
-    ULONG mStatRedundantErrorPacketCount;
-    ULONG mStatIntegrityErrorPacketCount;
-    ULONG mStatAvrgPeriodMsec;
-    ULONG mStatAvrgJitterMysec;
-    ULONG mVLId;
-    ULONG mStatDuration;
-} VBLAfdxStatistic;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mFlags;           /* Bit 0 - channel is configured */
+                               /* Bit 1 - HW related counters valid */
+                               /* Bit 2 - CANwin related counters are valid */
+                               /* Bit 3 - link-related info is valid */
+                               /* Bit 4 - invalid packet counter is valid */
+                               /* Bit 5 - lost packet counter is valid */
+                               /* Bit 6 - dropped packet counter is valid */
+                               /* Bit 7 -uint8_t counters are based on CANwin packets, not HW */
+    uint32_t mRxPacketCount;
+    uint32_t mRxByteCount;
+    uint32_t mTxPacketCount;
+    uint32_t mTxByteCount;
+    uint32_t mCollisionCount;
+    uint32_t mErrorCount;
+    uint32_t mStatDroppedRedundantPacketCount;
+    uint32_t mStatRedundantErrorPacketCount;
+    uint32_t mStatIntegrityErrorPacketCount;
+    uint32_t mStatAvrgPeriodMsec;
+    uint32_t mStatAvrgJitterMysec;
+    uint32_t mVLId;
+    uint32_t mStatDuration;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2030,31 +2032,31 @@ typedef struct VBLAfdxStatistic_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLAfdxBusStatistic_t
+struct VBLAfdxBusStatistic_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mFlags;         /* Bit0=Valid Rx/Tx Counter, Bit1=Valid Error Counter; Bit2=Valid VLId */
-    ULONG mStatDuration;     /* real time period in mysec of statistic datacollection */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mFlags;           /* Bit0=Valid Rx/Tx Counter, Bit1=Valid Error Counter; Bit2=Valid VLId */
+    uint32_t mStatDuration;    /* real time period in mysec of statistic datacollection */
     /* bus-specific info */
-    ULONG mStatRxPacketCountHW; /* read frames taken from hardware, i.e. on bus */
-    ULONG mStatTxPacketCountHW; /* send frames as taken from hardware, i.e. on bus */
-    ULONG mStatRxErrorCountHW;  /* number of erronous Rx-frames detected by HW */
-    ULONG mStatTxErrorCountHW;  /* number of erronous Tx-frames detected by HW */
-    ULONG mStatRxBytesHW;       /*uint8_ts received by HW during this time period */
-    ULONG mStatTxBytesHW;       /*uint8_ts sent by HW during this time period */
+    uint32_t mStatRxPacketCountHW; /* read frames taken from hardware, i.e. on bus */
+    uint32_t mStatTxPacketCountHW; /* send frames as taken from hardware, i.e. on bus */
+    uint32_t mStatRxErrorCountHW;  /* number of erronous Rx-frames detected by HW */
+    uint32_t mStatTxErrorCountHW;  /* number of erronous Tx-frames detected by HW */
+    uint32_t mStatRxBytesHW;       /*uint8_ts received by HW during this time period */
+    uint32_t mStatTxBytesHW;       /*uint8_ts sent by HW during this time period */
     /* CANwin specific info */
-    ULONG mStatRxPacketCount;      /* received frames within CANwin */
-    ULONG mStatTxPacketCount;      /* send packets from within CANwin */
-    ULONG mStatDroppedPacketCount; /* number of packets aktively dropped by CANwin */
-    ULONG mStatInvalidPacketCount; /* number of packets with incompatible eth-header regarding AFDX-spec */
-    ULONG mStatLostPacketCount;    /* number of packets lost by CABwin due to queue overflow etc */
-                                   /* connection related info */
-    uint8_t mLine;                 /* lineA (0) or lineB (1) */
-    uint8_t mLinkStatus;           /* status of adapter as per EthernetStatus */
-    uint16_t mLinkSpeed;           /* link speed: 0:=10mbps 1:=100mbps 2:=1000mbps */
-    uint16_t mLinkLost;            /* counter of link-losses during this period */
-} VBLAfdxBusStatistic;
+    uint32_t mStatRxPacketCount;      /* received frames within CANwin */
+    uint32_t mStatTxPacketCount;      /* send packets from within CANwin */
+    uint32_t mStatDroppedPacketCount; /* number of packets aktively dropped by CANwin */
+    uint32_t mStatInvalidPacketCount; /* number of packets with incompatible eth-header regarding AFDX-spec */
+    uint32_t mStatLostPacketCount;    /* number of packets lost by CABwin due to queue overflow etc */
+                                      /* connection related info */
+    uint8_t mLine;                    /* lineA (0) or lineB (1) */
+    uint8_t mLinkStatus;              /* status of adapter as per EthernetStatus */
+    uint16_t mLinkSpeed;              /* link speed: 0:=10mbps 1:=100mbps 2:=1000mbps */
+    uint16_t mLinkLost;               /* counter of link-losses during this period */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2062,7 +2064,7 @@ typedef struct VBLAfdxBusStatistic_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: this struct might be extended in future versions! */
-typedef struct VBLAfdxLineStatus_t /* note: this should match specific items of VBLAEthernetStatus */
+struct VBLAfdxLineStatus_t /* note: this should match specific items of VBLAEthernetStatus */
 {
     uint16_t mFlags;      /* Valid fields: */
                           /* Bit 0 - Link Status */
@@ -2098,15 +2100,15 @@ typedef struct VBLAfdxLineStatus_t /* note: this should match specific items of 
                           /* 3 - BR 4-pair */
     uint8_t mReserved;
     uint32_t mBitrate; /* Bitrate in [kbit/sec] */
-} VBLAfdxLineStatus;
+};
 
-typedef struct VBLAfdxStatus_t
+struct VBLAfdxStatus_t
 {
-    VBLObjectHeader mHeader;    /* object header */
-    uint16_t mChannel;          /* application channel */
-    VBLAfdxLineStatus mStatusA; /* status of adapter lineA */
-    VBLAfdxLineStatus mStatusB; /* status of adapter lineB */
-} VBLAfdxStatus;
+    VBLObjectHeader_t mHeader;    /* object header */
+    uint16_t mChannel;            /* application channel */
+    VBLAfdxLineStatus_t mStatusA; /* status of adapter lineA */
+    VBLAfdxLineStatus_t mStatusB; /* status of adapter lineB */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2115,15 +2117,15 @@ typedef struct VBLAfdxStatus_t
 -----------------------------------------------------------------------------*/
 /* HINT: this struct might be extended in future versions! */
 #define BL_AFDX_ERRORTEXT_LEN 512
-typedef struct VBLAfdxErrorEvent_t
+struct VBLAfdxErrorEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mErrorLevel;    /* Error Level, 0=error, 1=warning, 2=info*/
-    ULONG mSourceIdentifier;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mErrorLevel;      /* Error Level, 0=error, 1=warning, 2=info*/
+    uint32_t mSourceIdentifier;
     char mErrorText[BL_AFDX_ERRORTEXT_LEN]; /* error events are rare, so no need to optimize storage */
     char mErrorAttributes[BL_AFDX_ERRORTEXT_LEN];
-} VBLAfdxErrorEvent;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2131,23 +2133,23 @@ typedef struct VBLAfdxErrorEvent_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLA429Message_t
+struct VBLA429Message_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint8_t mA429Data[4];
+    VBLObjectHeader_t mHeader; /* object header */
+    std::array<uint8_t, 4> mA429Data;
     uint16_t mChannel;
     uint8_t mDir; /* direction flag: 0=Rx, 1=Tx */
     uint8_t mReserved;
-    ULONG mBitrate;
-    LONG mErrReason;
+    uint32_t mBitrate;
+    uint32_t mErrReason;
     uint16_t mErrPosition;
     uint64_t mFrameGap;
-    ULONG mFrameLength;
+    uint32_t mFrameLength;
     uint16_t mMsgCtrl;
-    ULONG mCycleTime;
-    ULONG mError; /* reserved */
-    ULONG mBitLenOfLastBit;
-} VBLA429Message;
+    uint32_t mCycleTime;
+    uint32_t mError; /* reserved */
+    uint32_t mBitLenOfLastBit;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2155,17 +2157,17 @@ typedef struct VBLA429Message_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-#define BL_A429_ERRORTEXT_LEN 512
-typedef struct VBLA429Error_t
+constexpr size_t BL_A429_ERRORTEXT_LEN = 512;
+struct VBLA429Error_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint16_t mChannel;       /* application channel */
-    uint16_t mErrorType;     /* error type, 0=error, 1=warning, 2=info*/
-    ULONG mSourceIdentifier;
-    ULONG mErrReason;
-    char mErrorText[BL_A429_ERRORTEXT_LEN]; /* error events are rare, so no need to optimize storage */
-    char mErrorAttributes[BL_A429_ERRORTEXT_LEN];
-} VBLA429Error;
+    VBLObjectHeader_t mHeader; /* object header */
+    uint16_t mChannel;         /* application channel */
+    uint16_t mErrorType;       /* error type, 0=error, 1=warning, 2=info*/
+    uint32_t mSourceIdentifier;
+    uint32_t mErrReason;
+    std::array<char, BL_A429_ERRORTEXT_LEN> mErrorText; /* error events are rare, so no need to optimize storage */
+    std::array<char, BL_A429_ERRORTEXT_LEN> mErrorAttributes;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2173,17 +2175,17 @@ typedef struct VBLA429Error_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLA429Status_t
+using VBLA429Status = struct VBLA429Status_t
 {
-    VBLObjectHeader mHeader; /* object header */
+    VBLObjectHeader_t mHeader; /* object header */
     uint16_t mChannel;
-    uint8_t mDir;      /* direction flag: 0=Rx, 1=Tx */
-    uint16_t mParity;  /* parity */
-    ULONG mMinGap;     /* minimum gap */
-    ULONG mBitrate;    /* Tx bit rate */
-    ULONG mMinBitrate; /* Rx min bit rate */
-    ULONG mMaxBitrate; /* Rx max bit rate */
-} VBLA429Status;
+    uint8_t mDir;         /* direction flag: 0=Rx, 1=Tx */
+    uint16_t mParity;     /* parity */
+    uint32_t mMinGap;     /* minimum gap */
+    uint32_t mBitrate;    /* Tx bit rate */
+    uint32_t mMinBitrate; /* Rx min bit rate */
+    uint32_t mMaxBitrate; /* Rx max bit rate */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2191,26 +2193,26 @@ typedef struct VBLA429Status_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLA429BusStatistic_t
+struct VBLA429BusStatistic_t
 {
-    VBLObjectHeader mHeader; /* object header */
+    VBLObjectHeader_t mHeader; /* object header */
     uint16_t mChannel;
     uint8_t mDir; /* direction flag: 0=Rx, 1=Tx */
-    ULONG mBusLoad;
-    ULONG mDataTotal;
-    ULONG mErrorTotal;
-    ULONG mBitrate;
-    USHORT mParityErrors;  /* error count (parity) */
-    USHORT mBitrateErrors; /* error count (bit rate) */
-    USHORT mGapErrors;     /* error count (gaps) */
-    USHORT mLineErrors;    /* error count (lines) */
-    USHORT mFormatErrors;
-    USHORT mDutyFactorErrors;
-    USHORT mWordLenErrors;
-    USHORT mCodingErrors;
-    USHORT mIdleErrors;
-    USHORT mLevelErrors;
-    USHORT mLabelCount[256];
+    uint32_t mBusLoad;
+    uint32_t mDataTotal;
+    uint32_t mErrorTotal;
+    uint32_t mBitrate;
+    uint16_t mParityErrors;  /* error count (parity) */
+    uint16_t mBitrateErrors; /* error count (bit rate) */
+    uint16_t mGapErrors;     /* error count (gaps) */
+    uint16_t mLineErrors;    /* error count (lines) */
+    uint16_t mFormatErrors;
+    uint16_t mDutyFactorErrors;
+    uint16_t mWordLenErrors;
+    uint16_t mCodingErrors;
+    uint16_t mIdleErrors;
+    uint16_t mLevelErrors;
+    uint16_t mLabelCount[256];
 } VBLA429BusStatistic;
 
 /*----------------------------------------------------------------------------
@@ -2223,9 +2225,9 @@ typedef struct VBLA429BusStatistic_t
 #define BL_TRIGGER_FLAG_LOGGING_START 0x00000001  /* start of logging trigger type */
 #define BL_TRIGGER_FLAG_LOGGING_STOP 0x00000002   /* stop of logging trigger type */
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLAppTrigger_t
+struct VBLAppTrigger_t
 {
-    VBLObjectHeader mHeader;   /* object header */
+    VBLObjectHeader_t mHeader; /* object header */
     uint64_t mPreTriggerTime;  /* pre-trigger time */
     uint64_t mPostTriggerTime; /* post-trigger time */
     uint16_t mChannel;         /* channel of event which triggered (if any) */
@@ -2249,16 +2251,16 @@ typedef struct VBLAppTrigger_t
 #define APPTEXT_DBCHANNELINFO_FLAGS(version, bustype, channel, canfd) \
     (uint32_t) (((uint32_t) (canfd & 0x01) << 24) | ((uint32_t) (bustype & 0xFF) << 16) | ((uint32_t) (channel & 0xFF) << 8) | ((uint32_t) (version & 0xFF)))
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLAppText_t
+struct VBLAppText_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size to*/
-                             /* */
-                             /* mHeader.mObjectSize = sizeof( VBLAppText) + mTextLength; */
-                             /* */
-    uint32_t mSource;        /* source of text */
-    uint32_t mReserved;      /* reserved */
-    uint32_t mTextLength;    /* text length inuint8_ts */
-    BL_LPSTR mText;          /* text in MBCS */
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
+                               /* */
+                               /* mHeader.mObjectSize = sizeof( VBLAppText) + mTextLength; */
+                               /* */
+    uint32_t mSource;          /* source of text */
+    uint32_t mReserved;        /* reserved */
+    uint32_t mTextLength;      /* text length inuint8_ts */
+    // BL_LPSTR mText;          /* text in MBCS */
 } VBLAppText;
 
 /*----------------------------------------------------------------------------
@@ -2267,11 +2269,11 @@ typedef struct VBLAppText_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLRealtimeClock_t
+struct VBLRealtimeClock_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint64_t mTime;          /* logging start time in ns since 00:00 1.1.1970 GMT */
-    uint64_t mLoggingOffset; /* measurement zero offset in ns to 00:00 1.1.1970 GMT */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint64_t mTime;            /* logging start time in ns since 00:00 1.1.1970 GMT */
+    uint64_t mLoggingOffset;   /* measurement zero offset in ns to 00:00 1.1.1970 GMT */
 } VBLRealtimeClock;
 
 /*----------------------------------------------------------------------------
@@ -2295,7 +2297,7 @@ typedef struct VBLRealtimeClock_t
 #define BL_COMPRESSION_DEFAULT 6
 #define BL_COMPRESSION_MAX 9
 
-typedef struct VBLFileStatistics_t
+struct VBLFileStatistics_t
 {
     uint32_t mStatisticsSize;       /* sizeof (VBLFileStatistics) */
     uint8_t mApplicationID;         /* application ID */
@@ -2308,7 +2310,19 @@ typedef struct VBLFileStatistics_t
     uint32_t mObjectsRead;          /* number of objects read */
 } VBLFileStatistics;
 
-typedef struct VBLFileStatisticsEx_t
+struct SYSTEMTIME
+{
+    uint16_t wYear;
+    uint16_t wMonth;
+    uint16_t wDayOfWeek;
+    uint16_t wDay;
+    uint16_t wHour;
+    uint16_t wMinute;
+    uint16_t wSecond;
+    uint16_t wMilliseconds;
+};
+
+struct VBLFileStatisticsEx_t
 {
     uint32_t mStatisticsSize;         /* sizeof (VBLFileStatisticsEx) */
     uint8_t mApplicationID;           /* application ID */
@@ -2340,11 +2354,11 @@ typedef struct VBLFileStatisticsEx_t
 #define BL_BUSTYPE_WLAN 13
 #define BL_BUSTYPE_AFDX 14
 
-typedef struct VBLDriverOverrun_t
+struct VBLDriverOverrun_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint32_t mBusType;       /* bus type (see BL_BUSTYPE_...) */
-    uint16_t mChannel;       /* channel where overrun occured */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint32_t mBusType;         /* bus type (see BL_BUSTYPE_...) */
+    uint16_t mChannel;         /* channel where overrun occured */
     uint16_t mDummy;
 } VBLDriverOverrun;
 
@@ -2353,15 +2367,15 @@ typedef struct VBLDriverOverrun_t
 | Event Comment
 |
 -----------------------------------------------------------------------------*/
-typedef struct VBLEventComment_t
+struct VBLEventComment_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size to*/
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
     /* */
     /* mHeader.mObjectSize = sizeof( VBLEventComment) + mTextLength; */
     /* */
     uint32_t mCommentedEventType; /* commented event type */
     uint32_t mTextLength;         /* text length inuint8_ts */
-    BL_LPSTR mText;               /* text in MBCS */
+    // BL_LPSTR mText;               /* text in MBCS */
 } VBLEventComment;
 
 /*----------------------------------------------------------------------------
@@ -2369,23 +2383,23 @@ typedef struct VBLEventComment_t
 | Event Global Marker
 |
 -----------------------------------------------------------------------------*/
-typedef struct VBLGlobalMarker_t
+struct VBLGlobalMarker_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size to*/
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
     /* */
     /* mHeader.mObjectSize = sizeof( VBLEventComment) + mGroupNameLength + mMarkerNameLength + mDescriptionLength */
     /* */
     uint32_t mCommentedEventType; /* commented event type */
-    COLORREF mForegroundColor;
-    COLORREF mBackgroundColor;
+    uint32_t mForegroundColor;
+    uint32_t mBackgroundColor;
     uint8_t mIsRelocatable;
     uint32_t mGroupNameLength;   /* group name length inuint8_ts */
     uint32_t mMarkerNameLength;  /* marker name length inuint8_ts */
     uint32_t mDescriptionLength; /* description length inuint8_ts */
-    BL_LPSTR mGroupName;         /* group name in MBCS */
-    BL_LPSTR mMarkerName;        /* marker name in MBCS */
-    BL_LPSTR mDescription;       /* description in MBCS */
-} VBLGlobalMarker;
+    // BL_LPSTR mGroupName;         /* group name in MBCS */
+    // BL_LPSTR mMarkerName;        /* marker name in MBCS */
+    // BL_LPSTR mDescription;       /* description in MBCS */
+};
 
 
 /*----------------------------------------------------------------------------
@@ -2419,9 +2433,9 @@ typedef struct VBLGlobalMarker_t
 #define BL_TESTSTRUCT_VERDICT_ERRORINTESTSYSTEM 5
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLTestStructure_t
+struct VBLTestStructure_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size too */
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size too */
     /* */
     /* mHeader.mObjectSize = sizeof(VBLTestStructure) + (mExecutingObjectNameLength + mNameLength + mTextLength) * sizeof(wchar_t) */
     /* */
@@ -2433,9 +2447,9 @@ typedef struct VBLTestStructure_t
     uint32_t mExecutingObjectNameLength; /* string length in wchar_t's for mExecutingObjectName */
     uint32_t mNameLength;                /* string length in wchar_t's for mName */
     uint32_t mTextLength;                /* string length in wchar_t's for mText */
-    BL_LPWSTR mExecutingObjectName;      /* name of the executing test module or test configuration as shown in CANoe (wchar_t) */
-    BL_LPWSTR mName;                     /* name of structure element (can change between begin/end when using CAPL function TestCaseTitle or similar (wchar_t) */
-    BL_LPWSTR mText;                     /* full informational text for event as it appears in CANoe trace window */
+    // BL_LPWSTR mExecutingObjectName;      /* name of the executing test module or test configuration as shown in CANoe (wchar_t) */
+    // BL_LPWSTR mName;                     /* name of structure element (can change between begin/end when using CAPL function TestCaseTitle or similar (wchar_t) */
+    // BL_LPWSTR mText;                     /* full informational text for event as it appears in CANoe trace window */
 } VBLTestStructure;
 
 /*----------------------------------------------------------------------------
@@ -2449,9 +2463,9 @@ typedef struct VBLTestStructure_t
 #define BL_FB_TYPE_SERVICE_FUNCTION 2
 #define BL_FB_TYPE_STATE 3
 
-typedef struct VBLFunctionBus_t
+struct VBLFunctionBus_t
 {
-    VBLVarObjectHeader mHeader; /* object header - NOTE! set the object size to*/
+    VBLVarObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
     /* */
     /* mHeader.mObjectSize = sizeof( VBLVarObjectHeader) + sizeof (VBLFunctionBusStatic_t) + mNameLength + mDataLength; */
     /* */
@@ -2465,16 +2479,15 @@ typedef struct VBLFunctionBus_t
 
     struct VBLFunctionBusDynamic_t
     {
-        BL_LPSTR mName;  /* path name in the port server */
-        BL_LPBYTE mData; /* variable data */
-    } mDynamic;
-
-} VBLFunctionBusObject;
+        // BL_LPSTR mName;  /* path name in the port server */
+        // BL_LPBYTE mData; /* variable data */
+    };
+};
 
 /* HINT: Extension of this structure is not allowed! */
-typedef struct VBLDiagRequestInterpretation_t
+struct VBLDiagRequestInterpretation_t
 {
-    VBLObjectHeader mHeader; /* object header - NOTE! set the object size too */
+    VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size too */
     /* */
     /* mHeader.mObjectSize = sizeof(VBLDiagRequestInterpretation) + (mEcuQualifierLength + mVariantQualifierLength + mServiceQualifierLength) */
     /* */
@@ -2484,10 +2497,10 @@ typedef struct VBLDiagRequestInterpretation_t
     uint32_t mEcuQualifierLength;     /* string length for mEcuQualifier     */
     uint32_t mVariantQualifierLength; /* string length for mVariantQualifier */
     uint32_t mServiceQualifierLength; /* string length for mServiceQualifier */
-    BL_LPSTR mEcuQualifier;           /* qualifier of the ECU the request was sent to */
-    BL_LPSTR mVariantQualifier;       /* qualifier of the active diagnostic variant   */
-    BL_LPSTR mServiceQualifier;       /* qualifier of the diagnostic service          */
-} VBLDiagRequestInterpretation;
+    // BL_LPSTR mEcuQualifier;           /* qualifier of the ECU the request was sent to */
+    // BL_LPSTR mVariantQualifier;       /* qualifier of the active diagnostic variant   */
+    // BL_LPSTR mServiceQualifier;       /* qualifier of the diagnostic service          */
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2499,25 +2512,25 @@ typedef struct VBLDiagRequestInterpretation_t
 #define BL_WM_QS_STATUS_EMERGENCY 1
 #define BL_WM_QS_STATUS_LOST_DATA 2
 
-typedef struct VBLWaterMarkEvent_t
+struct VBLWaterMarkEvent_t
 {
-    VBLObjectHeader mHeader; /* object header */
-    uint32_t mQueueState;    /* the current state of the queue */
+    VBLObjectHeader_t mHeader; /* object header */
+    uint32_t mQueueState;      /* the current state of the queue */
 } VBLWaterMarkEvent;
 
 #define BL_DL_QI_RT_QUEUE 0
 #define BL_DL_QI_ANLYZ_QUEUE 1
 #define BL_DL_QI_RT_AND_ANLYZ_QUEUE 2
 
-typedef struct VBLDataLostBegin_t
+struct VBLDataLostBegin_t
 {
-    VBLObjectHeader mHeader;   /* object header */
+    VBLObjectHeader_t mHeader; /* object header */
     uint32_t mQueueIdentifier; /* identifier for the leaking queue */
 } VBLDataLostBegin;
 
-typedef struct VBLDataLostEnd_t
+struct VBLDataLostEnd_t
 {
-    VBLObjectHeader mHeader;            /* object header */
+    VBLObjectHeader_t mHeader;          /* object header */
     uint32_t mQueueIdentifier;          /* identifier for the leaking queue */
     uint64_t mFirstObjectLostTimeStamp; /* timestamp of the first object lost */
     uint32_t mNumberOfLostEvents;       /* number of lost events */
@@ -2534,9 +2547,9 @@ typedef struct VBLDataLostEnd_t
 #define BL_TC_STATUS_STOP 2
 #define BL_TC_STATUS_STARTSTOP 3
 
-typedef struct VBLTriggerCondition_t
+struct VBLTriggerCondition_t
 {
-    VBLVarObjectHeader mHeader; /* object header - NOTE! set the object size to*/
+    VBLVarObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
     /* */
     /* mHeader.mObjectSize = sizeof(VBLVarObjectHeader) + sizeof (VBLTriggerCondition_t) + mNameLength + mDataLength; */
     /* */
@@ -2549,8 +2562,7 @@ typedef struct VBLTriggerCondition_t
 
     struct VBLTriggerConditionDynamic_t
     {
-        BL_LPSTR mTriggerBlockName; /* trigger block name */
-        BL_LPSTR mTriggerCondition; /* trigger condition */
+        // BL_LPSTR mTriggerBlockName; /* trigger block name */
+        // BL_LPSTR mTriggerCondition; /* trigger condition */
     } mDynamic;
-
-} VBLTriggerCondition;
+};
