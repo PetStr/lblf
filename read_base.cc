@@ -1,5 +1,8 @@
+#include "blf_structs.hh"
+#include "print.hh"
 #include <array>
 #include <cstring>
+#include <deque>
 #include <fstream>
 #include <iomanip>
 #include <type_traits>
@@ -8,9 +11,6 @@
 
 // hexdump -v -C -n 512 truck02.blf
 
-#include "blf_structs.hh"
-#include "print.hh"
-#include <deque>
 
 using namespace lblf;
 
@@ -101,7 +101,7 @@ auto read(std::fstream &fs, uint32_t length, std::string &data) -> bool
     fs.read(reinterpret_cast<char *>(data.data()), length);
     return true;
 }
-    
+
 
 auto read(std::fstream &fs, BaseHeader &ohb) -> bool
 {
@@ -582,7 +582,7 @@ auto handle_ObjectType(std::deque<char> &log_que, const BaseHeader &ohb) -> exit
                 std::cout << "rest: " << rest << '\n';
                 std::cout << "Left in deque: " << log_que.size() << '\n';
                 log_que.erase(log_que.begin(), log_que.begin() + rest);
-                }
+            }
             break;
 
         default:
@@ -797,20 +797,27 @@ auto go_through_log_data(std::deque<char> &logcontainer_que) -> bool
 
 auto go_through_log_data_jump(std::deque<char> &logcontainer_que) -> bool
 {
+    static bool read_object_header = false;
     while (not logcontainer_que.empty())
         {
             if (logcontainer_que.size() >= sizeof(BaseHeader))
                 {
-                    BaseHeader ohb;
+                    //print(logcontainer_que, 208);
+                    static BaseHeader ohb;
+                    if(not read_object_header)
+                    {
                     read(logcontainer_que, ohb);
+                    read_object_header = true;
+                    }
                     std::cout << "Inside compressed LogContainer: ";
                     lblf::print(std::cout, ohb);
-                    const size_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
+                    const size_t bytes_to_jump = ohb.objSize - sizeof(ohb) + (ohb.objSize % 4);
                     std::cout << "size_left: " << logcontainer_que.size() << " to jump: " << bytes_to_jump << '\n';
-                    print(logcontainer_que, bytes_to_jump);
+                    //print(logcontainer_que, bytes_to_jump);
                     if (logcontainer_que.size() >= bytes_to_jump)
                         {
                             logcontainer_que.erase(logcontainer_que.begin(), logcontainer_que.begin() + bytes_to_jump);
+                            read_object_header = false;
                         }
                     else
                         {
@@ -820,7 +827,7 @@ auto go_through_log_data_jump(std::deque<char> &logcontainer_que) -> bool
                 }
             else
                 {
-                    std::cout << std::dec << logcontainer_que.size() << " " << sizeof(BaseHeader) << '\n';
+                    std::cout << std::dec << "que size: " << logcontainer_que.size() << ", BaseHeader: " << sizeof(BaseHeader) << '\n';
                     std::cout << "Need to reload from log Container 2\n";
                     return false;
                 }
@@ -864,9 +871,10 @@ void go_through_file_log_container(const char *const filename)
 
     while (!fs.eof())
         {
-            if ((filelength - fs.tellg() == 0)) {
-                break;
-}
+            if ((filelength - fs.tellg() == 0))
+                {
+                    break;
+                }
             std::cout << "Line: " << std::dec << __LINE__ << ", Bytes left: " << filelength - fs.tellg() << '\n';
 
             struct BaseHeader ohb;
