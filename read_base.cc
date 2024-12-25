@@ -828,8 +828,9 @@ void go_through_file_log_container(const char *const filename)
 
     while (!fs.eof())
         {
-            if ((filelength - fs.tellg() == 0))
+            if ((filelength - fs.tellg() == 0)) {
                 break;
+}
             std::cout << "Line: " << std::dec << __LINE__ << ", Bytes left: " << filelength - fs.tellg() << '\n';
 
             struct BaseHeader ohb;
@@ -869,7 +870,7 @@ void go_through_file_log_container(const char *const filename)
                 }
             else
                 {
-                    const size_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
+                    const int32_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
                     // std::cout << "To jump: " << bytes_to_jump << '\n';
                     fs.seekg(bytes_to_jump, std::ios_base::cur);
                 }

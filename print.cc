@@ -350,7 +350,7 @@ auto print(timeStampStatus_e tss) -> std::string
 {
     switch (tss)
         {
-        case timeStampStatus_e::orginal:
+        case timeStampStatus_e::original:
             return "Orginal";
         case timeStampStatus_e::SwGen:
             return "Software Generated";
