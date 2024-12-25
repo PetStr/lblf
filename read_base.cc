@@ -17,7 +17,7 @@ using namespace lblf;
 const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 
-const uint32_t defaultConteinerSize = 0x20000;
+const uint32_t defaultContainerSize = 0x20000;
 
 // Forward declaration.
 auto handle_ObjectType(std::fstream &fstr, const BaseHeader &obh) -> exit_codes;
@@ -578,10 +578,11 @@ auto handle_ObjectType(std::deque<char> &log_que, const BaseHeader &ohb) -> exit
                 CANDriverStatistic can_stat;
                 consume_que(log_que, can_stat);
                 print(std::cout, can_stat);
-                std::cout << "rest: " << payload_size - sizeof(CANDriverStatistic) << 'n';
                 const auto rest = payload_size - sizeof(CANDriverStatistic);
+                std::cout << "rest: " << rest << '\n';
+                std::cout << "Left in deque: " << log_que.size() << '\n';
                 log_que.erase(log_que.begin(), log_que.begin() + rest);
-            }
+                }
             break;
 
         default:
@@ -794,6 +795,41 @@ auto go_through_log_data(std::deque<char> &logcontainer_que) -> bool
 }
 
 
+auto go_through_log_data_jump(std::deque<char> &logcontainer_que) -> bool
+{
+    while (not logcontainer_que.empty())
+        {
+            if (logcontainer_que.size() >= sizeof(BaseHeader))
+                {
+                    BaseHeader ohb;
+                    read(logcontainer_que, ohb);
+                    std::cout << "Inside compressed LogContainer: ";
+                    lblf::print(std::cout, ohb);
+                    const size_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
+                    std::cout << "size_left: " << logcontainer_que.size() << " to jump: " << bytes_to_jump << '\n';
+                    print(logcontainer_que, bytes_to_jump);
+                    if (logcontainer_que.size() >= bytes_to_jump)
+                        {
+                            logcontainer_que.erase(logcontainer_que.begin(), logcontainer_que.begin() + bytes_to_jump);
+                        }
+                    else
+                        {
+                            std::cout << "Need to reload from log Container 1\n";
+                            return false;
+                        }
+                }
+            else
+                {
+                    std::cout << std::dec << logcontainer_que.size() << " " << sizeof(BaseHeader) << '\n';
+                    std::cout << "Need to reload from log Container 2\n";
+                    return false;
+                }
+        }
+    std::cout << "Need to reload from log Container 3\n";
+    return true;
+}
+
+
 void go_through_file_log_container(const char *const filename)
 {
     std::cout << "Opening file: " << filename;
@@ -865,7 +901,7 @@ void go_through_file_log_container(const char *const filename)
                     if (lc.compressionMethod == compressionMethod_e::zlib)
                         {
                             handle_container_compressed_deque(container_data, lc, ohb, logcontainer_que);
-                            go_through_log_data(logcontainer_que);
+                            go_through_log_data_jump(logcontainer_que);
                         }
                 }
             else
