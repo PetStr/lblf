@@ -324,20 +324,18 @@ struct VBLCANMessage_t
 };
 
 // CAN dir, rtr, wu & nerr encoded into flags
-#define CAN_MSG_DIR(f) (uint8_t) (f & 0x0F)
-#define CAN_MSG_RTR(f) (uint8_t) ((f & 0x80) >> 7)
-#define CAN_MSG_WU(f) (uint8_t) ((f & 0x40) >> 6)
-#define CAN_MSG_NERR(f) (uint8_t) ((f & 0x20) >> 5)
-#define CAN_MSG_FLAGS(dir, rtr) (uint8_t) (((uint8_t) (rtr & 0x01) << 7) | (uint8_t) (dir & 0x0F))
-#define CAN_MSG_FLAGS_EXT(dir, rtr, wu, nerr) \
-    (uint8_t) (((uint8_t) (rtr & 0x01) << 7) | ((uint8_t) (wu & 0x01) << 6) | ((uint8_t) (nerr & 0x01) << 5) | (uint8_t) (dir & 0x0F))
-#define CAN_FD_MSG_EDL(f) (BYTE)(f & 0x1)
-#define CAN_FD_MSG_BRS(f) (BYTE)((f & 0x2) >> 1)
-#define CAN_FD_MSG_ESI(f) (BYTE)((f & 0x4) >> 2)
+#define CAN_MSG_DIR(f) (uint8_t) ((f) & 0x0F)
+#define CAN_MSG_RTR(f) (uint8_t) (((f) & 0x80) >> 7)
+#define CAN_MSG_WU(f) (uint8_t) (((f) & 0x40) >> 6)
+#define CAN_MSG_NERR(f) (uint8_t) (((f) & 0x20) >> 5)
+#define CAN_MSG_FLAGS(dir, rtr) (uint8_t) (((uint8_t) ((rtr) & 0x01) << 7) | (uint8_t) ((dir) & 0x0F))
+#define CAN_MSG_FLAGS_EXT(dir, rtr, wu, nerr) (uint8_t) (((uint8_t) ((rtr) & 0x01) << 7) | ((uint8_t) ((wu) & 0x01) << 6) | ((uint8_t) ((nerr) & 0x01) << 5) | (uint8_t) ((dir) & 0x0F))
+#define CAN_FD_MSG_EDL(f) (BYTE)((f) & 0x1)
+#define CAN_FD_MSG_BRS(f) (BYTE)(((f) & 0x2) >> 1)
+#define CAN_FD_MSG_ESI(f) (BYTE)(((f) & 0x4) >> 2)
 
 
-#define CAN_FD_MSG_FLAGS(edl, brs, esi) \
-    (uint8_t) (((uint8_t) (edl & 0x01)) | ((uint8_t) (brs & 0x01) << 1) | (uint8_t) (esi & 0x01) << 2)
+#define CAN_FD_MSG_FLAGS(edl, brs, esi)  (uint8_t) (((uint8_t) ((edl) & 0x01)) | ((uint8_t) ((brs) & 0x01) << 1) | (uint8_t) ((esi) & 0x01) << 2)
 
 /* HINT: Extension of this structure is not allowed! */
 struct VBLCANErrorFrame_t
@@ -1979,9 +1977,9 @@ struct VBLAfdxFrame_t
 {
     VBLObjectHeader_t mHeader; /* object header - NOTE! set the object size to*/
                                /* mHeader.mObjectSize = sizeof( VBLEthernetFrame) + mPayLoadLength; */
-    uint8_t mSourceAddress[6];
+    std::array<uint8_t, 6> mSourceAddress;
     uint16_t mChannel;
-    uint8_t mDestinationAddress[6];
+    std::array<uint8_t, 6> mDestinationAddress;
     uint16_t mDir; /* Direction flag: 0=Rx, 1=Tx, 2=TxRq */
     uint16_t mType;
     uint16_t mTPID;
@@ -2116,15 +2114,15 @@ struct VBLAfdxStatus_t
 |
 -----------------------------------------------------------------------------*/
 /* HINT: this struct might be extended in future versions! */
-#define BL_AFDX_ERRORTEXT_LEN 512
+constexpr size_t BL_AFDX_ERRORTEXT_LEN = 512;
 struct VBLAfdxErrorEvent_t
 {
     VBLObjectHeader_t mHeader; /* object header */
     uint16_t mChannel;         /* application channel */
     uint16_t mErrorLevel;      /* Error Level, 0=error, 1=warning, 2=info*/
     uint32_t mSourceIdentifier;
-    char mErrorText[BL_AFDX_ERRORTEXT_LEN]; /* error events are rare, so no need to optimize storage */
-    char mErrorAttributes[BL_AFDX_ERRORTEXT_LEN];
+    std::array<uint8_t, BL_AFDX_ERRORTEXT_LEN> mErrorText; /* error events are rare, so no need to optimize storage */
+    std::array<uint8_t, BL_AFDX_ERRORTEXT_LEN> mErrorAttributes;
 };
 
 /*----------------------------------------------------------------------------
@@ -2212,8 +2210,8 @@ struct VBLA429BusStatistic_t
     uint16_t mCodingErrors;
     uint16_t mIdleErrors;
     uint16_t mLevelErrors;
-    uint16_t mLabelCount[256];
-} VBLA429BusStatistic;
+    std::array<uint16_t, 256> mLabelCount;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2233,7 +2231,7 @@ struct VBLAppTrigger_t
     uint16_t mChannel;         /* channel of event which triggered (if any) */
     uint16_t mFlags;           /* trigger type (see above) */
     uint32_t mAppSecific2;     /* app specific member 2 */
-} VBLAppTrigger;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2261,7 +2259,7 @@ struct VBLAppText_t
     uint32_t mReserved;        /* reserved */
     uint32_t mTextLength;      /* text length inuint8_ts */
     // BL_LPSTR mText;          /* text in MBCS */
-} VBLAppText;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2274,7 +2272,7 @@ struct VBLRealtimeClock_t
     VBLObjectHeader_t mHeader; /* object header */
     uint64_t mTime;            /* logging start time in ns since 00:00 1.1.1970 GMT */
     uint64_t mLoggingOffset;   /* measurement zero offset in ns to 00:00 1.1.1970 GMT */
-} VBLRealtimeClock;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2304,11 +2302,11 @@ struct VBLFileStatistics_t
     uint8_t mApplicationMajor;      /* application major number */
     uint8_t mApplicationMinor;      /* application minor number */
     uint8_t mApplicationBuild;      /* application build number */
-    uint64_t mFileSize;             /* file size inuint8_ts */
-    uint64_t mUncompressedFileSize; /* uncompressed file size inuint8_ts */
+    uint64_t mFileSize;             /* file size in bytes */
+    uint64_t mUncompressedFileSize; /* uncompressed file size in bytes */
     uint32_t mObjectCount;          /* number of objects */
     uint32_t mObjectsRead;          /* number of objects read */
-} VBLFileStatistics;
+};
 
 struct SYSTEMTIME
 {
@@ -2324,19 +2322,19 @@ struct SYSTEMTIME
 
 struct VBLFileStatisticsEx_t
 {
-    uint32_t mStatisticsSize;         /* sizeof (VBLFileStatisticsEx) */
-    uint8_t mApplicationID;           /* application ID */
-    uint8_t mApplicationMajor;        /* application major number */
-    uint8_t mApplicationMinor;        /* application minor number */
-    uint8_t mApplicationBuild;        /* application build number */
-    uint64_t mFileSize;               /* file size inuint8_ts */
-    uint64_t mUncompressedFileSize;   /* uncompressed file size inuint8_ts */
-    uint32_t mObjectCount;            /* number of objects */
-    uint32_t mObjectsRead;            /* number of objects read */
-    SYSTEMTIME mMeasurementStartTime; /* measurement start time */
-    SYSTEMTIME mLastObjectTime;       /* last object time */
-    uint32_t mReserved[18];           /* reserved */
-} VBLFileStatisticsEx;
+    uint32_t mStatisticsSize;           /* sizeof (VBLFileStatisticsEx) */
+    uint8_t mApplicationID;             /* application ID */
+    uint8_t mApplicationMajor;          /* application major number */
+    uint8_t mApplicationMinor;          /* application minor number */
+    uint8_t mApplicationBuild;          /* application build number */
+    uint64_t mFileSize;                 /* file size inuint8_ts */
+    uint64_t mUncompressedFileSize;     /* uncompressed file size inuint8_ts */
+    uint32_t mObjectCount;              /* number of objects */
+    uint32_t mObjectsRead;              /* number of objects read */
+    SYSTEMTIME mMeasurementStartTime;   /* measurement start time */
+    SYSTEMTIME mLastObjectTime;         /* last object time */
+    std::array<uint32_t, 18> mReserved; /* reserved */
+};
 
 
 /*----------------------------------------------------------------------------
@@ -2360,7 +2358,7 @@ struct VBLDriverOverrun_t
     uint32_t mBusType;         /* bus type (see BL_BUSTYPE_...) */
     uint16_t mChannel;         /* channel where overrun occured */
     uint16_t mDummy;
-} VBLDriverOverrun;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2376,7 +2374,7 @@ struct VBLEventComment_t
     uint32_t mCommentedEventType; /* commented event type */
     uint32_t mTextLength;         /* text length inuint8_ts */
     // BL_LPSTR mText;               /* text in MBCS */
-} VBLEventComment;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2450,7 +2448,7 @@ struct VBLTestStructure_t
     // BL_LPWSTR mExecutingObjectName;      /* name of the executing test module or test configuration as shown in CANoe (wchar_t) */
     // BL_LPWSTR mName;                     /* name of structure element (can change between begin/end when using CAPL function TestCaseTitle or similar (wchar_t) */
     // BL_LPWSTR mText;                     /* full informational text for event as it appears in CANoe trace window */
-} VBLTestStructure;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2475,7 +2473,7 @@ struct VBLFunctionBus_t
         uint32_t mVEType;
         uint32_t mNameLength; /* length of variable name inuint8_ts */
         uint32_t mDataLength; /* length of variable data inuint8_ts */
-    } mStatic;
+    };
 
     struct VBLFunctionBusDynamic_t
     {
@@ -2516,7 +2514,7 @@ struct VBLWaterMarkEvent_t
 {
     VBLObjectHeader_t mHeader; /* object header */
     uint32_t mQueueState;      /* the current state of the queue */
-} VBLWaterMarkEvent;
+};
 
 #define BL_DL_QI_RT_QUEUE 0
 #define BL_DL_QI_ANLYZ_QUEUE 1
@@ -2526,7 +2524,7 @@ struct VBLDataLostBegin_t
 {
     VBLObjectHeader_t mHeader; /* object header */
     uint32_t mQueueIdentifier; /* identifier for the leaking queue */
-} VBLDataLostBegin;
+};
 
 struct VBLDataLostEnd_t
 {
@@ -2534,7 +2532,7 @@ struct VBLDataLostEnd_t
     uint32_t mQueueIdentifier;          /* identifier for the leaking queue */
     uint64_t mFirstObjectLostTimeStamp; /* timestamp of the first object lost */
     uint32_t mNumberOfLostEvents;       /* number of lost events */
-} VBLDataLostEnd;
+};
 
 /*----------------------------------------------------------------------------
 |
@@ -2558,11 +2556,11 @@ struct VBLTriggerCondition_t
         uint32_t mState;                  /* status */
         uint32_t mTriggerBlockNameLength; /* length of trigger block name inuint8_ts */
         uint32_t mTriggerConditionLength; /* length of trigger condition inuint8_ts */
-    } mStatic;
+    };
 
     struct VBLTriggerConditionDynamic_t
     {
         // BL_LPSTR mTriggerBlockName; /* trigger block name */
         // BL_LPSTR mTriggerCondition; /* trigger condition */
-    } mDynamic;
+    };
 };

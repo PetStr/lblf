@@ -37,8 +37,8 @@ struct can_counter_record
 // Global
 namespace GLOBAL
 {
-std::vector<can_counter_record> id_data;
-uint32_t can_frame_counter;
+std::vector<can_counter_record> id_data; //NOLINT
+uint32_t can_frame_counter; //NOLINT
 }
 
 
@@ -88,14 +88,7 @@ auto begin_does_exist(const std::string &str, const std::string &to_find) -> boo
 {
     auto pos = str.find(to_find);
     // if (pos != std::string::npos)
-    if (pos == 0)
-        {
-            return true;
-        }
-    else
-        {
-            return false;
-        }
+    return pos == 0;
 }
 
 

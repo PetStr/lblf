@@ -2,8 +2,8 @@
 #define BLF_STRUCTS_HH
 
 #include <array>
-#include <cstdlib>
 #include <cstdint>
+
 
 /*
 translate
@@ -12,7 +12,7 @@ DWORD = uint32_t
 BYTE = uint8_t
 */
 
-namespace lblf 
+namespace lblf
 {
 
 enum class exit_codes : uint32_t
@@ -206,33 +206,36 @@ struct sysTime_t
 
 struct fileStatistics
 {
-    uint32_t FileSign{0};
-    uint32_t StatSize{0};
-    AppId_e AppId{0};
-    uint8_t AppMaj{0};
-    uint8_t AppMin{0};
-    uint8_t AppBuild{0};
-    uint8_t ApiMaj{0};
-    uint8_t ApiMin{0};
-    uint8_t ApiBuild{0};
-    uint8_t ApiPatch{0};
-    uint64_t fileSize{0};
-    uint64_t uncompressedSize{0};
-    uint32_t objCount{0};
-    uint32_t objRead{0};
-    sysTime_t meas_start_time{0, 0, 0, 0, 0, 0, 0, 0};
-    sysTime_t last_obj_time{0, 0, 0, 0, 0, 0, 0, 0};
-    uint64_t fileSize_less115{0};
+    uint32_t FileSign {0};
+    uint32_t StatSize {0};
+    AppId_e AppId {0};
+    uint8_t AppMaj {0};
+    uint8_t AppMin {0};
+    uint8_t AppBuild {0};
+    uint8_t ApiMaj {0};
+    uint8_t ApiMin {0};
+    uint8_t ApiBuild {0};
+    uint8_t ApiPatch {0};
+    uint64_t fileSize {0};
+    uint64_t uncompressedSize {0};
+    uint32_t objCount {0};
+    uint32_t objRead {0};
+    sysTime_t meas_start_time {0, 0, 0, 0, 0, 0, 0, 0};
+    sysTime_t last_obj_time {0, 0, 0, 0, 0, 0, 0, 0};
+    uint64_t fileSize_less115 {0};
 };
 
 
 struct BaseHeader
 {
-    uint32_t ObjSign{0}; // LOBJ
-    uint16_t headerSize{0};
-    uint16_t headerVer{0};
-    uint32_t objSize{0};
-    enum ObjectType_e objectType{0}; //  : uint32_t;
+    uint32_t ObjSign {0}; // LOBJ
+    uint16_t headerSize {0};
+    uint16_t headerVer {0};
+    uint32_t objSize {0};
+    enum ObjectType_e objectType
+    {
+        0
+    }; //  : uint32_t;
 };
 
 
@@ -245,7 +248,7 @@ enum class ObjectFlags_e : uint32_t
 
 enum class timeStampStatus_e : uint8_t
 {
-    orginal = 0x01,
+    original = 0x01,
     SwGen = 0x02,
     User = 0x10
 };
@@ -253,18 +256,17 @@ enum class timeStampStatus_e : uint8_t
 
 struct ObjectHeader
 {
-    ObjectFlags_e objectFlag{};
-    uint16_t clientIndex{0};
-    uint16_t objectVersion{0};
-    uint64_t objectTimeStamp{0};
-    
+    ObjectFlags_e objectFlag {};
+    uint16_t clientIndex {0};
+    uint16_t objectVersion {0};
+    uint64_t objectTimeStamp {0};
 };
 
 
 struct ObjectHeader2
 {
-    ObjectFlags_e objectFlags{0};
-    timeStampStatus_e timeStampStatus{0};
+    ObjectFlags_e objectFlags {0};
+    timeStampStatus_e timeStampStatus {0};
     uint8_t reservObjHeader {0};
     uint16_t ObjectHeaderVersion {0};
     uint64_t ObjectTimeStamp {0};
@@ -281,21 +283,87 @@ enum class compressionMethod_e : int16_t
 
 struct LogContainer
 {
-    compressionMethod_e compressionMethod{0}; //int16_t
-    uint16_t reserv1{0};
-    uint32_t reserv2{0};
-    uint32_t unCompressedFileSize{0};
-    uint32_t reserv3{0};
+    compressionMethod_e compressionMethod {0}; // int16_t
+    uint16_t reserv1 {0};
+    uint32_t reserv2 {0};
+    uint32_t unCompressedFileSize {0};
+    uint32_t reserv3 {0};
 };
+
+/*
+CAN_MSG_DIR	Direction	Sent (TX) or Received (RX).
+CAN_MSG_RTR	Remote Transmission Request	Normal (0) or Remote (1).
+CAN_MSG_WU	Wake-Up Message	Message causing wake-up.
+CAN_MSG_NERR	Network Error	Error frame detected.
+CAN_MSG_FLAGS	General Flags	Additional message information.
+CAN_MSG_FLAGS_EXT	Extended Identifier	Standard (0) or Extended (1).
+CAN_FD_MSG_EDL	CAN FD Mode	Indicates FD protocol.
+CAN_FD_MSG_BRS	Bit Rate Switching	Higher bit rate during data phase.
+CAN_FD_MSG_ESI	Error State Indicator	Active (0) or Passive (1).
+*/
+
+// Extract direction (lower 4 bits)
+constexpr auto CAN_MSG_DIR(uint8_t f) -> uint8_t
+{
+    return f & 0x0FU;
+}
+
+// Extract Remote Transmission Request (RTR) (bit 7)
+constexpr auto CAN_MSG_RTR(uint8_t f) -> uint8_t
+{
+    return (f & 0x80U) >> 7U;
+}
+
+// Extract Wake-Up (WU) flag (bit 6)
+constexpr auto CAN_MSG_WU(uint8_t f) -> uint8_t
+{
+    return (f & 0x40U) >> 6U;
+}
+
+// Extract Network Error (NERR) flag (bit 5)
+constexpr auto CAN_MSG_NERR(uint8_t f) -> uint8_t
+{
+    return (f & 0x20U) >> 5U;
+}
+
+// Combine direction and RTR into flags
+constexpr auto CAN_MSG_FLAGS(uint8_t dir, uint8_t rtr) -> uint8_t
+{
+    return ((rtr & 0x01U) << 7U) | (dir & 0x0FU);
+}
+
+// Combine direction, RTR, WU, and NERR into extended flags
+constexpr auto CAN_MSG_FLAGS_EXT(uint8_t dir, uint8_t rtr, uint8_t wu, uint8_t nerr) -> uint8_t
+{
+    return ((rtr & 0x01U) << 7U) | ((wu & 0x01U) << 6U) | ((nerr & 0x01U) << 5U) | (dir & 0x0FU);
+}
+
+// Extract CAN FD Extended Data Length (EDL) flag (bit 0)
+constexpr auto CAN_FD_MSG_EDL(uint8_t f) -> uint8_t
+{
+    return f & 0x01U;
+}
+
+// Extract CAN FD Bit Rate Switch (BRS) flag (bit 1)
+constexpr auto CAN_FD_MSG_BRS(uint8_t f) -> uint8_t
+{
+    return (f & 0x02U) >> 1U;
+}
+
+// Extract CAN FD Error State Indicator (ESI) flag (bit 2)
+constexpr auto CAN_FD_MSG_ESI(uint8_t f) -> uint8_t
+{
+    return (f & 0x04U) >> 2U;
+}
 
 
 struct CanMessage
 {
-    uint16_t channel{0};
-    uint8_t flags{0};
-    uint8_t dlc{0};
-    uint32_t id{0};
-    std::array<uint8_t, 8> data {0,0,0,0,0,0,0,0};
+    uint16_t channel {0};
+    uint8_t flags {0};
+    uint8_t dlc {0};
+    uint32_t id {0};
+    std::array<uint8_t, 8> data {0, 0, 0, 0, 0, 0, 0, 0};
 };
 
 
@@ -309,16 +377,16 @@ struct CanError
 
 struct CanError_short
 {
-    uint16_t channel{0};
-    uint16_t length{0};
+    uint16_t channel {0};
+    uint16_t length {0};
 };
 
 
 struct CanOverload
 {
-    uint16_t channel{0};
-    uint16_t reservedCanOverloadFrame1{0};
-    uint32_t reservedCanOverloadFrame2{0}; // Corrected //??
+    uint16_t channel {0};
+    uint16_t reservedCanOverloadFrame1 {0};
+    uint32_t reservedCanOverloadFrame2 {0}; // Corrected //??
 };
 
 
@@ -331,78 +399,78 @@ struct CanOverload_short
 
 struct CanMessage2
 {
-    uint16_t channel{0};
-    uint8_t flags{0};
-    uint8_t dlc{0};
-    uint32_t id{0};
+    uint16_t channel {0};
+    uint8_t flags {0};
+    uint8_t dlc {0};
+    uint32_t id {0};
     std::array<uint8_t, 8> data {0, 0, 0, 0, 0, 0, 0, 0};
-    uint32_t frameLength{0};
-    uint8_t bitCount{0};
-    uint8_t reservedCanMessage1{0};
-    uint16_t reservedCanMessage2{0};
+    uint32_t frameLength {0};
+    uint8_t bitCount {0};
+    uint8_t reservedCanMessage1 {0};
+    uint16_t reservedCanMessage2 {0};
 };
 
 
 enum class AppTriggerFlags : uint16_t
 {
-    BL_TRIGGER_FLAG_SINGLE_TRIGGER = 0x00000000 ,  /* single trigger type */
-    BL_TRIGGER_FLAG_LOGGING_START  = 0x00000001,   /* start of logging trigger type */
-    BL_TRIGGER_FLAG_LOGGING_STOP   = 0x00000002   /* stop of logging trigger type */
+    BL_TRIGGER_FLAG_SINGLE_TRIGGER = 0x00000000, /* single trigger type */
+    BL_TRIGGER_FLAG_LOGGING_START = 0x00000001,  /* start of logging trigger type */
+    BL_TRIGGER_FLAG_LOGGING_STOP = 0x00000002    /* stop of logging trigger type */
 };
 
 
 struct AppTrigger
 {
-    uint64_t preTriggerTime{0};
-    uint64_t postTriggerTime{0};
-    uint16_t channel{0};
-    AppTriggerFlags flags{0};
-    uint32_t appSpecific2{0};
+    uint64_t preTriggerTime {0};
+    uint64_t postTriggerTime {0};
+    uint16_t channel {0};
+    AppTriggerFlags flags {0};
+    uint32_t appSpecific2 {0};
 };
 
 
 struct AppText
 {
-    uint32_t mSource{0};
-    uint32_t reserved{0};
-    uint32_t mTextLength{0};
-    char *mText{nullptr};
+    uint32_t mSource {0};
+    uint32_t reserved {0};
+    uint32_t mTextLength {0};
+    char *mText {nullptr};
 };
 
 
 struct CANErrorFrameExt // CAN_DRIVER_ERROR_EXT
 {
-    uint16_t Channel{0}; /* application channel */
-    uint16_t Length{0};  /* CAN error frame length */
-    uint32_t Flags{0};   /* extended CAN error frame flags */
-    uint8_t ECC{0};      /* error control code */
-    uint8_t Position{0}; /* error position */
-    uint8_t DLC{0};      /* lower 4 bits: DLC from CAN-Core. Upper 4 bits: reserved */
-    uint8_t Reserved1{0};
-    uint32_t FrameLengthInNS{0}; /* frame length in ns */
-    uint32_t ID{0};              /* frame ID from CAN-Core */
-    uint16_t FlagsExt{0};        /* extended error flags */
-    uint16_t Reserved2{0};
-    std::array<uint8_t, 8> Data {0,0,0,0,0,0,0,0}; /* Payload, only for CAN-Core */
+    uint16_t Channel {0}; /* application channel */
+    uint16_t Length {0};  /* CAN error frame length */
+    uint32_t Flags {0};   /* extended CAN error frame flags */
+    uint8_t ECC {0};      /* error control code */
+    uint8_t Position {0}; /* error position */
+    uint8_t DLC {0};      /* lower 4 bits: DLC from CAN-Core. Upper 4 bits: reserved */
+    uint8_t Reserved1 {0};
+    uint32_t FrameLengthInNS {0}; /* frame length in ns */
+    uint32_t ID {0};              /* frame ID from CAN-Core */
+    uint16_t FlagsExt {0};        /* extended error flags */
+    uint16_t Reserved2 {0};
+    std::array<uint8_t, 8> Data {0, 0, 0, 0, 0, 0, 0, 0}; /* Payload, only for CAN-Core */
 };
 
 
 struct reserved_5
 {
-    std::array<uint32_t, 6> data {0,0,0,0,0,0};
+    std::array<uint32_t, 6> data {0, 0, 0, 0, 0, 0};
 };
 
 
 struct CANDriverStatistic
 {
-    uint16_t           mChannel{0};                    /* application channel */
-    uint16_t           mBusLoad{0};                    /* CAN bus load */
-    uint32_t           mStandardDataFrames{0};         /* standard CAN id data frames */
-    uint32_t           mExtendedDataFrames{0};         /* extended CAN id data frames */
-    uint32_t           mStandardRemoteFrames{0};       /* standard CAN id remote frames */
-    uint32_t           mExtendedRemoteFrames{0};       /* extended CAN id remote frames */
-    uint32_t           mErrorFrames{0};                /* CAN error frames */
-    uint32_t           mOverloadFrames{0};             /* CAN overload frames */
+    uint16_t mChannel {0};              /* application channel */
+    uint16_t mBusLoad {0};              /* CAN bus load */
+    uint32_t mStandardDataFrames {0};   /* standard CAN id data frames */
+    uint32_t mExtendedDataFrames {0};   /* extended CAN id data frames */
+    uint32_t mStandardRemoteFrames {0}; /* standard CAN id remote frames */
+    uint32_t mExtendedRemoteFrames {0}; /* extended CAN id remote frames */
+    uint32_t mErrorFrames {0};          /* CAN error frames */
+    uint32_t mOverloadFrames {0};       /* CAN overload frames */
 };
 
 #pragma pack()
@@ -419,17 +487,13 @@ enum class ObjectHeaders_e
 
 struct ObjectHeaderCarry
 {
-    ObjectHeaders_e oh_enum;
+    ObjectHeaders_e oh_enum {};
     struct BaseHeader ohb;
     struct ObjectHeader oh;
     struct ObjectHeader2 oh2;
-    ObjectHeaderCarry()
-        : oh_enum(ObjectHeaders_e::NONE)
-    {
-    }
 };
 
 
-} //namespace lblf 
+} // namespace lblf
 
 #endif
