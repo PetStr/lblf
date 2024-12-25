@@ -1,8 +1,6 @@
 #ifndef PRINT_HH
 #define PRINT_HH
 
-#include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <string>
 
