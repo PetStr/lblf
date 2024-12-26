@@ -1,6 +1,6 @@
 
-#include <iomanip>
 #include "print.hh"
+#include <iomanip>
 
 namespace lblf
 {
@@ -559,9 +559,10 @@ void print(std::ostream &stream, const AppText &at)
 void print(std::ostream &stream, const reserved_5 &r)
 {
     stream << "Reserved_5: ";
-    for (auto a: r.data) {
-        stream << " 0x" << std::hex << a;
-}
+    for (auto a: r.data)
+        {
+            stream << " 0x" << std::hex << a;
+        }
     stream << '\n';
 }
 
