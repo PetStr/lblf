@@ -17,7 +17,7 @@ find_package(ZLIB)
 
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wno-switch -std=c++20")
 
-add_executable(read read.cc print.cc)
+add_executable(read read.cc print.cc blf_reader.cc)
 target_link_libraries(read -lz )
 
 #add_executable(read_base read_base.cc print.cc)
