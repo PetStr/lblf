@@ -409,6 +409,20 @@ struct CanMessage2
 };
 
 
+struct CanMessage2_obh
+{
+    ObjectHeader obh;
+    uint16_t channel {0};
+    uint8_t flags {0};
+    uint8_t dlc {0};
+    uint32_t id {0};
+    std::array<uint8_t, 8> data {0, 0, 0, 0, 0, 0, 0, 0};
+    uint32_t frameLength {0};
+    uint8_t bitCount {0};
+    uint8_t reservedCanMessage1 {0};
+    uint16_t reservedCanMessage2 {0};
+};
+
 enum class AppTriggerFlags : uint16_t
 {
     BL_TRIGGER_FLAG_SINGLE_TRIGGER = 0x00000000, /* single trigger type */
@@ -433,6 +447,16 @@ struct AppText
     uint32_t reserved {0};
     uint32_t mTextLength {0};
     char *mText {nullptr};
+};
+
+
+struct AppText_obh
+{
+    ObjectHeader obh;
+    uint32_t mSource {0};
+    uint32_t reserved {0};
+    uint32_t mTextLength {0};
+    //string that is mTextLength
 };
 
 

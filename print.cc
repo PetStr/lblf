@@ -1,5 +1,6 @@
 
 #include "print.hh"
+#include "blf_structs.hh"
 #include <iomanip>
 
 namespace lblf
@@ -528,6 +529,22 @@ void print(std::ostream &stream, const CanMessage2 &cm2)
     for (auto d: cm2.data)
         {
             stream << " " << std::hex << std::setfill('0') << std::setw(2) << (int) d;
+        }
+    stream << '\n';
+}
+
+
+void print(std::ostream &stream, const CanMessage2_obh &cm2)
+{
+    stream << "CanMessage2 : ";
+    stream << "channel: " << std::dec << (int) cm2.channel;
+    stream << ", flags: " << std::dec << (int) cm2.flags;
+    stream << ", dlc: " << std::dec << (int) cm2.dlc;
+    stream << ", id: 0x" << std::hex << (int) cm2.id;
+    stream << ", data: ";
+    for (size_t i = 0; i < cm2.dlc; ++i)
+        {
+            stream << " " << std::hex << std::setfill('0') << std::setw(2) << (int) cm2.data.at(i);
         }
     stream << '\n';
 }

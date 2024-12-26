@@ -1,12 +1,10 @@
 #include "blf_structs.hh"
 #include "print.hh"
-#include <array>
 #include <cstring>
 #include <deque>
 #include <fstream>
 #include <iomanip>
 #include <stdexcept>
-#include <type_traits>
 #include <vector>
 #include <zlib.h>
 
@@ -164,7 +162,7 @@ auto read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb) -> bool
 
 
 template <typename type_data>
-auto read_template(const uint8_t *indata_array, type_data &data) -> size_t
+auto read_template(const char *indata_array, type_data &data) -> size_t
 {
     std::memcpy(reinterpret_cast<char *>(&data), indata_array, sizeof(type_data));
     return sizeof(type_data);
@@ -385,7 +383,7 @@ public:
 };
 
 
-inline auto blf_reader::fill_deque() -> bool
+auto blf_reader::fill_deque() -> bool
 {
     struct BaseHeader ohb;
     if (read(fs, ohb))
@@ -401,7 +399,7 @@ inline auto blf_reader::fill_deque() -> bool
         {
             struct LogContainer lc;
             read(fs, lc, ohb);
-            print(std::cout, lc);
+            // print(std::cout, lc);
             std::vector<uint8_t> container_data;
             auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
 
@@ -499,7 +497,7 @@ auto blf_reader::data() -> struct lobj
 
     read(logcontainer_que, result.base_header);
 
-    lblf::print(std::cout, result.base_header);
+    // lblf::print(std::cout, result.base_header);
     const size_t size_of_data = result.base_header.objSize - sizeof(result.base_header) + (result.base_header.objSize % 4);
 
     if (logcontainer_que.size() < size_of_data)
@@ -534,6 +532,59 @@ doit(const std::string &filename)
 }
 
 
+void doit2(const std::string &filename)
+{
+    blf_reader reader(filename);
+    size_t counter = 0;
+    while (reader.next())
+        {
+            counter++;
+            const auto data = reader.data();
+            if (data.base_header.objectType == ObjectType_e::CAN_MESSAGE2)
+                {
+                    struct CanMessage2_obh can2;
+                    if (sizeof(can2) <= data.payload.size())
+                        {
+                            read_template(data.payload.data(), can2);
+                        }
+                    std::cout << std::dec << counter << ", ";
+                    print(std::cout, can2);
+                }
+        }
+}
+
+
+void doit3(const std::string &filename)
+{
+    blf_reader reader(filename);
+    size_t counter = 0;
+    while (reader.next())
+        {
+            counter++;
+            const auto data = reader.data();
+            if (data.base_header.objectType == ObjectType_e::APP_TEXT)
+                {
+                    struct AppText_obh Apptext;
+                    if (sizeof(Apptext) <= data.payload.size())
+                        {
+                            read_template(data.payload.data(), Apptext);
+                        }
+                    std::cout << std::dec << counter << ", ";
+                    std::string AppText_string;
+                    const auto length = Apptext.mTextLength;
+                    const auto offset = sizeof(Apptext) + 4U;
+                    const auto far_length = length + offset;
+                    for (size_t i = offset; i < far_length; ++i)
+                        {
+                            AppText_string.push_back(data.payload.at(i));
+                        }
+                    std::cout << AppText_string << '\n';
+                }
+        }
+    std::cout << std::dec << "Loops: " << counter << '\n';
+}
+
+
 auto main(int argc, char *argv[]) -> int
 {
 
@@ -542,7 +593,7 @@ auto main(int argc, char *argv[]) -> int
     if (argc > 1)
         {
             // go_through_file( argv[1] );
-            doit(argv[1]);
+            doit3(argv[1]);
         }
     else
         {
