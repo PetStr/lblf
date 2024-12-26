@@ -26,7 +26,8 @@ target_link_libraries(read -lz )
 #add_executable(sand sand.cc print.cc)
 #target_link_libraries(sand -lz )
 
-add_executable(count_id count_id.cc print.cc)
+add_executable(count_id count_id.cc print.cc blf_reader.cc)
+target_link_libraries(count_id -lz )
 
 add_executable(print_structs print_structs.cc)
 
