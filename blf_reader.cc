@@ -3,7 +3,6 @@
 #include "blf_structs.hh"
 #include "print.hh"
 #include <cstring>
-
 #include <iomanip>
 #include <stdexcept>
 #include <vector>
@@ -18,12 +17,6 @@ const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 
 const uint32_t defaultContainerSize = 0x20000;
-
-// Forward declaration.
-auto handle_ObjectType(std::deque<char> &log_que, const BaseHeader &obh) -> exit_codes;
-
-
-
 
 
 void print(const std::deque<char> &data, size_t counts_to_print)
@@ -158,9 +151,6 @@ auto read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb) -> bool
 }
 
 
-
-
-
 void print(const std::vector<uint8_t> &data)
 {
     size_t cnt = 0;
@@ -196,161 +186,6 @@ auto handle_container_compressed_deque(
     logcontainer_que.insert(logcontainer_que.end(), uncompressedData.begin(), uncompressedData.end());
 
     return retVal;
-}
-
-
-auto handle_ObjectType(std::deque<char> &log_que, const BaseHeader &ohb) -> exit_codes
-{
-    const auto payload_size = ohb.objSize - ohb.headerSize;
-    switch (ohb.objectType)
-        {
-        case (ObjectType_e::CAN_MESSAGE): // read Can message;
-            {
-                struct ObjectHeader oheader;
-                consume_que(log_que, oheader);
-                //	  print(std::cout, oheader);
-                if (payload_size == sizeof(CanMessage))
-                    {
-                        struct CanMessage cmessage;
-                        if (consume_que(log_que, cmessage))
-                            {
-                                print(std::cout, cmessage);
-                            }
-                    }
-                else
-                    {
-                        return exit_codes::CAN_MESSAGE_INVALID_LENGTH;
-                    }
-            }
-            break;
-
-        case (ObjectType_e::CAN_ERROR): // CanErrorFrame
-            {
-                struct ObjectHeader oheader;
-                consume_que(log_que, oheader);
-                print(std::cout, oheader);
-                if (payload_size == sizeof(CanError_short))
-                    {
-                        struct CanError_short cef;
-                        consume_que(log_que, cef);
-                        print(std::cout, cef);
-                    }
-                else if (payload_size == sizeof(CanError))
-                    {
-                        struct CanError cef;
-                        consume_que(log_que, cef);
-                        print(std::cout, cef);
-                    }
-            }
-            break;
-
-
-        case (ObjectType_e::CAN_OVERLOAD): // CanOverload
-            {
-                print(std::cout, ohb);
-                struct ObjectHeader oheader;
-                consume_que(log_que, oheader);
-                print(std::cout, oheader);
-                if (payload_size == sizeof(CanOverload))
-                    {
-                        struct CanOverload col;
-                        consume_que(log_que, col);
-                        print(std::cout, col);
-                    }
-                else if (payload_size == sizeof(CanOverload_short))
-                    {
-                        struct CanOverload_short cols;
-                        consume_que(log_que, cols);
-                        print(std::cout, cols);
-                    }
-                else
-                    {
-                        std::cout << "Error wrong CanOverload Frame!\n";
-                    }
-            }
-            break;
-
-        case (ObjectType_e::APP_TRIGGER): // Handle apptrigger
-            {
-                struct ObjectHeader oh;
-                consume_que(log_que, oh);
-                // print(std::cout, oh);
-                struct AppTrigger ap;
-                consume_que(log_que, ap);
-                print(std::cout, ap);
-            }
-            break;
-
-        case (ObjectType_e::LOG_CONTAINER): // Get Logcontainer
-            {
-                std::cout << "Log container not implemented inside a log container\n";
-                return exit_codes::UNHANDLED_OBJECT_TYPE;
-                break;
-            }
-
-        case (ObjectType_e::CAN_MESSAGE2):
-            {
-                struct ObjectHeader oh;
-                consume_que(log_que, oh);
-                //	  print(std::cout, oh);
-                struct CanMessage2 cm2;
-                if (consume_que(log_que, cm2))
-                    {
-                        print(std::cout, cm2);
-                    }
-            }
-            break;
-
-        case (ObjectType_e::APP_TEXT):
-            {
-                struct ObjectHeader oh;
-                consume_que(log_que, oh);
-                struct AppText ap;
-                consume_que(log_que, ap.mSource);
-                consume_que(log_que, ap.reserved);
-                consume_que(log_que, ap.mTextLength);
-                uint32_t dummy = 0;
-                consume_que(log_que, dummy);
-                std::cout << std::dec << "objSize: " << (int) ohb.objSize << ", TextLength: " << (int) ap.mTextLength;
-                std::string app_text_string;
-                for (uint32_t i = 0; i < ap.mTextLength; ++i)
-                    {
-                        app_text_string.insert(app_text_string.begin() + i, log_que.front());
-                        log_que.pop_front();
-                    }
-                // std::cout << "App_text: " << app_text_string << '\n';
-            }
-            break;
-
-        case (ObjectType_e::reserved_5):
-            {
-                struct ObjectHeader oh;
-                consume_que(log_que, oh);
-                struct reserved_5 r5;
-                consume_que(log_que, r5);
-                print(std::cout, r5);
-            }
-            break;
-
-        case (ObjectType_e::CAN_STATISTIC):
-            {
-                ObjectHeader oh;
-                consume_que(log_que, oh);
-                CANDriverStatistic can_stat;
-                consume_que(log_que, can_stat);
-                print(std::cout, can_stat);
-                const auto rest = payload_size - sizeof(CANDriverStatistic);
-                std::cout << "rest: " << rest << '\n';
-                std::cout << "Left in deque: " << log_que.size() << '\n';
-                log_que.erase(log_que.begin(), log_que.begin() + rest);
-            }
-            break;
-
-        default:
-            std::cout << "New ObjectType: " << (int) ohb.objectType << '\n';
-            return exit_codes::UNHANDLED_OBJECT_TYPE;
-        }
-    return exit_codes::EXITING_SUCCESS;
 }
 
 
@@ -486,4 +321,3 @@ auto blf_reader::data() -> struct lblf::lobj
 
     return result;
 }
-
