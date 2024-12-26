@@ -90,26 +90,6 @@ auto read(std::fstream &fs, fileStatistics &os) -> bool
 }
 
 
-auto read(std::fstream &fs, uint32_t length, std::vector<uint8_t> &data) -> bool
-{
-    for (uint32_t n = 0; n < length; n++)
-        {
-            uint8_t value = 0;
-            fs.read(reinterpret_cast<char *>(&value), 1);
-            data.push_back(value);
-        }
-    return true;
-}
-
-
-auto read(std::fstream &fs, uint32_t length, std::string &data) -> bool
-{
-    data.resize(length);
-    fs.read(reinterpret_cast<char *>(data.data()), length);
-    return true;
-}
-
-
 auto read(std::fstream &fs, BaseHeader &ohb) -> bool
 {
     fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
@@ -123,27 +103,6 @@ auto read(std::fstream &fs, BaseHeader &ohb) -> bool
     fs.read(reinterpret_cast<char *>(&ohb.headerVer), sizeof(ohb.headerVer));
     fs.read(reinterpret_cast<char *>(&ohb.objSize), sizeof(ohb.objSize));
     fs.read(reinterpret_cast<char *>(&ohb.objectType), sizeof(ohb.objectType));
-    return true;
-}
-
-
-auto read(uint8_t *data, BaseHeader &ohb) -> bool
-{
-    std::memcpy(&ohb.ObjSign, data, sizeof(ohb.ObjSign));
-    if (ohb.ObjSign != ObjectSignature)
-        {
-            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
-            std::cout << '\n';
-            return false;
-        }
-    data = data + sizeof(ohb.ObjSign);
-    std::memcpy(&ohb.headerSize, data, sizeof(ohb.headerSize));
-    data = data + sizeof(ohb.headerSize);
-    std::memcpy(&ohb.headerVer, data, sizeof(ohb.headerVer));
-    data = data + sizeof(ohb.headerVer);
-    std::memcpy(&ohb.objSize, data, sizeof(ohb.objSize));
-    data = data + sizeof(ohb.objSize);
-    std::memcpy(&ohb.objectType, data, sizeof(ohb.objectType));
     return true;
 }
 
@@ -205,14 +164,6 @@ auto read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb) -> bool
 
 
 template <typename type_data>
-auto read_template(std::fstream &fs, type_data &data) -> bool
-{
-    fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
-    return true;
-}
-
-
-template <typename type_data>
 auto read_template(const uint8_t *indata_array, type_data &data) -> size_t
 {
     std::memcpy(reinterpret_cast<char *>(&data), indata_array, sizeof(type_data));
@@ -252,11 +203,7 @@ auto handle_container_compressed_deque(
         reinterpret_cast<Byte *>(compressedData.data()),
         static_cast<uLong>(compressedData.size()));
 
-    // std::cout << __FUNCTION__ << " retVal; " << std::dec << retVal << '\n';
-
     logcontainer_que.insert(logcontainer_que.end(), uncompressedData.begin(), uncompressedData.end());
-
-    // print(uncompressedData);
 
     return retVal;
 }
