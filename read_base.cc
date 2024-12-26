@@ -757,44 +757,6 @@ auto handle_ObjectType(std::fstream &fstr, const BaseHeader &ohb) -> exit_codes
 }
 
 
-auto go_through_log_data(std::deque<char> &logcontainer_que) -> bool
-{
-    while (not logcontainer_que.empty())
-        {
-            if (logcontainer_que.size() >= sizeof(BaseHeader))
-                {
-                    BaseHeader ohb;
-                    read(logcontainer_que, ohb);
-                    std::cout << "Inside compressed LogContainer: ";
-                    lblf::print(std::cout, ohb);
-                    const size_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
-                    std::cout << "size_left: " << logcontainer_que.size() << " to jump: " << bytes_to_jump << '\n';
-                    print(logcontainer_que, bytes_to_jump);
-                    if (logcontainer_que.size() >= bytes_to_jump)
-                        {
-                            handle_ObjectType(logcontainer_que, ohb);
-                            const auto jump = (ohb.objSize % 4);
-                            std::cout << "additional jump: " << jump << '\n';
-                            logcontainer_que.erase(logcontainer_que.begin(), logcontainer_que.begin() + jump);
-                        }
-                    else
-                        {
-                            std::cout << "Need to reload from log Container 1\n";
-                            return false;
-                        }
-                }
-            else
-                {
-                    std::cout << std::dec << logcontainer_que.size() << " " << sizeof(BaseHeader) << '\n';
-                    std::cout << "Need to reload from log Container 2\n";
-                    return false;
-                }
-        }
-    std::cout << "Need to reload from log Container 3\n";
-    return true;
-}
-
-
 auto go_through_log_data_jump(std::deque<char> &logcontainer_que) -> bool
 {
     static bool read_object_header = false;
@@ -802,18 +764,18 @@ auto go_through_log_data_jump(std::deque<char> &logcontainer_que) -> bool
         {
             if (logcontainer_que.size() >= sizeof(BaseHeader))
                 {
-                    //print(logcontainer_que, 208);
+                    // print(logcontainer_que, 208);
                     static BaseHeader ohb;
-                    if(not read_object_header)
-                    {
-                    read(logcontainer_que, ohb);
-                    read_object_header = true;
-                    }
+                    if (not read_object_header)
+                        {
+                            read(logcontainer_que, ohb);
+                            read_object_header = true;
+                        }
                     std::cout << "Inside compressed LogContainer: ";
                     lblf::print(std::cout, ohb);
                     const size_t bytes_to_jump = ohb.objSize - sizeof(ohb) + (ohb.objSize % 4);
-                    std::cout << "size_left: " << logcontainer_que.size() << " to jump: " << bytes_to_jump << '\n';
-                    //print(logcontainer_que, bytes_to_jump);
+                    // std::cout << "size_left: " << logcontainer_que.size() << " to jump: " << bytes_to_jump << '\n';
+                    // print(logcontainer_que, bytes_to_jump);
                     if (logcontainer_que.size() >= bytes_to_jump)
                         {
                             logcontainer_que.erase(logcontainer_que.begin(), logcontainer_que.begin() + bytes_to_jump);
