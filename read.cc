@@ -21,7 +21,7 @@ void doit(const std::string &filename)
             counter++;
             const auto data = reader.data();
             std::cout << std::dec << counter << ", ";
-            lblf::print(data.base_header.objectType);
+            std::cout << lblf::print(data.base_header.objectType) << '\n';
         }
 }
 
@@ -87,7 +87,7 @@ auto main(int argc, char *argv[]) -> int
     if (argc > 1)
         {
             // go_through_file( argv[1] );
-            doit3(argv[1]);
+            doit(argv[1]);
         }
     else
         {
