@@ -2,7 +2,7 @@
 #include "blf_reader.hh"
 #include "print.hh"
 #include <iostream>
-
+#include <cstring>
 
 template <typename type_data>
 auto read_template(const char *indata_array, type_data &data) -> size_t

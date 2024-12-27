@@ -335,6 +335,20 @@ auto main(int argc, char *argv[]) -> int
                             can_id_count(GLOBAL::id_data, can_id, channel);
                         }
                 }
+
+            if (data.base_header.objectType == lblf::ObjectType_e::CAN_MESSAGE)
+                {
+                    GLOBAL::can_frame_counter++;
+                    struct lblf::CanMessage_obh can2;
+                    if (sizeof(can2) <= data.payload.size())
+                        {
+                            read_template(data.payload.data(), can2);
+                            unsigned int can_id = can2.id;
+                            unsigned char channel = can2.channel;
+                            can_id_count(GLOBAL::id_data, can_id, channel);
+                        }
+                }
+
         }
     print_frameid_dbcdata(std::cout, GLOBAL::id_data, dbc_data);
     std::cout << "Number of dbc frames: " << dbc_data.size() << '\n';

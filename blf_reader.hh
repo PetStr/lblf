@@ -4,6 +4,7 @@
 #include "blf_structs.hh"
 #include <deque>
 #include <fstream>
+#include <vector>
 
 namespace lblf
 {

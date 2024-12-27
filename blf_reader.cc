@@ -246,7 +246,9 @@ auto blf_reader::fill_deque() -> bool
                 }
             else
                 {
-                    throw std::runtime_error("Not implemented uncompressed");
+                    print(std::cout, lc);
+                    logcontainer_que.insert(logcontainer_que.end(), container_data.begin(), container_data.end());
+                    //throw std::runtime_error("Not implemented uncompressed");
                 }
         }
     else
