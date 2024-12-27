@@ -232,10 +232,7 @@ struct BaseHeader
     uint16_t headerSize {0};
     uint16_t headerVer {0};
     uint32_t objSize {0};
-    enum ObjectType_e objectType
-    {
-        0
-    }; //  : uint32_t;
+    enum ObjectType_e objectType {ObjectType_e::UNKNOWN}; //uint32_t
 };
 
 
@@ -365,6 +362,17 @@ struct CanMessage
 };
 
 
+struct CanMessage_obh
+{
+    ObjectHeader obh;
+    uint16_t channel {0};
+    uint8_t flags {0};
+    uint8_t dlc {0};
+    uint32_t id {0};
+    std::array<uint8_t, 8> data {0, 0, 0, 0, 0, 0, 0, 0};
+};
+
+
 struct CanError
 {
     uint16_t channel {0};
@@ -373,8 +381,25 @@ struct CanError
 };
 
 
+struct CanError_obh
+{
+    ObjectHeader obh;
+    uint16_t channel {0};
+    uint16_t length {0};
+    uint32_t reservedCanErrorFrame {0};
+};
+
+
 struct CanError_short
 {
+    uint16_t channel {0};
+    uint16_t length {0};
+};
+
+
+struct CanError_short_obh
+{
+    ObjectHeader obh;
     uint16_t channel {0};
     uint16_t length {0};
 };
@@ -390,6 +415,14 @@ struct CanOverload
 
 struct CanOverload_short
 {
+    uint16_t channel {0};
+    uint16_t reservedCanOverloadFrame1 {0};
+};
+
+
+struct CanOverload_short_obh
+{
+    ObjectHeader obh;
     uint16_t channel {0};
     uint16_t reservedCanOverloadFrame1 {0};
 };
@@ -496,6 +529,7 @@ struct CANDriverStatistic
 };
 
 #pragma pack()
+
 
 // Application helper structs.
 enum class ObjectHeaders_e

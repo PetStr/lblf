@@ -4,21 +4,18 @@
  */
 
 
-#include <cstring>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <vector>
-
 #include "blf_reader.hh"
 #include "blf_structs.hh"
-#include "print.hh"
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <vector>
 
 
 struct dbc_id_data
 {
-    uint8_t dbc_table;
-    uint32_t id;
+    uint8_t dbc_table{0};
+    uint32_t id{0};
     std::string id_name;
 };
 
@@ -53,8 +50,6 @@ using namespace lblf;
 const size_t CAN_ID_MARK = 1;
 const size_t CAN_NAME_MARK = 2;
 
-const uint32_t FileSignature = 0x47474F4C;   // LOGG
-const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 
 // Forward declaration.
 auto handle_ObjectType(std::fstream &fs, const BaseHeader &ohb) -> exit_codes;
@@ -259,7 +254,6 @@ void print_dbcdata(std::ostream &stream, std::vector<dbc_id_data> &dbc_data)
 }
 
 
-
 /**
  * @brief support operator for enum typed data.
  *
@@ -299,9 +293,6 @@ auto read_template(const char *indata_array, type_data &data) -> size_t
     std::memcpy(reinterpret_cast<char *>(&data), indata_array, sizeof(type_data));
     return sizeof(type_data);
 }
-
-
-
 
 
 auto main(int argc, char *argv[]) -> int

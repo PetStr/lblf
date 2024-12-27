@@ -1,3 +1,14 @@
+/**
+ * @file blf_reader.cc
+ * @author Petter Strandh (petter.strandh@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-12-27
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
 
 #include "blf_reader.hh"
 #include "blf_structs.hh"
@@ -12,6 +23,9 @@
 
 
 using namespace lblf;
+
+
+namespace {
 
 const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
@@ -188,6 +202,7 @@ auto handle_container_compressed_deque(
     return retVal;
 }
 
+} // namespace
 
 auto blf_reader::fill_deque() -> bool
 {

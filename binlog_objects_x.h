@@ -1950,7 +1950,7 @@ struct VBLWlanFrame_t
     int16_t mSignalStrength;   /* signal strength in [dbm] */
     uint16_t mSignalQuality;   /* signal quality in [dbm] */
     uint16_t mFrameLength;     /* Number ofuint8_ts (header + payload) */
-    // BL_LPBYTE mFrameData;    /* Max. 2342 datauint8_ts per frame  */
+    // BL_LPBYTE mFrameData;    /* Max. 2342 data bytes per frame  */
 };
 
 /* HINT: this struct might be extended in future versions! */
