@@ -1,8 +1,8 @@
 
 #include "blf_reader.hh"
 #include "print.hh"
-#include <iostream>
 #include <cstring>
+#include <iostream>
 
 template <typename type_data>
 auto read_template(const char *indata_array, type_data &data) -> size_t
@@ -87,7 +87,14 @@ auto main(int argc, char *argv[]) -> int
     if (argc > 1)
         {
             // go_through_file( argv[1] );
-            doit(argv[1]);
+            try
+                {
+                    doit(argv[1]);
+                }
+            catch (...)
+                {
+                    std::cout << "Houston, we have a problem\n";
+                }
         }
     else
         {

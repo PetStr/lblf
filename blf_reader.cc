@@ -36,7 +36,7 @@ const uint32_t defaultContainerSize = 0x20000;
 auto getfileLength(std::fstream &fileStream) -> uint32_t
 {
     fileStream.seekg(0, std::fstream::end);
-    uint32_t length = fileStream.tellg();
+    const uint32_t length = fileStream.tellg();
     fileStream.seekg(0, std::fstream::beg);
     return length;
 }
@@ -123,7 +123,7 @@ auto read_logcontainer(std::fstream &fileStream, LogContainer &lc, const BaseHea
 } // namespace
 
 
-auto blf_reader::read(BaseHeader &ohb) -> bool
+auto blf_reader::read_baseHeader(BaseHeader &ohb) -> bool
 {
     uint32_t current_position = fileStream.tellg();
     if (current_position == fileLength)
@@ -154,7 +154,7 @@ auto blf_reader::fill_deque() -> bool
         }
 
     struct BaseHeader ohb;
-    if (read(ohb))
+    if (read_baseHeader(ohb))
         {
             // Successful with object header
         }

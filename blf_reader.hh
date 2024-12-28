@@ -23,7 +23,7 @@ private:
     fileStatistics fileStat;
     uint32_t fileLength {0};
     auto fill_deque() -> bool;
-    auto read(BaseHeader &ohb) -> bool;
+    auto read_baseHeader(BaseHeader &ohb) -> bool;
 
 public:
     blf_reader(const blf_reader &) = delete;
