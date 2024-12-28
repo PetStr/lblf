@@ -129,25 +129,17 @@ auto consume_que(std::deque<char> &que, param &output) -> bool
 
 auto read(std::deque<char> &que, BaseHeader &ohb) -> bool
 {
-    // print(que, 16);
     consume_que(que, ohb.ObjSign);
-    // print(que, 16);
     if (ohb.ObjSign != ObjectSignature)
         {
             std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
             std::cout << '\n';
             return false;
         }
-
     consume_que(que, ohb.headerSize);
-    // print(que, 16);
     consume_que(que, ohb.headerVer);
-    // print(que, 16);
     consume_que(que, ohb.objSize);
-    // print(que, 16);
     consume_que(que, ohb.objectType);
-    // print(que, 16);
-
     return true;
 }
 
