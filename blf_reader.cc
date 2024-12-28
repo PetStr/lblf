@@ -95,11 +95,14 @@ auto read(std::fstream &fileStream, fileStatistics &os) -> bool
 
 auto read(std::fstream &fileStream, BaseHeader &ohb) -> bool
 {
+    uint32_t length1 = fileStream.tellg();
+    std::cout << "Filepointer at: " << length1 << '\n';
     fileStream.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
         {
-            std::cout << "directly from file: Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
-            std::cout << '\n';
+            uint32_t length2 = fileStream.tellg();
+            std::cout << "Directly from file: Not Found LOBJ: " << std::hex << (int) ohb.ObjSign << '\n';
+            std::cout << "Filepointer at: " << length2 << '\n';
             return false;
         }
     fileStream.read(reinterpret_cast<char *>(&ohb.headerSize), sizeof(ohb.headerSize));
