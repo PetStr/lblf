@@ -1,12 +1,12 @@
 /**
  * @file blf_reader.cc
  * @author Petter Strandh (petter.strandh@gmail.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-12-27
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 
@@ -25,7 +25,8 @@
 using namespace lblf;
 
 
-namespace {
+namespace
+{
 
 const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
@@ -53,58 +54,58 @@ void print(const std::deque<char> &data, size_t counts_to_print)
 }
 
 
-auto fileLength(std::fstream &fs) -> uint32_t
+auto fileLength(std::fstream &fileStream) -> uint32_t
 {
-    fs.seekg(0, std::fstream::end);
-    uint32_t length = fs.tellg();
-    fs.seekg(0, std::fstream::beg);
+    fileStream.seekg(0, std::fstream::end);
+    uint32_t length = fileStream.tellg();
+    fileStream.seekg(0, std::fstream::beg);
     return length;
 }
 
 
-auto read(std::fstream &fs, fileStatistics &os) -> bool
+auto read(std::fstream &fileStream, fileStatistics &os) -> bool
 {
-    fs.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
+    fileStream.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
     if (os.FileSign != FileSignature)
         {
             return false;
         }
 
-    fs.read(reinterpret_cast<char *>(&os.StatSize), sizeof(os.StatSize));
-    fs.read(reinterpret_cast<char *>(&os.AppId), sizeof(os.AppId));
-    fs.read(reinterpret_cast<char *>(&os.AppMaj), sizeof(os.AppMaj));
-    fs.read(reinterpret_cast<char *>(&os.AppMin), sizeof(os.AppMin));
-    fs.read(reinterpret_cast<char *>(&os.AppBuild), sizeof(os.AppBuild));
-    fs.read(reinterpret_cast<char *>(&os.ApiMaj), sizeof(os.ApiMaj));
-    fs.read(reinterpret_cast<char *>(&os.ApiMin), sizeof(os.ApiMin));
-    fs.read(reinterpret_cast<char *>(&os.ApiBuild), sizeof(os.ApiBuild));
-    fs.read(reinterpret_cast<char *>(&os.ApiPatch), sizeof(os.ApiPatch));
-    fs.read(reinterpret_cast<char *>(&os.fileSize), sizeof(os.fileSize));
-    fs.read(reinterpret_cast<char *>(&os.uncompressedSize), sizeof(os.uncompressedSize));
-    fs.read(reinterpret_cast<char *>(&os.objCount), sizeof(os.objCount));
-    fs.read(reinterpret_cast<char *>(&os.objRead), sizeof(os.objRead));
-    fs.read(reinterpret_cast<char *>(&os.meas_start_time), sizeof(os.meas_start_time));
-    fs.read(reinterpret_cast<char *>(&os.last_obj_time), sizeof(os.last_obj_time));
-    fs.read(reinterpret_cast<char *>(&os.fileSize_less115), sizeof(os.fileSize_less115));
+    fileStream.read(reinterpret_cast<char *>(&os.StatSize), sizeof(os.StatSize));
+    fileStream.read(reinterpret_cast<char *>(&os.AppId), sizeof(os.AppId));
+    fileStream.read(reinterpret_cast<char *>(&os.AppMaj), sizeof(os.AppMaj));
+    fileStream.read(reinterpret_cast<char *>(&os.AppMin), sizeof(os.AppMin));
+    fileStream.read(reinterpret_cast<char *>(&os.AppBuild), sizeof(os.AppBuild));
+    fileStream.read(reinterpret_cast<char *>(&os.ApiMaj), sizeof(os.ApiMaj));
+    fileStream.read(reinterpret_cast<char *>(&os.ApiMin), sizeof(os.ApiMin));
+    fileStream.read(reinterpret_cast<char *>(&os.ApiBuild), sizeof(os.ApiBuild));
+    fileStream.read(reinterpret_cast<char *>(&os.ApiPatch), sizeof(os.ApiPatch));
+    fileStream.read(reinterpret_cast<char *>(&os.fileSize), sizeof(os.fileSize));
+    fileStream.read(reinterpret_cast<char *>(&os.uncompressedSize), sizeof(os.uncompressedSize));
+    fileStream.read(reinterpret_cast<char *>(&os.objCount), sizeof(os.objCount));
+    fileStream.read(reinterpret_cast<char *>(&os.objRead), sizeof(os.objRead));
+    fileStream.read(reinterpret_cast<char *>(&os.meas_start_time), sizeof(os.meas_start_time));
+    fileStream.read(reinterpret_cast<char *>(&os.last_obj_time), sizeof(os.last_obj_time));
+    fileStream.read(reinterpret_cast<char *>(&os.fileSize_less115), sizeof(os.fileSize_less115));
     const uint32_t offset = os.StatSize - sizeof(fileStatistics);
-    fs.seekg(offset, std::ios_base::cur);
+    fileStream.seekg(offset, std::ios_base::cur);
     return true;
 }
 
 
-auto read(std::fstream &fs, BaseHeader &ohb) -> bool
+auto read(std::fstream &fileStream, BaseHeader &ohb) -> bool
 {
-    fs.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
+    fileStream.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
     if (ohb.ObjSign != ObjectSignature)
         {
-            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
+            std::cout << "directly from file: Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
             std::cout << '\n';
             return false;
         }
-    fs.read(reinterpret_cast<char *>(&ohb.headerSize), sizeof(ohb.headerSize));
-    fs.read(reinterpret_cast<char *>(&ohb.headerVer), sizeof(ohb.headerVer));
-    fs.read(reinterpret_cast<char *>(&ohb.objSize), sizeof(ohb.objSize));
-    fs.read(reinterpret_cast<char *>(&ohb.objectType), sizeof(ohb.objectType));
+    fileStream.read(reinterpret_cast<char *>(&ohb.headerSize), sizeof(ohb.headerSize));
+    fileStream.read(reinterpret_cast<char *>(&ohb.headerVer), sizeof(ohb.headerVer));
+    fileStream.read(reinterpret_cast<char *>(&ohb.objSize), sizeof(ohb.objSize));
+    fileStream.read(reinterpret_cast<char *>(&ohb.objectType), sizeof(ohb.objectType));
     return true;
 }
 
@@ -132,7 +133,7 @@ auto read(std::deque<char> &que, BaseHeader &ohb) -> bool
     consume_que(que, ohb.ObjSign);
     if (ohb.ObjSign != ObjectSignature)
         {
-            std::cout << "Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
+            std::cout << "consume_que Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
             std::cout << '\n';
             return false;
         }
@@ -144,9 +145,9 @@ auto read(std::deque<char> &que, BaseHeader &ohb) -> bool
 }
 
 
-auto read(std::fstream &fs, LogContainer &lc, const BaseHeader &ohb) -> bool
+auto read(std::fstream &fileStream, LogContainer &lc, const BaseHeader &ohb) -> bool
 {
-    fs.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
+    fileStream.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
     if (lc.compressionMethod == compressionMethod_e::uncompressed)
         {
@@ -173,33 +174,18 @@ void print(const std::vector<uint8_t> &data)
 }
 
 
-auto handle_container_compressed_deque(
-    std::vector<uint8_t> &compressedData,
-    const LogContainer &lc,
-    std::deque<char> &logcontainer_que) -> int
-{
-    uLong uncompressedFileSize = lc.unCompressedFileSize;
-    std::vector<uint8_t> uncompressedData {};
-
-    uncompressedData.resize(uncompressedFileSize);
-
-    int retVal = uncompress(
-        reinterpret_cast<Byte *>(uncompressedData.data()),
-        &uncompressedFileSize,
-        reinterpret_cast<Byte *>(compressedData.data()),
-        static_cast<uLong>(compressedData.size()));
-
-    logcontainer_que.insert(logcontainer_que.end(), uncompressedData.begin(), uncompressedData.end());
-
-    return retVal;
-}
-
 } // namespace
 
 auto blf_reader::fill_deque() -> bool
 {
+    if (fileStream.eof())
+        {
+            std::cout << "BLF file ended\n";
+            return false;
+        }
+
     struct BaseHeader ohb;
-    if (read(fs, ohb))
+    if (read(fileStream, ohb))
         {
             // Successful with object header
         }
@@ -211,7 +197,7 @@ auto blf_reader::fill_deque() -> bool
     if (ohb.objectType == ObjectType_e::LOG_CONTAINER)
         {
             struct LogContainer lc;
-            read(fs, lc, ohb);
+            read(fileStream, lc, ohb);
             // print(std::cout, lc);
             std::vector<uint8_t> container_data;
             auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
@@ -220,17 +206,26 @@ auto blf_reader::fill_deque() -> bool
 
             container_data.resize(compressedFileSize);
 
-            fs.read(reinterpret_cast<char *>(container_data.data()), compressedFileSize);
+            fileStream.read(reinterpret_cast<char *>(container_data.data()), compressedFileSize);
 
             // Padding
-            fs.seekg(ohb.objSize % 4, std::ios_base::cur);
+            fileStream.seekg(ohb.objSize % 4, std::ios_base::cur);
 
             if (lc.compressionMethod == compressionMethod_e::zlib)
                 {
-                    const auto retVal = handle_container_compressed_deque(
-                        container_data,
-                        lc,
-                        logcontainer_que);
+                    uLong uncompressedFileSize = lc.unCompressedFileSize;
+                    std::vector<uint8_t> uncompressedData {};
+
+                    uncompressedData.resize(uncompressedFileSize);
+
+                    const int retVal = uncompress(
+                        reinterpret_cast<Byte *>(uncompressedData.data()),
+                        &uncompressedFileSize,
+                        reinterpret_cast<Byte *>(container_data.data()),
+                        static_cast<uLong>(container_data.size()));
+
+                    logcontainer_que.insert(logcontainer_que.end(), uncompressedData.begin(), uncompressedData.end());
+
                     if (retVal not_eq 0)
                         {
                             throw std::runtime_error("zlib error");
@@ -240,14 +235,14 @@ auto blf_reader::fill_deque() -> bool
                 {
                     print(std::cout, lc);
                     logcontainer_que.insert(logcontainer_que.end(), container_data.begin(), container_data.end());
-                    //throw std::runtime_error("Not implemented uncompressed");
+                    // throw std::runtime_error("Not implemented uncompressed");
                 }
         }
     else
         {
             const int32_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
-            // std::cout << "To jump: " << bytes_to_jump << '\n';
-            fs.seekg(bytes_to_jump, std::ios_base::cur);
+            std::cout << "No LogContainer on fileStream, to jump: " << bytes_to_jump << '\n';
+            fileStream.seekg(bytes_to_jump, std::ios_base::cur);
         }
     return true;
 }
@@ -255,16 +250,16 @@ auto blf_reader::fill_deque() -> bool
 
 blf_reader::blf_reader(const std::string &filename)
 {
-    fs.open(filename, std::fstream::in | std::fstream::binary);
+    fileStream.open(filename, std::fstream::in | std::fstream::binary);
 
-    if (fs.fail())
+    if (fileStream.fail())
         {
             throw std::runtime_error("Failed to open file: " + filename);
         }
 
-    if (fs)
+    if (fileStream)
         {
-            if (read(fs, fileStat))
+            if (read(fileStream, fileStat))
                 {
                     print(std::cout, fileStat);
                 }
@@ -279,7 +274,7 @@ blf_reader::blf_reader(const std::string &filename)
 
 blf_reader::~blf_reader()
 {
-    fs.close();
+    fileStream.close();
 }
 
 
@@ -292,7 +287,7 @@ auto blf_reader::fileStatistics() -> struct fileStatistics
 auto
 blf_reader::next() -> bool
 {
-    return !fs.eof();
+    return !fileStream.eof();
 }
 
 

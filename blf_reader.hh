@@ -18,7 +18,7 @@ struct lobj
 class blf_reader
 {
 private:
-    std::fstream fs;
+    std::fstream fileStream;
     std::deque<char> logcontainer_que;
     fileStatistics fileStat;
     auto fill_deque() -> bool;
