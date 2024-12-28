@@ -199,7 +199,7 @@ auto blf_reader::fill_deque() -> bool
             struct LogContainer lc;
             read(fileStream, lc, ohb);
             // print(std::cout, lc);
-            std::vector<uint8_t> container_data;
+            std::vector<char> container_data;
             auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
 
             // std::cout << "compressed blob: " << compressedFileSize << '\n';
