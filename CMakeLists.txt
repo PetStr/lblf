@@ -31,10 +31,10 @@ target_link_libraries(count_id -lz )
 
 add_executable(print_structs print_structs.cc)
 
-#add_executable(deque_replenish deque_replenish.cc)
 
-#add_executable(deque_example deque_example.cc)
 
 #add_executable(variant variant.cc)
-#add_executable(tell_gear tell_gear.cc print.cc)
+
+add_executable(tell_gear tell_gear.cc print.cc blf_reader.cc)
+target_link_libraries(tell_gear -lz )
 

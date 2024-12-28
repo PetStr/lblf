@@ -30,31 +30,10 @@ namespace
 
 const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
-
 const uint32_t defaultContainerSize = 0x20000;
 
 
-void print(const std::deque<char> &data, size_t counts_to_print)
-{
-    size_t cnt = 0;
-    for (auto a: data)
-        {
-            std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) static_cast<uint8_t>(a);
-            cnt++;
-            if ((cnt % 16) == 0)
-                {
-                    std::cout << '\n';
-                }
-            if (cnt >= counts_to_print)
-                {
-                    break;
-                }
-        }
-    std::cout << '\n';
-}
-
-
-auto fileLength(std::fstream &fileStream) -> uint32_t
+auto getfileLength(std::fstream &fileStream) -> uint32_t
 {
     fileStream.seekg(0, std::fstream::end);
     uint32_t length = fileStream.tellg();
@@ -63,7 +42,7 @@ auto fileLength(std::fstream &fileStream) -> uint32_t
 }
 
 
-auto read(std::fstream &fileStream, fileStatistics &os) -> bool
+auto read_fileStatistics(std::fstream &fileStream, fileStatistics &os) -> bool
 {
     fileStream.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
     if (os.FileSign != FileSignature)
@@ -93,26 +72,6 @@ auto read(std::fstream &fileStream, fileStatistics &os) -> bool
 }
 
 
-auto read(std::fstream &fileStream, BaseHeader &ohb) -> bool
-{
-    uint32_t length1 = fileStream.tellg();
-    std::cout << "Filepointer at: " << length1 << '\n';
-    fileStream.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
-    if (ohb.ObjSign != ObjectSignature)
-        {
-            uint32_t length2 = fileStream.tellg();
-            std::cout << "Directly from file: Not Found LOBJ: " << std::hex << (int) ohb.ObjSign << '\n';
-            std::cout << "Filepointer at: " << length2 << '\n';
-            return false;
-        }
-    fileStream.read(reinterpret_cast<char *>(&ohb.headerSize), sizeof(ohb.headerSize));
-    fileStream.read(reinterpret_cast<char *>(&ohb.headerVer), sizeof(ohb.headerVer));
-    fileStream.read(reinterpret_cast<char *>(&ohb.objSize), sizeof(ohb.objSize));
-    fileStream.read(reinterpret_cast<char *>(&ohb.objectType), sizeof(ohb.objectType));
-    return true;
-}
-
-
 template <typename param>
 auto consume_que(std::deque<char> &que, param &output) -> bool
 {
@@ -131,7 +90,7 @@ auto consume_que(std::deque<char> &que, param &output) -> bool
 }
 
 
-auto read(std::deque<char> &que, BaseHeader &ohb) -> bool
+auto read_deque(std::deque<char> &que, BaseHeader &ohb) -> bool
 {
     consume_que(que, ohb.ObjSign);
     if (ohb.ObjSign != ObjectSignature)
@@ -148,7 +107,7 @@ auto read(std::deque<char> &que, BaseHeader &ohb) -> bool
 }
 
 
-auto read(std::fstream &fileStream, LogContainer &lc, const BaseHeader &ohb) -> bool
+auto read_logcontainer(std::fstream &fileStream, LogContainer &lc, const BaseHeader &ohb) -> bool
 {
     fileStream.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
@@ -161,23 +120,30 @@ auto read(std::fstream &fileStream, LogContainer &lc, const BaseHeader &ohb) -> 
 }
 
 
-void print(const std::vector<uint8_t> &data)
+} // namespace
+
+
+auto blf_reader::read(BaseHeader &ohb) -> bool
 {
-    size_t cnt = 0;
-    for (auto a: data)
+    uint32_t current_position = fileStream.tellg();
+    if (current_position == fileLength)
         {
-            std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
-            cnt++;
-            if ((cnt % 16) == 0)
-                {
-                    std::cout << '\n';
-                }
+            return false;
         }
-    std::cout << '\n';
+
+    fileStream.read(reinterpret_cast<char *>(&ohb.ObjSign), sizeof(ohb.ObjSign));
+    if (ohb.ObjSign != ObjectSignature)
+        {
+            std::cout << "Directly from file: Not Found LOBJ: " << std::hex << (int) ohb.ObjSign << '\n';
+            return false;
+        }
+    fileStream.read(reinterpret_cast<char *>(&ohb.headerSize), sizeof(ohb.headerSize));
+    fileStream.read(reinterpret_cast<char *>(&ohb.headerVer), sizeof(ohb.headerVer));
+    fileStream.read(reinterpret_cast<char *>(&ohb.objSize), sizeof(ohb.objSize));
+    fileStream.read(reinterpret_cast<char *>(&ohb.objectType), sizeof(ohb.objectType));
+    return true;
 }
 
-
-} // namespace
 
 auto blf_reader::fill_deque() -> bool
 {
@@ -188,7 +154,7 @@ auto blf_reader::fill_deque() -> bool
         }
 
     struct BaseHeader ohb;
-    if (read(fileStream, ohb))
+    if (read(ohb))
         {
             // Successful with object header
         }
@@ -200,7 +166,7 @@ auto blf_reader::fill_deque() -> bool
     if (ohb.objectType == ObjectType_e::LOG_CONTAINER)
         {
             struct LogContainer lc;
-            read(fileStream, lc, ohb);
+            read_logcontainer(fileStream, lc, ohb);
             // print(std::cout, lc);
             std::vector<char> container_data;
             auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
@@ -236,7 +202,7 @@ auto blf_reader::fill_deque() -> bool
                 }
             else
                 {
-                    print(std::cout, lc);
+                    lblf::print::print(std::cout, lc);
                     logcontainer_que.insert(logcontainer_que.end(), container_data.begin(), container_data.end());
                     // throw std::runtime_error("Not implemented uncompressed");
                 }
@@ -262,9 +228,10 @@ blf_reader::blf_reader(const std::string &filename)
 
     if (fileStream)
         {
-            if (read(fileStream, fileStat))
+            fileLength = getfileLength(fileStream);
+            if (read_fileStatistics(fileStream, fileStat))
                 {
-                    print(std::cout, fileStat);
+                    lblf::print::print(std::cout, fileStat);
                 }
             else
                 {
@@ -290,7 +257,7 @@ auto blf_reader::fileStatistics() -> struct fileStatistics
 auto
 blf_reader::next() -> bool
 {
-    return !fileStream.eof();
+    return not(fileStream.tellg() >= fileLength);
 }
 
 
@@ -308,7 +275,7 @@ auto blf_reader::data() -> struct lblf::lobj
             return result;
         }
 
-    read(logcontainer_que, result.base_header);
+    read_deque(logcontainer_que, result.base_header);
 
     // lblf::print(std::cout, result.base_header);
     const size_t size_of_data = result.base_header.objSize - sizeof(result.base_header) + (result.base_header.objSize % 4);

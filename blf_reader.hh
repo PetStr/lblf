@@ -21,7 +21,9 @@ private:
     std::fstream fileStream;
     std::deque<char> logcontainer_que;
     fileStatistics fileStat;
+    uint32_t fileLength {0};
     auto fill_deque() -> bool;
+    auto read(BaseHeader &ohb) -> bool;
 
 public:
     blf_reader(const blf_reader &) = delete;

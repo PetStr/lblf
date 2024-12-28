@@ -7,8 +7,10 @@
 
 #include "blf_structs.hh"
 
-namespace lblf
+namespace lblf::print
 {
+void print(std::ostream &stream, const std::vector<uint8_t> &data);
+void print(std::ostream &stream, const std::deque<char> &data, size_t counts_to_print);
 auto print(lblf::exit_codes ec) -> std::string;
 auto print(lblf::ObjectType_e ot) -> std::string;
 auto print(lblf::AppId_e ai) -> std::string;
@@ -34,6 +36,6 @@ void print(std::ostream &stream, const lblf::CanError_short &cfe);
 void print(std::ostream &stream, const lblf::CANErrorFrameExt &ce);
 void print(std::ostream &stream, const CANDriverStatistic &can_stat);
 
-} // namespace lblf
+} // namespace lblf::print
 
 #endif

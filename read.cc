@@ -21,7 +21,7 @@ void doit(const std::string &filename)
             counter++;
             const auto data = reader.data();
             std::cout << std::dec << counter << ", ";
-            std::cout << lblf::print(data.base_header.objectType) << '\n';
+            std::cout << lblf::print::print(data.base_header.objectType) << '\n';
         }
 }
 
@@ -42,7 +42,7 @@ void doit2(const std::string &filename)
                             read_template(data.payload.data(), can2);
                         }
                     std::cout << std::dec << counter << ", ";
-                    print(std::cout, can2);
+                    lblf::print::print(std::cout, can2);
                 }
         }
 }

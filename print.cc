@@ -3,8 +3,44 @@
 #include "blf_structs.hh"
 #include <iomanip>
 
-namespace lblf
+namespace lblf::print
 {
+
+void print(std::ostream &stream, const std::vector<uint8_t> &data)
+{
+    size_t cnt = 0;
+    for (auto a: data)
+        {
+            stream << " " << std::hex << std::setfill('0') << std::setw(2) << (int) a;
+            cnt++;
+            if ((cnt % 16) == 0)
+                {
+                    stream << '\n';
+                }
+        }
+    stream << '\n';
+}
+
+
+void print(std::ostream &stream, const std::deque<char> &data, size_t counts_to_print)
+{
+    size_t cnt = 0;
+    for (auto a: data)
+        {
+            stream << " " << std::hex << std::setfill('0') << std::setw(2) << (int) static_cast<uint8_t>(a);
+            cnt++;
+            if ((cnt % 16) == 0)
+                {
+                    stream << '\n';
+                }
+            if (cnt >= counts_to_print)
+                {
+                    break;
+                }
+        }
+    stream << '\n';
+}
+
 
 auto print(exit_codes ec) -> std::string
 {
@@ -319,7 +355,7 @@ auto print(AppId_e ai) -> std::string
         case AppId_e::PORSCHELOGGER:
             return "PORSCHELOGGER";
         }
-    return "Undeclared AppId: ";
+    return "Undeclared AppId: " + std::to_string (static_cast<int> (ai));
 }
 
 
@@ -618,8 +654,9 @@ void print(std::ostream &stream, const CANErrorFrameExt &ce)
     stream << " mFlagsExt: " << (int) ce.FlagsExt;
     stream << " mReserved2: " << (int) ce.Reserved2;
     stream << " mData:";
-    for (auto n: ce.Data)
+    for (auto n: ce.Data) {
         stream << " " << std::hex << std::setfill('0') << std::setw(2) << (int) n;
+}
     stream << '\n';
 }
 
@@ -638,4 +675,4 @@ void print(std::ostream &s, const CANDriverStatistic &can_stat)
 }
 
 
-} // namespace lblf
+} // namespace lblf::print
