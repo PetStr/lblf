@@ -14,8 +14,8 @@
 
 struct dbc_id_data
 {
-    uint8_t dbc_table{0};
-    uint32_t id{0};
+    uint8_t dbc_table {0};
+    uint32_t id {0};
     std::string id_name;
 };
 
@@ -348,7 +348,6 @@ auto main(int argc, char *argv[]) -> int
                             can_id_count(GLOBAL::id_data, can_id, channel);
                         }
                 }
-
         }
     print_frameid_dbcdata(std::cout, GLOBAL::id_data, dbc_data);
     std::cout << "Number of dbc frames: " << dbc_data.size() << '\n';

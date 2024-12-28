@@ -232,7 +232,10 @@ struct BaseHeader
     uint16_t headerSize {0};
     uint16_t headerVer {0};
     uint32_t objSize {0};
-    enum ObjectType_e objectType {ObjectType_e::UNKNOWN}; //uint32_t
+    enum ObjectType_e objectType
+    {
+        ObjectType_e::UNKNOWN
+    }; // uint32_t
 };
 
 
@@ -288,64 +291,64 @@ struct LogContainer
 };
 
 
-//CAN_MSG_DIR	Direction	Sent (TX) or Received (RX).
-// Extract direction (lower 4 bits)
+// CAN_MSG_DIR	Direction	Sent (TX) or Received (RX).
+//  Extract direction (lower 4 bits)
 constexpr auto CAN_MSG_DIR(uint8_t f) -> uint8_t
 {
     return f & 0x0FU;
 }
 
-//CAN_MSG_RTR	Remote Transmission Request	Normal (0) or Remote (1).
-// Extract Remote Transmission Request (RTR) (bit 7)
+// CAN_MSG_RTR	Remote Transmission Request	Normal (0) or Remote (1).
+//  Extract Remote Transmission Request (RTR) (bit 7)
 constexpr auto CAN_MSG_RTR(uint8_t f) -> uint8_t
 {
     return (f & 0x80U) >> 7U;
 }
 
-//CAN_MSG_WU	Wake-Up Message	Message causing wake-up.
-// Extract Wake-Up (WU) flag (bit 6)
+// CAN_MSG_WU	Wake-Up Message	Message causing wake-up.
+//  Extract Wake-Up (WU) flag (bit 6)
 constexpr auto CAN_MSG_WU(uint8_t f) -> uint8_t
 {
     return (f & 0x40U) >> 6U;
 }
 
-//CAN_MSG_NERR	Network Error	Error frame detected.
-// Extract Network Error (NERR) flag (bit 5)
+// CAN_MSG_NERR	Network Error	Error frame detected.
+//  Extract Network Error (NERR) flag (bit 5)
 constexpr auto CAN_MSG_NERR(uint8_t f) -> uint8_t
 {
     return (f & 0x20U) >> 5U;
 }
 
-//CAN_MSG_FLAGS	General Flags	Additional message information.
-// Combine direction and RTR into flags
+// CAN_MSG_FLAGS	General Flags	Additional message information.
+//  Combine direction and RTR into flags
 constexpr auto CAN_MSG_FLAGS(uint8_t dir, uint8_t rtr) -> uint8_t
 {
     return ((rtr & 0x01U) << 7U) | (dir & 0x0FU);
 }
 
-//CAN_MSG_FLAGS_EXT	Extended Identifier	Standard (0) or Extended (1).
-// Combine direction, RTR, WU, and NERR into extended flags
+// CAN_MSG_FLAGS_EXT	Extended Identifier	Standard (0) or Extended (1).
+//  Combine direction, RTR, WU, and NERR into extended flags
 constexpr auto CAN_MSG_FLAGS_EXT(uint8_t dir, uint8_t rtr, uint8_t wu, uint8_t nerr) -> uint8_t
 {
     return ((rtr & 0x01U) << 7U) | ((wu & 0x01U) << 6U) | ((nerr & 0x01U) << 5U) | (dir & 0x0FU);
 }
 
-//CAN_FD_MSG_EDL	CAN FD Mode	Indicates FD protocol.
-// Extract CAN FD Extended Data Length (EDL) flag (bit 0)
+// CAN_FD_MSG_EDL	CAN FD Mode	Indicates FD protocol.
+//  Extract CAN FD Extended Data Length (EDL) flag (bit 0)
 constexpr auto CAN_FD_MSG_EDL(uint8_t f) -> uint8_t
 {
     return f & 0x01U;
 }
 
-//CAN_FD_MSG_BRS	Bit Rate Switching	Higher bit rate during data phase.
-// Extract CAN FD Bit Rate Switch (BRS) flag (bit 1)
+// CAN_FD_MSG_BRS	Bit Rate Switching	Higher bit rate during data phase.
+//  Extract CAN FD Bit Rate Switch (BRS) flag (bit 1)
 constexpr auto CAN_FD_MSG_BRS(uint8_t f) -> uint8_t
 {
     return (f & 0x02U) >> 1U;
 }
 
-//CAN_FD_MSG_ESI	Error State Indicator	Active (0) or Passive (1).
-// Extract CAN FD Error State Indicator (ESI) flag (bit 2)
+// CAN_FD_MSG_ESI	Error State Indicator	Active (0) or Passive (1).
+//  Extract CAN FD Error State Indicator (ESI) flag (bit 2)
 constexpr auto CAN_FD_MSG_ESI(uint8_t f) -> uint8_t
 {
     return (f & 0x04U) >> 2U;
@@ -489,7 +492,7 @@ struct AppText_obh
     uint32_t mSource {0};
     uint32_t reserved {0};
     uint32_t mTextLength {0};
-    //string that is mTextLength
+    // string that is mTextLength
 };
 
 

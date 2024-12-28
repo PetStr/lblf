@@ -355,7 +355,7 @@ auto print(AppId_e ai) -> std::string
         case AppId_e::PORSCHELOGGER:
             return "PORSCHELOGGER";
         }
-    return "Undeclared AppId: " + std::to_string (static_cast<int> (ai));
+    return "Undeclared AppId: " + std::to_string(static_cast<int>(ai));
 }
 
 
@@ -654,9 +654,10 @@ void print(std::ostream &stream, const CANErrorFrameExt &ce)
     stream << " mFlagsExt: " << (int) ce.FlagsExt;
     stream << " mReserved2: " << (int) ce.Reserved2;
     stream << " mData:";
-    for (auto n: ce.Data) {
-        stream << " " << std::hex << std::setfill('0') << std::setw(2) << (int) n;
-}
+    for (auto n: ce.Data)
+        {
+            stream << " " << std::hex << std::setfill('0') << std::setw(2) << (int) n;
+        }
     stream << '\n';
 }
 

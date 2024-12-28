@@ -103,7 +103,7 @@ stream_type& operator>>(stream_type& is, CanError& cm)
 template <typename stream_type>
 stream_type& operator>>(stream_type& is, uint8_t& var)
 {
-    is.read(reinterpret_cast<char *>(&var), sizeof(var));
+    is.read(reinterpret_cast<char*>(&var), sizeof(var));
     return is;
 }
 
@@ -111,7 +111,7 @@ stream_type& operator>>(stream_type& is, uint8_t& var)
 template <typename stream_type>
 stream_type& operator>>(stream_type& is, uint16_t& var)
 {
-    is.read(reinterpret_cast<char *>(&var), sizeof(var));
+    is.read(reinterpret_cast<char*>(&var), sizeof(var));
     return is;
 }
 
@@ -128,14 +128,14 @@ stream_type& operator>>(stream_type& is, uint32_t& var)
 template <typename stream_type>
 auto operator>>(stream_type& is, uint64_t& var) -> stream_type&
 {
-    is.read(reinterpret_cast<char *>(&var), sizeof(var));
+    is.read(reinterpret_cast<char*>(&var), sizeof(var));
     return is;
 }
 
 
 auto operator>>(std::istream& is, uint8_t& var) -> std::istream&
 {
-    auto *placeholder = reinterpret_cast<char*>(&var);
+    auto* placeholder = reinterpret_cast<char*>(&var);
     is.read(placeholder, sizeof(var));
     return is;
 }
@@ -143,30 +143,29 @@ auto operator>>(std::istream& is, uint8_t& var) -> std::istream&
 
 auto operator>>(std::istream& is, uint16_t& var) -> std::istream&
 {
-    is.read(reinterpret_cast<char *>(&var), sizeof(var));
+    is.read(reinterpret_cast<char*>(&var), sizeof(var));
     return is;
 }
 
 
 auto operator>>(std::istream& is, uint32_t& var) -> std::istream&
 {
-    is.read(reinterpret_cast<char *>(&var), sizeof(var));
+    is.read(reinterpret_cast<char*>(&var), sizeof(var));
     return is;
 }
 
 
 auto operator>>(std::istream& is, uint64_t& var) -> std::istream&
 {
-    is.read(reinterpret_cast<char *>(&var), sizeof(var));
+    is.read(reinterpret_cast<char*>(&var), sizeof(var));
     return is;
 }
-
 
 
 template <typename type_data, typename stream_type>
 bool read_template(stream_type& fs, type_data& data)
 {
-    fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
+    fs.read(reinterpret_cast<char*>(&data), sizeof(type_data));
     return true;
 }
 
@@ -174,7 +173,7 @@ bool read_template(stream_type& fs, type_data& data)
 template <typename type_data>
 bool read_template(std::istream& fs, type_data& data)
 {
-    fs.read(reinterpret_cast<char *>(&data), sizeof(type_data));
+    fs.read(reinterpret_cast<char*>(&data), sizeof(type_data));
     return true;
 }
 
@@ -182,7 +181,7 @@ bool read_template(std::istream& fs, type_data& data)
 template <typename stream_type>
 bool read(stream_type& fs, fileStatistics& os)
 {
-    fs >> os.FileSign; // PSPS Error starts here. 
+    fs >> os.FileSign; // PSPS Error starts here.
     if (os.FileSign != FileSignature)
         {
             return false;

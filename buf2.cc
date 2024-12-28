@@ -5,12 +5,12 @@ using namespace std;
 
 /*** vxor_streambuf class ******************************************/
 
-class vxor_streambuf: public streambuf
+class vxor_streambuf : public streambuf
 {
 public:
-    vxor_streambuf(streambuf *buffer, const int width) :
-        buffer(buffer),
-        size(width / 2)
+    vxor_streambuf(streambuf *buffer, const int width)
+        : buffer(buffer)
+        , size(width / 2)
     {
         previous_line = new char[size];
         memset(previous_line, 0, size);
@@ -30,7 +30,8 @@ public:
     {
         // Read line from original buffer
         streamsize read = buffer->sgetn(current_line, size);
-        if (!read) return traits_type::eof();
+        if (!read)
+            return traits_type::eof();
 
         // Do vertical XOR decoding
         for (int i = 0; i < size; i += 1)
@@ -58,11 +59,13 @@ public:
 
                 // Write line to original buffer
                 streamsize written = buffer->sputn(current_line, write);
-                if (written != write) return traits_type::eof();
+                if (written != write)
+                    return traits_type::eof();
             }
 
         setp(current_line, current_line + size);
-        if (!traits_type::eq_int_type(value, traits_type::eof())) sputc(value);
+        if (!traits_type::eq_int_type(value, traits_type::eof()))
+            sputc(value);
         return traits_type::not_eof(value);
     };
 
@@ -83,11 +86,13 @@ private:
 
 /*** vxor_istream class ********************************************/
 
-class vxor_istream: public istream
+class vxor_istream : public istream
 {
 public:
-    vxor_istream(istream &stream, const int width) :
-        istream(new vxor_streambuf(stream.rdbuf(), width)) {}
+    vxor_istream(istream &stream, const int width)
+        : istream(new vxor_streambuf(stream.rdbuf(), width))
+    {
+    }
 
     virtual ~vxor_istream()
     {
@@ -98,11 +103,13 @@ public:
 
 /*** vxor_ostream class ********************************************/
 
-class vxor_ostream: public ostream
+class vxor_ostream : public ostream
 {
 public:
-    vxor_ostream(ostream &stream, const int width) :
-        ostream(new vxor_streambuf(stream.rdbuf(), width)) {}
+    vxor_ostream(ostream &stream, const int width)
+        : ostream(new vxor_streambuf(stream.rdbuf(), width))
+    {
+    }
 
     virtual ~vxor_ostream()
     {

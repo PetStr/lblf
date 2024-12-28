@@ -1,31 +1,37 @@
+#include <algorithm>
 #include <deque>
 #include <iostream>
-#include <algorithm>
 
-class DynamicBuffer {
+class DynamicBuffer
+{
 public:
     // Add data to the buffer
-    void append(const char* data, std::size_t size) {
+    void append(const char* data, std::size_t size)
+    {
         buffer_.insert(buffer_.end(), data, data + size);
     }
 
     // Consume data from the front of the buffer
-    auto consume(std::size_t n) -> std::size_t {
+    auto consume(std::size_t n) -> std::size_t
+    {
         std::size_t to_consume = std::min(n, buffer_.size());
         buffer_.erase(buffer_.begin(), buffer_.begin() + to_consume);
         return to_consume;
     }
 
     // Get the size of the buffer
-    [[nodiscard]] auto size() const -> std::size_t {
+    [[nodiscard]] auto size() const -> std::size_t
+    {
         return buffer_.size();
     }
 
     // Print buffer contents (demonstration)
-    void print() const {
-        for (char c : buffer_) {
-            std::cout << c;
-        }
+    void print() const
+    {
+        for (char c: buffer_)
+            {
+                std::cout << c;
+            }
         std::cout << '\n';
     }
 
@@ -33,7 +39,8 @@ private:
     std::deque<char> buffer_;
 };
 
-int main() {
+int main()
+{
     DynamicBuffer buffer;
 
     // Simulate appending data

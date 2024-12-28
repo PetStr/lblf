@@ -3,6 +3,7 @@
 #include "print.hh"
 #include <cstring>
 #include <iostream>
+#include <map>
 
 template <typename type_data>
 auto read_template(const char *indata_array, type_data &data) -> size_t
@@ -79,17 +80,34 @@ void doit3(const std::string &filename)
 }
 
 
+void doit4(const std::string &filename)
+{
+    std::map<lblf::ObjectType_e, size_t> input_types;
+    lblf::blf_reader reader(filename);
+    size_t counter = 0;
+    while (reader.next())
+        {
+            counter++;
+            const auto data = reader.data();
+            input_types[data.base_header.objectType]++;
+        }
+    std::cout << std::dec << "Loops: " << counter << '\n';
+    for (const auto value: input_types)
+        {
+            std::cout << lblf::print::print(value.first) << '\t' << value.second << '\n';
+        }
+}
+
 auto main(int argc, char *argv[]) -> int
 {
-
     std::cout << "----- START OF OUTPUT -----------------------------\n";
 
     if (argc > 1)
         {
-            // go_through_file( argv[1] );
             try
                 {
-                    doit(argv[1]);
+                    const std::string filename(argv[1]);
+                    doit4(filename);
                 }
             catch (...)
                 {

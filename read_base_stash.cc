@@ -246,8 +246,8 @@ auto handle_container_compressed(std::vector<uint8_t> &compressedFile, LogContai
 
     uncompressedFile.resize(bytes_left_in_container);
 
-   // std::cout << "compressed file size: " << compressedFile.size() << '\n';
-   // std::cout << "uncompressed file size: " << bytes_left_in_container << '\n';
+    // std::cout << "compressed file size: " << compressedFile.size() << '\n';
+    // std::cout << "uncompressed file size: " << bytes_left_in_container << '\n';
 
 
     if (0)
@@ -689,13 +689,13 @@ void go_through_file_log_container(const char *const filename)
                     std::vector<uint8_t> container_data;
                     auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
 
-                    //std::cout << "compressed blob: " << compressedFileSize << '\n';
+                    // std::cout << "compressed blob: " << compressedFileSize << '\n';
 
                     container_data.resize(compressedFileSize);
 
                     fs.read(reinterpret_cast<char *>(container_data.data()), compressedFileSize);
 
-                    //Padding
+                    // Padding
                     fs.seekg(ohb.objSize % 4, std::ios_base::cur);
 
                     std::cout << "data size: " << container_data.size() << '\n';

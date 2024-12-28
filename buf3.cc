@@ -4,9 +4,9 @@
 // BasicSequenceInputBuffer
 // ============================================================================
 
-template < typename Char, typename Traits = std::char_traits<Char> >
+template <typename Char, typename Traits = std::char_traits<Char>>
 class BasicSequenceInputBuffer
-    :   public std::basic_streambuf<Char, Traits>
+    : public std::basic_streambuf<Char, Traits>
 {
     // Types
     // =====
@@ -82,9 +82,9 @@ template <typename Char, typename Traits>
 typename BasicSequenceInputBuffer<Char, Traits>::int_type
 BasicSequenceInputBuffer<Char, Traits>::pbackfail(int_type ch)
 {
-    if(is_eof(ch))
+    if (is_eof(ch))
         {
-            if(this->eback() != this->gptr())
+            if (this->eback() != this->gptr())
                 {
                     this->gbump(-1);
                     return traits_type::to_int_type(*this->gptr());
@@ -99,9 +99,9 @@ typedef BasicSequenceInputBuffer<char> SequenceInputBuffer;
 // BasicSequenceInputStream
 //=============================================================================
 
-template < typename Char, typename Traits = std::char_traits<Char> >
+template <typename Char, typename Traits = std::char_traits<Char>>
 class BasicSequenceInputStream
-    :   public std::basic_istream<Char, Traits>
+    : public std::basic_istream<Char, Traits>
 {
 private:
     typedef std::basic_istream<Char, Traits> Base;
@@ -125,8 +125,10 @@ public:
 
 public:
     explicit BasicSequenceInputStream(pointer data, size_type size)
-        :   Base(&m_buf), m_buf(data, size)
-    {}
+        : Base(&m_buf)
+        , m_buf(data, size)
+    {
+    }
 
 private:
     buffer_type m_buf;
@@ -147,7 +149,7 @@ int main()
     const std::vector<uint8_t> vector(s.begin(), s.end());
     SequenceInputStream stream(vector.data(), vector.size());
 
-    uint8_t * line;
+    uint8_t* line;
     stream.read(line, 1);
     std::cout << line << '\n';
 }
