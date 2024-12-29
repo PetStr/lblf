@@ -482,6 +482,7 @@ struct AppText
     uint32_t mSource {0};
     uint32_t reserved {0};
     uint32_t mTextLength {0};
+    uint32_t reserved2 {0}; // extra field not present in reference documentation.
     char *mText {nullptr};
 };
 
@@ -492,6 +493,7 @@ struct AppText_obh
     uint32_t mSource {0};
     uint32_t reserved {0};
     uint32_t mTextLength {0};
+    uint32_t reserved2 {0}; // extra field not present in reference documentation.
     // string that is mTextLength
 };
 

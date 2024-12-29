@@ -67,7 +67,7 @@ void doit3(const std::string &filename)
                     std::cout << std::dec << counter << ", ";
                     std::string AppText_string;
                     const auto length = Apptext.mTextLength;
-                    const auto offset = sizeof(Apptext) + 4U;
+                    const auto offset = sizeof(Apptext);
                     const auto far_length = length + offset;
                     for (size_t i = offset; i < far_length; ++i)
                         {
