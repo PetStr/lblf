@@ -42,36 +42,6 @@ auto getfileLength(std::fstream &fileStream) -> uint32_t
 }
 
 
-auto read_fileStatistics(std::fstream &fileStream, fileStatistics &os) -> bool
-{
-    fileStream.read(reinterpret_cast<char *>(&os.FileSign), sizeof(os.FileSign));
-    if (os.FileSign != FileSignature)
-        {
-            return false;
-        }
-
-    fileStream.read(reinterpret_cast<char *>(&os.StatSize), sizeof(os.StatSize));
-    fileStream.read(reinterpret_cast<char *>(&os.AppId), sizeof(os.AppId));
-    fileStream.read(reinterpret_cast<char *>(&os.AppMaj), sizeof(os.AppMaj));
-    fileStream.read(reinterpret_cast<char *>(&os.AppMin), sizeof(os.AppMin));
-    fileStream.read(reinterpret_cast<char *>(&os.AppBuild), sizeof(os.AppBuild));
-    fileStream.read(reinterpret_cast<char *>(&os.ApiMaj), sizeof(os.ApiMaj));
-    fileStream.read(reinterpret_cast<char *>(&os.ApiMin), sizeof(os.ApiMin));
-    fileStream.read(reinterpret_cast<char *>(&os.ApiBuild), sizeof(os.ApiBuild));
-    fileStream.read(reinterpret_cast<char *>(&os.ApiPatch), sizeof(os.ApiPatch));
-    fileStream.read(reinterpret_cast<char *>(&os.fileSize), sizeof(os.fileSize));
-    fileStream.read(reinterpret_cast<char *>(&os.uncompressedSize), sizeof(os.uncompressedSize));
-    fileStream.read(reinterpret_cast<char *>(&os.objCount), sizeof(os.objCount));
-    fileStream.read(reinterpret_cast<char *>(&os.objRead), sizeof(os.objRead));
-    fileStream.read(reinterpret_cast<char *>(&os.meas_start_time), sizeof(os.meas_start_time));
-    fileStream.read(reinterpret_cast<char *>(&os.last_obj_time), sizeof(os.last_obj_time));
-    fileStream.read(reinterpret_cast<char *>(&os.fileSize_less115), sizeof(os.fileSize_less115));
-    const uint32_t offset = os.StatSize - sizeof(fileStatistics);
-    fileStream.seekg(offset, std::ios_base::cur);
-    return true;
-}
-
-
 template <typename param>
 auto consume_que(std::deque<char> &que, param &output) -> bool
 {
@@ -122,6 +92,35 @@ auto read_logcontainer(std::fstream &fileStream, LogContainer &lc, const BaseHea
 
 } // namespace
 
+
+auto blf_reader::read_fileStatistics() -> bool
+{
+    fileStream.read(reinterpret_cast<char *>(&fileStat.FileSign), sizeof(fileStat.FileSign));
+    if (fileStat.FileSign != FileSignature)
+        {
+            return false;
+        }
+
+    fileStream.read(reinterpret_cast<char *>(&fileStat.StatSize), sizeof(fileStat.StatSize));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.AppId), sizeof(fileStat.AppId));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.AppMaj), sizeof(fileStat.AppMaj));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.AppMin), sizeof(fileStat.AppMin));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.AppBuild), sizeof(fileStat.AppBuild));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.ApiMaj), sizeof(fileStat.ApiMaj));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.ApiMin), sizeof(fileStat.ApiMin));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.ApiBuild), sizeof(fileStat.ApiBuild));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.ApiPatch), sizeof(fileStat.ApiPatch));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.fileSize), sizeof(fileStat.fileSize));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.uncompressedSize), sizeof(fileStat.uncompressedSize));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.objCount), sizeof(fileStat.objCount));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.objRead), sizeof(fileStat.objRead));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.meas_start_time), sizeof(fileStat.meas_start_time));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.last_obj_time), sizeof(fileStat.last_obj_time));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.fileSize_less115), sizeof(fileStat.fileSize_less115));
+    const uint32_t offset = fileStat.StatSize - sizeof(fileStat);
+    fileStream.seekg(offset, std::ios_base::cur);
+    return true;
+}
 
 auto blf_reader::read_baseHeader(BaseHeader &ohb) -> bool
 {
@@ -229,7 +228,7 @@ blf_reader::blf_reader(const std::string &filename)
     if (fileStream)
         {
             fileLength = getfileLength(fileStream);
-            if (read_fileStatistics(fileStream, fileStat))
+            if (read_fileStatistics())
                 {
                     lblf::print::print(std::cout, fileStat);
                 }
@@ -248,6 +247,12 @@ blf_reader::~blf_reader()
 }
 
 
+auto blf_reader::next() -> bool
+{
+    return not(logcontainer_que.empty() and (fileStream.tellg() >= fileLength));
+}
+
+
 auto blf_reader::fileStatistics() -> struct fileStatistics
 {
     return fileStat;
@@ -255,13 +260,7 @@ auto blf_reader::fileStatistics() -> struct fileStatistics
 
 
 auto
-blf_reader::next() -> bool
-{
-    return not(fileStream.tellg() >= fileLength);
-}
-
-
-auto blf_reader::data() -> struct lblf::lobj
+blf_reader::data() -> struct lblf::lobj
 {
     struct lblf::lobj result;
     if (logcontainer_que.size() < sizeof(BaseHeader))

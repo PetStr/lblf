@@ -1,9 +1,10 @@
 #ifndef PRINT_HH
 #define PRINT_HH
 
-
+#include <deque>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "blf_structs.hh"
 

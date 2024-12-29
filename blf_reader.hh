@@ -24,6 +24,7 @@ private:
     uint32_t fileLength {0};
     auto fill_deque() -> bool;
     auto read_baseHeader(BaseHeader &ohb) -> bool;
+    auto read_fileStatistics() -> bool;
 
 public:
     blf_reader(const blf_reader &) = delete;

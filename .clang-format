@@ -7,6 +7,7 @@ MaxEmptyLinesToKeep: 2
 SortIncludes: true
 SpaceAfterCStyleCast: true
 SpaceBeforeRangeBasedForLoopColon: false
+AlwaysBreakAfterReturnType: None
 #SpacesInConditionalStatement: true
 #SpacesInParentheses: true
 
