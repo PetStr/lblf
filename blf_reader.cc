@@ -174,7 +174,7 @@ auto blf_reader::fill_deque() -> bool
     struct BaseHeader ohb;
     if (read_baseHeader(ohb))
         {
-            // Successful with object header
+            BaseHeaderRead++;
         }
     else
         {
@@ -276,14 +276,18 @@ auto blf_reader::next() -> bool
 }
 
 
-auto blf_reader::fileStatistics() -> struct fileStatistics
+auto blf_reader::fileStatistics() const -> struct fileStatistics
 {
     return fileStat;
 }
 
+auto blf_reader::getBaseHeadRead() const -> size_t
+{
+    return BaseHeaderRead;
+}
 
-auto
-blf_reader::data() -> struct lblf::lobj
+
+auto blf_reader::data() -> struct lblf::lobj
 {
     struct lblf::lobj result;
     if (logcontainer_que.size() < sizeof(BaseHeader))
@@ -297,7 +301,10 @@ blf_reader::data() -> struct lblf::lobj
             return result;
         }
 
-    read_baseheader(logcontainer_que, result.base_header);
+    if(read_baseheader(logcontainer_que, result.base_header))
+        {
+        BaseHeaderRead++;
+        }
 
     // lblf::print(std::cout, result.base_header);
     const size_t size_of_data = result.base_header.objSize - sizeof(result.base_header) + (result.base_header.objSize % 4);

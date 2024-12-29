@@ -2,6 +2,7 @@
 #define BLF_READER_HH
 
 #include "blf_structs.hh"
+#include <cstring>
 #include <deque>
 #include <fstream>
 #include <vector>
@@ -37,6 +38,7 @@ private:
     std::deque<char> logcontainer_que;
     fileStatistics fileStat;
     uint32_t fileLength {0};
+    size_t BaseHeaderRead {0};
     auto fill_deque() -> bool;
     auto read_baseHeader(BaseHeader &ohb) -> bool;
     auto read_fileStatistics() -> bool;
@@ -50,7 +52,8 @@ public:
     ~blf_reader();
     auto next() -> bool;
     auto data() -> struct lobj;
-    auto fileStatistics() -> struct fileStatistics;
+    auto fileStatistics() const -> struct fileStatistics;
+    auto getBaseHeadRead() const -> size_t;
 };
 
 } // namespace lblf
