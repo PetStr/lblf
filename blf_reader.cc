@@ -5,7 +5,28 @@
  * @version 0.1
  * @date 2024-12-27
  *
- * @copyright Copyright (c) 2024
+ * MIT License
+ *
+ * @copyright (c) 2024 Petter Strandh
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify,
+ * merge, publish, distribute, sublicense, and/or sell copies of the Software, subject
+ * to the following conditions:
+ *
+ * 1. The above copyright notice, this list of conditions, and the following disclaimer
+ *    shall be included in all copies or substantial portions of the Software.
+ * 2. Credit to the original author(s) must be prominently displayed in any derivative
+ *    works or redistributed versions, in a reasonable form such as a README file,
+ *    documentation, or within the user interface of the software where appropriate.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+ * PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+ * FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT,
+ * OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  *
  */
 
@@ -21,74 +42,72 @@
 
 // hexdump -v -C -n 512 truck02.blf
 
-
-using namespace lblf;
-
+namespace lblf
+{
 
 namespace
 {
 
-const uint32_t FileSignature = 0x47474F4C;   // LOGG
-const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
-const uint32_t defaultContainerSize = 0x20000;
+    const uint32_t FileSignature = 0x47474F4C;   // LOGG
+    const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
+    const uint32_t defaultContainerSize = 0x20000;
 
 
-auto getfileLength(std::fstream &fileStream) -> uint32_t
-{
-    fileStream.seekg(0, std::fstream::end);
-    const uint32_t length = fileStream.tellg();
-    fileStream.seekg(0, std::fstream::beg);
-    return length;
-}
+    auto getfileLength(std::fstream &fileStream) -> uint32_t
+    {
+        fileStream.seekg(0, std::fstream::end);
+        const uint32_t length = fileStream.tellg();
+        fileStream.seekg(0, std::fstream::beg);
+        return length;
+    }
 
 
-template <typename param>
-auto consume_que(std::deque<char> &que, param &output) -> bool
-{
-    if (que.size() >= sizeof(param))
-        {
-            std::vector<char> data(sizeof(param));
-            for (auto &cvalue: data)
-                {
-                    cvalue = que.front();
-                    que.pop_front();
-                }
-            std::memcpy(&output, data.data(), sizeof(param));
-            return true;
-        }
-    return false;
-}
+    template <typename param>
+    auto consume_que(std::deque<char> &que, param &output) -> bool
+    {
+        if (que.size() >= sizeof(param))
+            {
+                std::vector<char> data(sizeof(param));
+                for (auto &cvalue: data)
+                    {
+                        cvalue = que.front();
+                        que.pop_front();
+                    }
+                std::memcpy(&output, data.data(), sizeof(param));
+                return true;
+            }
+        return false;
+    }
 
 
-auto read_deque(std::deque<char> &que, BaseHeader &ohb) -> bool
-{
-    consume_que(que, ohb.ObjSign);
-    if (ohb.ObjSign != ObjectSignature)
-        {
-            std::cout << "consume_que Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
-            std::cout << '\n';
-            return false;
-        }
-    consume_que(que, ohb.headerSize);
-    consume_que(que, ohb.headerVer);
-    consume_que(que, ohb.objSize);
-    consume_que(que, ohb.objectType);
-    return true;
-}
+    auto read_baseheader(std::deque<char> &que, lblf::BaseHeader &ohb) -> bool
+    {
+        consume_que(que, ohb.ObjSign);
+        if (ohb.ObjSign != ObjectSignature)
+            {
+                std::cout << "consume_que Not Found LOBJ: " << std::hex << (int) ohb.ObjSign;
+                std::cout << '\n';
+                return false;
+            }
+        consume_que(que, ohb.headerSize);
+        consume_que(que, ohb.headerVer);
+        consume_que(que, ohb.objSize);
+        consume_que(que, ohb.objectType);
+        return true;
+    }
 
 
-auto read_logcontainer(std::fstream &fileStream, LogContainer &lc, const BaseHeader &ohb) -> bool
-{
-    fileStream.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
+    auto read_logcontainer(std::fstream &fileStream, LogContainer &lc, const BaseHeader &ohb) -> bool
+    {
+        fileStream.read(reinterpret_cast<char *>(&lc), sizeof(LogContainer));
 
-    if (lc.compressionMethod == compressionMethod_e::uncompressed)
-        {
-            lc.unCompressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - sizeof(lc.reserv1) - sizeof(lc.reserv2) - sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
-        }
+        if (lc.compressionMethod == compressionMethod_e::uncompressed)
+            {
+                lc.unCompressedFileSize = ohb.objSize - sizeof(lc.compressionMethod) - sizeof(lc.reserv1) - sizeof(lc.reserv2) - sizeof(lc.unCompressedFileSize) - sizeof(lc.reserv3);
+            }
 
-    return true;
-}
-
+        return true;
+    }
 
 } // namespace
 
@@ -167,20 +186,17 @@ auto blf_reader::fill_deque() -> bool
             struct LogContainer lc;
             read_logcontainer(fileStream, lc, ohb);
             // print(std::cout, lc);
-            std::vector<char> container_data;
-            auto compressedFileSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
-
-            // std::cout << "compressed blob: " << compressedFileSize << '\n';
-
-            container_data.resize(compressedFileSize);
-
-            fileStream.read(reinterpret_cast<char *>(container_data.data()), compressedFileSize);
-
-            // Padding
-            fileStream.seekg(ohb.objSize % 4, std::ios_base::cur);
 
             if (lc.compressionMethod == compressionMethod_e::zlib)
                 {
+                    std::vector<char> container_data;
+                    const auto compressedBlobSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
+
+                    container_data.resize(compressedBlobSize);
+
+                    fileStream.read(reinterpret_cast<char *>(container_data.data()), compressedBlobSize);
+                    fileStream.seekg(ohb.objSize % 4, std::ios_base::cur);
+
                     uLong uncompressedFileSize = lc.unCompressedFileSize;
                     std::vector<uint8_t> uncompressedData {};
 
@@ -201,9 +217,16 @@ auto blf_reader::fill_deque() -> bool
                 }
             else
                 {
+                    std::vector<char> container_data;
+                    const auto uncompressedBlobSize = ohb.objSize - ohb.headerSize - sizeof(LogContainer);
+
+                    container_data.resize(uncompressedBlobSize);
+
+                    fileStream.read(reinterpret_cast<char *>(container_data.data()), uncompressedBlobSize);
+                    fileStream.seekg(ohb.objSize % 4, std::ios_base::cur);
+
                     lblf::print::print(std::cout, lc);
                     logcontainer_que.insert(logcontainer_que.end(), container_data.begin(), container_data.end());
-                    // throw std::runtime_error("Not implemented uncompressed");
                 }
         }
     else
@@ -230,7 +253,7 @@ blf_reader::blf_reader(const std::string &filename)
             fileLength = getfileLength(fileStream);
             if (read_fileStatistics())
                 {
-                    lblf::print::print(std::cout, fileStat);
+                    // lblf::print::print(std::cout, fileStat);
                 }
             else
                 {
@@ -274,7 +297,7 @@ blf_reader::data() -> struct lblf::lobj
             return result;
         }
 
-    read_deque(logcontainer_que, result.base_header);
+    read_baseheader(logcontainer_que, result.base_header);
 
     // lblf::print(std::cout, result.base_header);
     const size_t size_of_data = result.base_header.objSize - sizeof(result.base_header) + (result.base_header.objSize % 4);
@@ -294,3 +317,5 @@ blf_reader::data() -> struct lblf::lobj
 
     return result;
 }
+
+} // namespace lblf

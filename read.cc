@@ -40,7 +40,7 @@ void doit2(const std::string &filename)
                     struct lblf::CanMessage2_obh can2;
                     if (sizeof(can2) <= data.payload.size())
                         {
-                            read_template(data.payload.data(), can2);
+                            lblf::read_blf_struct(data, can2);
                         }
                     std::cout << std::dec << counter << ", ";
                     lblf::print::print(std::cout, can2);

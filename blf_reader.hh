@@ -15,6 +15,21 @@ struct lobj
     std::vector<char> payload {};
 };
 
+
+template <typename type_data>
+auto read_blf_struct(const struct lobj &indata, type_data &blf_struct_data) -> size_t
+{
+    if (indata.payload.size() >= sizeof(type_data))
+        {
+            std::memcpy(reinterpret_cast<char *>(&blf_struct_data),
+                indata.payload.data(),
+                sizeof(type_data));
+            return sizeof(type_data);
+        }
+    return 0;
+}
+
+
 class blf_reader
 {
 private:
