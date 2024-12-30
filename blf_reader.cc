@@ -35,7 +35,6 @@
 #include "blf_structs.hh"
 #include "print.hh"
 #include <cstring>
-#include <iomanip>
 #include <stdexcept>
 #include <vector>
 #include <zlib.h>
@@ -272,11 +271,11 @@ blf_reader::~blf_reader()
 
 auto blf_reader::next() -> bool
 {
-    return not(logcontainer_que.empty() and (fileStream.tellg() >= fileLength));
+    return !logcontainer_que.empty() || (fileStream.tellg() < fileLength);
 }
 
 
-auto blf_reader::getfileStatistics() const -> struct fileStatistics
+auto blf_reader::getfileStatistics() const -> const struct fileStatistics&
 {
     return fileStat;
 }

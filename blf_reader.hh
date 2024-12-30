@@ -13,7 +13,7 @@ namespace lblf
 struct lobj
 {
     BaseHeader base_header;
-    std::vector<char> payload {};
+    std::vector<char> payload;
 };
 
 
@@ -52,7 +52,7 @@ public:
     ~blf_reader();
     auto next() -> bool;
     auto data() -> struct lobj;
-    auto getfileStatistics() const -> struct fileStatistics;
+    auto getfileStatistics() const -> const struct fileStatistics&;
     auto getBaseHeadRead() const -> size_t;
 };
 
