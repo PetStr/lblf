@@ -256,7 +256,7 @@ enum class timeStampStatus_e : uint8_t
 
 struct ObjectHeader
 {
-    ObjectFlags_e objectFlag {};
+    ObjectFlags_e objectFlags {};
     uint16_t clientIndex {0};
     uint16_t objectVersion {0};
     uint64_t objectTimeStamp {0};
