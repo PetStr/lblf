@@ -276,12 +276,13 @@ auto blf_reader::next() -> bool
 }
 
 
-auto blf_reader::fileStatistics() const -> struct fileStatistics
+auto blf_reader::getfileStatistics() const -> struct fileStatistics
 {
     return fileStat;
 }
 
-auto blf_reader::getBaseHeadRead() const -> size_t
+auto
+blf_reader::getBaseHeadRead() const -> size_t
 {
     return BaseHeaderRead;
 }
@@ -301,9 +302,9 @@ auto blf_reader::data() -> struct lblf::lobj
             return result;
         }
 
-    if(read_baseheader(logcontainer_que, result.base_header))
+    if (read_baseheader(logcontainer_que, result.base_header))
         {
-        BaseHeaderRead++;
+            BaseHeaderRead++;
         }
 
     // lblf::print(std::cout, result.base_header);

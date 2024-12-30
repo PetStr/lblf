@@ -52,7 +52,7 @@ public:
     ~blf_reader();
     auto next() -> bool;
     auto data() -> struct lobj;
-    auto fileStatistics() const -> struct fileStatistics;
+    auto getfileStatistics() const -> struct fileStatistics;
     auto getBaseHeadRead() const -> size_t;
 };
 

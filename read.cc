@@ -96,6 +96,7 @@ void doit4(const std::string &filename)
         {
             std::cout << lblf::print::print(value.first) << '\t' << value.second << '\n';
         }
+    std::cout << "Number of BaseHead reads: " << std::dec << reader.getBaseHeadRead() << '\n';
 }
 
 
