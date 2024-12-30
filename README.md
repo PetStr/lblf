@@ -36,7 +36,9 @@ The LogContainer can uncompressed or compressed with zlib. The zlib LogContainer
 
 ## Using lblf.
 
-This is a sample code of how reading a blf looks like. Common for all LOBJ is the BaseHeader. The rest is variable lengths base on type and length of data. 
+This is a sample code of how reading a blf looks like. Common for all LOBJ is the BaseHeader. The rest is variable lengths base on type and length of data.
+
+Example file of printing all CAN_MESSAGE2 data from given BLF file
 
 ```cpp
 #include "blf_structs.hh"
@@ -50,12 +52,38 @@ struct lblf::lobj
 
 void read_blf()
 {
-  lblf::blf_reader reader(filename);
+  lblf::blf_reader reader("sample.blf");
     while (reader.next())
         {
             struct lblf::lobj data = reader.data();
-            // do stuff with data.
+            if (data.base_header.objectType == lblf::ObjectType_e::CAN_MESSAGE2)
+                {
+                    struct lblf::CanMessage2_obh can2;
+                    lblf::read_blf_struct(data, can2);
+                    lblf::print::print(std::cout, can2);
+                }
         }
 }
 ```
+
+How to handle the various data types is up to the user. I would expect that the files are evaluated in a specific domain. The `payload` is in a std::vector<char> then it can be cast into a struct and then the dynamic portion of the data needs to be added outside of the struct. 
+
 ## Building
+
+The only external dependency is zlib. If installed properly it should only require the `-lz` linker switch.
+
+A sample program can be built with cmake. A simple one liner can do it as well.
+
+```console
+mkdir build
+cd build
+cmake ..
+make
+```
+
+Or just a one liner for quick iterations.
+
+```console
+g++ -std=c++20 blf_reader.cc read.cc print.cc -o read -lz
+```
+
