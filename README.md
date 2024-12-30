@@ -20,14 +20,9 @@ Followed by fileStatistics struct.
 
 At byte 144 the data follows. 
 
-Data starts with an BaseHeader which always starts with LOBJ 0x4A424F4C(JBOL).
+Data starts with a BaseHeader which always starts with LOBJ 0x4A424F4C(JBOL).
 
-Which is subsequent followed by a two possible ObjectHeaders
-
-* ObjectHeader.
-* ObjectHeader2. 
-
-Followed by a dynamic struct based on the type in BaseHeader.
+Which is subsequent followed by a two possible ObjectHeaders. Followed by a dynamic struct based on the number of `objectType` type in the BaseHeader.
 
 ## The Log Container
 All data should be wrapped within a LogContainer. 
@@ -36,9 +31,9 @@ The LogContainer can uncompressed or compressed with zlib. The zlib LogContainer
 
 ## Using lblf.
 
-This is a sample code of how reading a blf looks like. Common for all LOBJ is the BaseHeader. The rest is variable lengths base on type and length of data.
+This is a small sample code of how reading a blf looks like. Common for all LOBJ is the BaseHeader. Depending of the `objectType` the data an be fixed size. Simple read into a 1 pack struct or it is first Struct then varible length for example AppText.
 
-Example file of printing all CAN_MESSAGE2 data from given BLF file
+Example file of printing all CAN_MESSAGE2 data from given BLF file:
 
 ```cpp
 #include "blf_structs.hh"
@@ -66,7 +61,7 @@ void read_blf()
 }
 ```
 
-How to handle the various data types is up to the user. I would expect that the files are evaluated in a specific domain. The `payload` is in a std::vector<char> then it can be cast into a struct and then the dynamic portion of the data needs to be added outside of the struct. 
+How to handle the various data types is up to the user. I would expect that the files are evaluated in a specific domain. The `payload` is in a `std::vector<char>` then it can be cast into a struct and then the dynamic portion of the data needs to be added outside of the struct. 
 
 ## Building
 
@@ -87,3 +82,11 @@ Or just a one liner for quick iterations.
 g++ -std=c++20 blf_reader.cc read.cc print.cc -o read -lz
 ```
 
+## Customization.  
+
+The main thing is to handel all the possible ~130 different types of `objectType`s. Using read_blf_struct to catch the first static struct formatted part of the data. Then as a second stage catch the rest of the data that is in dynamic size.
+
+By looking into `binlog_objects.h` one can see the structs on the early versions of BLF. However this is not always true. best way is to look into `vector_blf` reference to see what is done there. `blf_structs.hh` contains a small subset of the various structs. It is not complete!
+
+Happy Coding
+PetStr

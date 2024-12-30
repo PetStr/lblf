@@ -10,6 +10,11 @@
 namespace lblf
 {
 
+
+/**
+ * @brief lobj frame struct
+ * 
+ */
 struct lobj
 {
     BaseHeader base_header;
@@ -17,6 +22,14 @@ struct lobj
 };
 
 
+/**
+ * @brief Static lobj reading function
+ * 
+ * @tparam type_data typically a struct with that aligns with blf type 
+ * @param indata incoming lobj frame
+ * @param blf_struct_data var parameter of type_data
+ * @return size_t Number of read bytes
+ */
 template <typename type_data>
 auto read_blf_struct(const struct lobj &indata, type_data &blf_struct_data) -> size_t
 {
@@ -31,6 +44,10 @@ auto read_blf_struct(const struct lobj &indata, type_data &blf_struct_data) -> s
 }
 
 
+/**
+ * @brief blf_reader class
+ * 
+ */
 class blf_reader
 {
 private:

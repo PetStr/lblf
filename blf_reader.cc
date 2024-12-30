@@ -280,8 +280,8 @@ auto blf_reader::getfileStatistics() const -> const struct fileStatistics&
     return fileStat;
 }
 
-auto
-blf_reader::getBaseHeadRead() const -> size_t
+
+auto blf_reader::getBaseHeadRead() const -> size_t
 {
     return BaseHeaderRead;
 }
