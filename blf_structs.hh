@@ -376,6 +376,21 @@ struct CanMessage_obh
 };
 
 
+struct CanMessage_obh_members
+{
+    ObjectHeader obh;
+    uint16_t channel {0};
+    uint8_t flags {0};
+    uint8_t dlc {0};
+    uint32_t id {0};
+    std::array<uint8_t, 8> data {0, 0, 0, 0, 0, 0, 0, 0};
+    [[nodiscard]] auto get_channel() const -> uint16_t { return channel;};
+    [[nodiscard]] auto get_flags() const -> uint8_t { return flags;};
+    [[nodiscard]] auto get_dlc() const -> uint8_t { return dlc;};
+    [[nodiscard]] auto get_id() const -> uint32_t { return id;};
+    [[nodiscard]] auto get_data() const -> std::array<uint8_t, 8> { return data;};
+};
+
 struct CanError
 {
     uint16_t channel {0};
@@ -457,6 +472,26 @@ struct CanMessage2_obh
     uint8_t bitCount {0};
     uint8_t reservedCanMessage1 {0};
     uint16_t reservedCanMessage2 {0};
+};
+
+
+struct CanMessage2_obh_members
+{
+    ObjectHeader obh;
+    uint16_t channel {0};
+    uint8_t flags {0};
+    uint8_t dlc {0};
+    uint32_t id {0};
+    std::array<uint8_t, 8> data {0, 0, 0, 0, 0, 0, 0, 0};
+    uint32_t frameLength {0};
+    uint8_t bitCount {0};
+    uint8_t reservedCanMessage1 {0};
+    uint16_t reservedCanMessage2 {0};
+    [[nodiscard]] auto get_channel() const -> uint16_t { return channel;};
+    [[nodiscard]] auto get_flags() const -> uint8_t { return flags;};
+    [[nodiscard]] auto get_dlc() const -> uint8_t { return dlc;};
+    [[nodiscard]] auto get_id() const -> uint32_t { return id;};
+    [[nodiscard]] auto get_data() const -> std::array<uint8_t, 8> { return data;};
 };
 
 enum class AppTriggerFlags : uint16_t
@@ -552,6 +587,18 @@ struct ObjectHeaderCarry
     struct BaseHeader ohb;
     struct ObjectHeader oh;
     struct ObjectHeader2 oh2;
+};
+
+
+struct CanMessage_common
+{
+    bool got_data {false};
+    ObjectHeader obh;
+    uint16_t channel {0};
+    uint8_t flags {0};
+    uint8_t dlc {0};
+    uint32_t id {0};
+    std::array<uint8_t, 8> data {0, 0, 0, 0, 0, 0, 0, 0};
 };
 
 

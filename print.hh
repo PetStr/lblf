@@ -36,7 +36,7 @@ void print(std::ostream &stream, const lblf::CanError &cfe);
 void print(std::ostream &stream, const lblf::CanError_short &cfe);
 void print(std::ostream &stream, const lblf::CANErrorFrameExt &ce);
 void print(std::ostream &stream, const CANDriverStatistic &can_stat);
-
+void print(std::ostream &stream, const lblf::CanMessage_common &cm);
 } // namespace lblf::print
 
 #endif

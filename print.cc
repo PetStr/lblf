@@ -676,4 +676,21 @@ void print(std::ostream &s, const CANDriverStatistic &can_stat)
 }
 
 
+void print(std::ostream &stream, const lblf::CanMessage_common &cm) 
+{
+    stream << "CanMessage : ";
+    stream << std::dec;
+    stream << "channel: " << (int) cm.channel;
+    stream << ", flags: " << std::dec << (int) cm.flags;
+    stream << ", dlc: " << std::dec << (int) cm.dlc;
+    stream << ", id: 0x" << std::hex << (int) cm.id;
+    stream << ", data: ";
+    for (size_t i = 1; i < cm.dlc; ++i)
+        {
+            stream << " " << std::hex << std::setfill('0') << std::setw(2) <<  (int)cm.data.at(i);
+        }
+    stream << '\n';
+}
+
+
 } // namespace lblf::print
