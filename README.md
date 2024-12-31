@@ -1,6 +1,9 @@
-# lblf - lite binary logging file reader
+# lblf - the lite Binary Logging File reader
 
-`lblf` is an implementation for reading Vector BLF files, the main driver for making this is to have a fast, simple and small tool for parsing BLF files. Aim is to have simple and fast program for special use cases. Aim is to support all platforms for little endian. 
+`lblf` is an implementation for reading Vector BLF files. 
+
+* Simple and fast program for special use cases.
+* To support all major platforms, right now only for little endian. 
 
 ## Introduction 
 
@@ -27,7 +30,7 @@ Which is subsequent followed by a two possible ObjectHeaders. Followed by a dyna
 ## The Log Container
 All data should be wrapped within a LogContainer. 
 
-The LogContainer can uncompressed or compressed with zlib. The zlib LogContainer will contain a block of 131072 (0x20000) bytes. The zlib blocks will cut in the middle of the under laying data stream so that in order to process, a continuous data flow must be created to read the underlying data.
+The LogContainer can be uncompressed or compressed with zlib. The zlib LogContainer will contain a block of 131072 (0x20000) bytes. The zlib blocks will cut in the middle of the under laying data stream so that in order to process, a continuous data flow must be created to read the underlying data.
 
 ## Using lblf.
 
@@ -84,9 +87,10 @@ g++ -std=c++20 blf_reader.cc read.cc print.cc -o read -lz
 
 ## Customization.  
 
-The main thing is to handel all the possible ~130 different types of `objectType`s. Using read_blf_struct to catch the first static struct formatted part of the data. Then as a second stage catch the rest of the data that is in dynamic size.
+The main thing is to handle all the possible ~130 different types of `objectType`s. Using read_blf_struct to catch the first static struct formatted part of the data. Then as a second stage catch the rest of the data that is in dynamic size.
 
 By looking into `binlog_objects.h` one can see the structs on the early versions of BLF. However this is not always true. best way is to look into `vector_blf` reference to see what is done there. `blf_structs.hh` contains a small subset of the various structs. It is not complete!
 
 Happy Coding
+
 PetStr
