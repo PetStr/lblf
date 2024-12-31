@@ -1,13 +1,12 @@
 
-#include "blf_structs.hh"
 #include "blf_reader.hh"
+#include "blf_structs.hh"
 #include "print.hh"
 
 
-
-void read_blf(const std::string & filename)
+void read_blf(const std::string &filename)
 {
-  lblf::blf_reader reader(filename);
+    lblf::blf_reader reader(filename);
     while (reader.next())
         {
             struct lblf::lobj data = reader.data();
