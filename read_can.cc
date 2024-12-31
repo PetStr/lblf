@@ -6,12 +6,6 @@
 #include <iostream>
 
 
-template <typename T>
-concept get_id = requires(T t) {
-    { t.get_id() } -> std::same_as<uint32_t>;
-};
-
-
 void read_all_candata(const std::string &filename)
 {
     lblf::blf_reader reader(filename);
