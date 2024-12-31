@@ -1,4 +1,4 @@
-# lblf - the lite Binary Logging File reader
+# lblf - the lite Binary Logging File (BLF) reader
 
 `lblf` is an implementation for reading Vector BLF files. 
 
@@ -9,7 +9,7 @@
 
 BLF Logging File (BLF) is a file format created by [Vector](http://www.vector.com) which is their main preferred log file format. For Vector customers there exists a dll `binlog` as their reference implementation. However, that is only available for Vector customers and only for Windows platform x86. 
 
-The BLF can handle various network types such as CAN, LIN, ETHERNET, MOST and to forth.  Many CAN loggers can emit blf format file and it can be used for Vector CANalyzer and other analytics software. 
+The BLF can handle various network types such as CAN, LIN, ETHERNET, MOST and to forth.  Many CAN loggers can export BLF formatted file and it can be used for Vector CANalyzer and other analytics software.
 
 The main source for information is Tobias Lorenz [vector_blf](https://bitbucket.org/tobylorenz/vector_blf/src/master/) which is a very nice reference implementation. However, the vector_blf implementation is fairly large, complex and performance is slow for my liking. 
 
@@ -34,9 +34,9 @@ The LogContainer can be uncompressed or compressed with zlib. The zlib LogContai
 
 ## Using lblf.
 
-This is a small sample code of how reading a blf looks like. Common for all LOBJ is the BaseHeader. Depending of the `objectType` the data an be fixed size. Simple read into a 1 pack struct or it is first Struct then varible length for example AppText.
+This is a small sample code of how reading a blf looks like. Common for all LOBJ is the BaseHeader. Depending of the `objectType` the data an be fixed size. Simple read into a `#pragma pack(1)` struct or data is of variable length first read the fixed data then the variable length, for example AppText.
 
-Example file of printing all CAN_MESSAGE2 data from given BLF file:
+Example code for printing all CAN_MESSAGE2 data from given BLF file:
 
 ```cpp
 #include "blf_structs.hh"
@@ -91,6 +91,23 @@ g++ -std=c++20 blf_reader.cc read.cc print.cc -o read -lz
 The main thing is to handle all the possible ~130 different types of `objectType`s. Using read_blf_struct to catch the first static struct formatted part of the data. Then as a second stage catch the rest of the data that is in dynamic size.
 
 By looking into `binlog_objects.h` one can see the structs on the early versions of BLF. However this is not always true. best way is to look into `vector_blf` reference to see what is done there. `blf_structs.hh` contains a small subset of the various structs. It is not complete!
+
+### Handling CAN frames. 
+
+In the BLF, there are several object types that deals with CAN.
+
+The older loggers tends to stores in CAN_MESSAGE objectType, and new implementations as CANalyzer stores in CAN_MESSAGE2 format.
+
+If a certain signal from a CAN is to be evaluated I have found [dbcc](https://github.com/howerj/dbcc) to be very helpful. Howerj´s software will convert a Vector `dbc` file into `C`. I have found to simply look into the generated code and then cut and paste the needed signals into the evaluating code will help with handling tricky conversions and bit shifts. 
+
+## ToDo's
+
+* Creating BLF_writer class for storing data.
+* Now when reading a uncompressed LogContainer all data is retrieved into the internal buffer. Intend to make  user adjustable or use the standard length for zlib container to keep the memory footprint a bit smaller. This is not a problem for normal PCs however, might be an issue for smaller foot print computers. It can be an issue for PCs if the BLF are very large.
+* Working on ideas to smother handle the different object types. There are ideas with `C++ concepts` that will be able to handle various types without virtual functions calls.
+* I am a bit tempted to look into Godbolting some of the code in the hot path for better performance. 
+* Make a Python wrapper so that is it can improve the life for evaluating data.
+
 
 Happy Coding
 
