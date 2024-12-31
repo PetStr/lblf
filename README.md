@@ -41,10 +41,11 @@ Example file of printing all CAN_MESSAGE2 data from given BLF file:
 ```cpp
 #include "blf_structs.hh"
 #include "blf_reader.hh"
+#include "print.hh"
 
 struct lblf::lobj
 {
-    BaseHeader base_header;
+    lblf::BaseHeader base_header;
     std::vector<char> payload {};
 };
 
