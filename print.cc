@@ -688,7 +688,7 @@ void print(std::ostream &stream, const lblf::CanMessage_common &cm)
     stream << ", dlc: " << std::dec << (int) cm.dlc;
     stream << ", id: 0x" << std::hex << (int) cm.id;
     stream << ", data: ";
-    for (size_t i = 1; i < cm.dlc; ++i)
+    for (size_t i = 0; i < cm.dlc; ++i)
         {
             stream << " " << std::hex << std::setfill('0') << std::setw(2) <<  (int)cm.data.at(i);
         }

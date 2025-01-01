@@ -599,6 +599,11 @@ struct CanMessage_common
     uint8_t dlc {0};
     uint32_t id {0};
     std::array<uint8_t, 8> data {0, 0, 0, 0, 0, 0, 0, 0};
+    [[nodiscard]] auto get_channel() const -> uint16_t { return channel;};
+    [[nodiscard]] auto get_flags() const -> uint8_t { return flags;};
+    [[nodiscard]] auto get_dlc() const -> uint8_t { return dlc;};
+    [[nodiscard]] auto get_id() const -> uint32_t { return id;};
+    [[nodiscard]] auto get_data() const -> std::array<uint8_t, 8> { return data;};
 };
 
 
