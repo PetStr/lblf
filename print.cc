@@ -676,21 +676,30 @@ void print(std::ostream &s, const CANDriverStatistic &can_stat)
 }
 
 
-void print(std::ostream &stream, const lblf::CanMessage_common &cm) 
+void print(std::ostream &stream, const lblf::CanMessage_common &cm)
 {
     stream << "CAN: ";
     stream << std::dec;
     stream << "T: ";
-    constexpr double one_to_nanoseconds = 1/1000000000.0;
-    stream << static_cast<double> (cm.obh.objectTimeStamp)* one_to_nanoseconds;
+    constexpr double one_to_nanoseconds = 1 / 1000000000.0;
+    stream << static_cast<double>(cm.obh.objectTimeStamp) * one_to_nanoseconds;
     stream << ", ch: " << (int) cm.channel;
     stream << ", flags: " << std::dec << (int) cm.flags;
     stream << ", dlc: " << std::dec << (int) cm.dlc;
     stream << ", id: 0x" << std::hex << (int) cm.id;
     stream << ", data: ";
-    for (size_t i = 0; i < cm.dlc; ++i)
+    uint8_t validated_dlc = cm.dlc;
+    if (validated_dlc > cm.data.size())
         {
-            stream << " " << std::hex << std::setfill('0') << std::setw(2) <<  (int)cm.data.at(i);
+            validated_dlc = cm.data.size();
+        }
+    else
+        {
+            validated_dlc = cm.dlc;
+        }
+    for (uint8_t i = 0; i < validated_dlc; ++i)
+        {
+            stream << " " << std::hex << std::setfill('0') << std::setw(2) << (int) cm.data.at(i);
         }
     stream << '\n';
 }
