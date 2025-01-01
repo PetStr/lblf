@@ -36,7 +36,7 @@ The LogContainer can be uncompressed or compressed with zlib. The zlib LogContai
 
 This is a small sample code of how reading a blf looks like. Common for all LOBJ is the BaseHeader. Depending of the `objectType` the data an be fixed size. Simple read into a `#pragma pack(1)` struct or data is of variable length first read the fixed data then the variable length, for example AppText.
 
-Example code for printing all CAN_MESSAGE2 data from given BLF file:
+Sample code for printing all CAN_MESSAGE2 data from given BLF file:
 
 ```cpp
 #include "blf_structs.hh"
