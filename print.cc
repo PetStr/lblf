@@ -432,7 +432,7 @@ void print(std::ostream &stream, const blf_struct::fileStatistics &os)
     stream << "os.fileSize           " << static_cast<uint64_t>(os.fileSize) << '\n';
     stream << "os.uncompressedSize   " << static_cast<uint64_t>(os.uncompressedSize) << '\n';
     stream << "os.objCount           " << static_cast<uint64_t>(os.objCount) << '\n';
-    stream << "os.objRead            " << static_cast<uint64_t>(os.objRead) << '\n';
+    stream << "os.applicationBuild   " << static_cast<uint64_t>(os.applicationBuild) << '\n';
     stream << "os.meas_start_time:   ";
     print(stream, os.meas_start_time);
     stream << "os.last_obj_time:     ";
@@ -511,7 +511,7 @@ void print(std::ostream &stream, const blf_struct::LogContainer &lc)
     stream << "LogContainer : ";
     stream << std::dec;
     stream << "compressionMethod: " << print(lc.compressionMethod);
-    stream << ", uncompressedFileSize: " << std::dec << (int) lc.unCompressedFileSize;
+    stream << ", uncompressedFileSize: " << std::dec << (uint32_t) lc.unCompressedFileSize;
     stream << '\n';
 }
 

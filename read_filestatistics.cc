@@ -11,7 +11,7 @@ auto main(int argc, char *argv[]) -> int
         {
             try
                 {
-                    const std::string filename(argv[1]);
+                    const std::string filename(argv[1]); // NOLINT
                     lblf::blf_reader reader(filename);
                     lblf::print::print(std::cout, reader.getfileStatistics());
                 }
@@ -22,7 +22,7 @@ auto main(int argc, char *argv[]) -> int
         }
     else
         {
-            std::cout << "run blf evaluation: " << argv[0] << " filname.blf\n";
+            std::cout << "run blf evaluation: " << argv[0] << " filname.blf\n"; // NOLINT
         }
 
     std::cout << "----- END OF OUTPUT -----\n";

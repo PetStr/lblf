@@ -103,6 +103,16 @@ namespace
         return true;
     }
 
+
+    auto fill_deque_direct(std::fstream &fileStream, std::deque<char> &logcontainer_que, uint32_t bytes_to_read) -> void
+    {
+        std::vector<char> container_data;
+        container_data.resize(bytes_to_read);
+        fileStream.read(reinterpret_cast<char *>(container_data.data()), bytes_to_read);
+        logcontainer_que.insert(logcontainer_que.end(), container_data.begin(), container_data.end());
+    }
+
+
 } // namespace
 
 
@@ -126,7 +136,7 @@ auto blf_reader::read_fileStatistics() -> bool
     fileStream.read(reinterpret_cast<char *>(&fileStat.fileSize), sizeof(fileStat.fileSize));
     fileStream.read(reinterpret_cast<char *>(&fileStat.uncompressedSize), sizeof(fileStat.uncompressedSize));
     fileStream.read(reinterpret_cast<char *>(&fileStat.objCount), sizeof(fileStat.objCount));
-    fileStream.read(reinterpret_cast<char *>(&fileStat.objRead), sizeof(fileStat.objRead));
+    fileStream.read(reinterpret_cast<char *>(&fileStat.applicationBuild), sizeof(fileStat.applicationBuild));
     fileStream.read(reinterpret_cast<char *>(&fileStat.meas_start_time), sizeof(fileStat.meas_start_time));
     fileStream.read(reinterpret_cast<char *>(&fileStat.last_obj_time), sizeof(fileStat.last_obj_time));
     fileStream.read(reinterpret_cast<char *>(&fileStat.fileSize_less115), sizeof(fileStat.fileSize_less115));
@@ -159,13 +169,35 @@ auto blf_reader::read_baseHeader(blf_struct::BaseHeader &ohb) -> bool
 
 auto blf_reader::fill_deque() -> bool
 {
+    static bool split_read = false;
+    static uint32_t rest_of_data = 0;
+    static struct blf_struct::BaseHeader ohb;
+
+    if (split_read)
+        {
+            if (rest_of_data > defaultContainerSize)
+                {
+                    split_read = true;
+                    fill_deque_direct(fileStream, logcontainer_que, defaultContainerSize);
+                    rest_of_data = rest_of_data - defaultContainerSize;
+                    return true;
+                }
+
+            split_read = false;
+            fill_deque_direct(fileStream, logcontainer_que, rest_of_data);
+            rest_of_data = 0;
+            fileStream.seekg(ohb.objSize % 4, std::ios_base::cur);
+            return true;
+        }
+
+
     if (fileStream.eof())
         {
             std::cout << "BLF file ended\n";
             return false;
         }
 
-    struct blf_struct::BaseHeader ohb;
+    // struct blf_struct::BaseHeader ohb;
     if (read_baseHeader(ohb))
         {
             BaseHeaderRead++;
@@ -211,20 +243,18 @@ auto blf_reader::fill_deque() -> bool
                 }
             else
                 {
-                    std::vector<char> container_data;
                     const auto uncompressedBlobSize = ohb.objSize - ohb.headerSize - sizeof(blf_struct::LogContainer);
-
-                    container_data.resize(uncompressedBlobSize);
-
-                    fileStream.read(reinterpret_cast<char *>(container_data.data()), uncompressedBlobSize);
-                    fileStream.seekg(ohb.objSize % 4, std::ios_base::cur);
-
-                    lblf::print::print(std::cout, lc);
-                    logcontainer_que.insert(logcontainer_que.end(), container_data.begin(), container_data.end());
+                    if (uncompressedBlobSize > defaultContainerSize)
+                        {
+                            split_read = true;
+                            fill_deque_direct(fileStream, logcontainer_que, defaultContainerSize);
+                            rest_of_data = uncompressedBlobSize - defaultContainerSize;
+                        }
                 }
         }
     else
         {
+            // I should never end up here
             const int32_t bytes_to_jump = ohb.objSize - ohb.headerSize + (ohb.objSize % 4);
             std::cout << "No LogContainer on fileStream, to jump: " << bytes_to_jump << '\n';
             fileStream.seekg(bytes_to_jump, std::ios_base::cur);

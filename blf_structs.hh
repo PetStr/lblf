@@ -18,6 +18,8 @@ namespace lblf
 const uint32_t FileSignature = 0x47474F4C;   // LOGG
 const uint32_t ObjectSignature = 0x4A424F4C; // LOBJ
 const uint32_t defaultContainerSize = 0x20000;
+const uint32_t StatSize = 144; //Size of the beginning fileStats
+const uint32_t applicationBuild = 123; // Some magic number
 
 enum class exit_codes : uint32_t
 {
@@ -232,7 +234,7 @@ namespace blf_struct
         uint64_t fileSize {0};
         uint64_t uncompressedSize {0};
         uint32_t objCount {0};
-        uint32_t objRead {0};
+        uint32_t applicationBuild {0};
         sysTime_t meas_start_time {0, 0, 0, 0, 0, 0, 0, 0};
         sysTime_t last_obj_time {0, 0, 0, 0, 0, 0, 0, 0};
         uint64_t fileSize_less115 {0};
